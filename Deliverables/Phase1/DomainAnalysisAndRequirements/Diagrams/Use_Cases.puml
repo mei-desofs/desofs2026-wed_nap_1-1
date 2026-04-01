@@ -3,8 +3,8 @@ left to right direction
 
 ' === Actors ===
 actor Customer
-actor Staff
-actor Administrators
+actor Support
+actor Admin
 
 ' === Use Cases ===
 usecase "UC1 - Login to the application" as UC1
@@ -23,13 +23,13 @@ Customer --> UC3
 Customer --> UC4
 
 ' === Refund flow ===
-Staff --> UC1
-Staff --> UC5
-Staff --> UC6
+Support --> UC1
+Support --> UC5
+Support --> UC6
 
-' === Administrators relations ===
-Administrators --> UC1
-Administrators --> UC7
-Administrators --> UC8
+' === Admin relations ===
+Admin --> UC1
+Admin --> UC7
+Admin --> UC8
 
 @enduml
