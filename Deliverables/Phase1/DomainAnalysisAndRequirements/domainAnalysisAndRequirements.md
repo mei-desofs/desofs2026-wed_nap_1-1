@@ -9,9 +9,9 @@
 ## List of Figures
 
 | Figure Number | Figure Description |
-|:-------------:|:-------------------|
+|:-------------:|:------------------:|
 |               |                    |
-|               |                    |
+|   Figure 2    |  Use Case Diagram  |
 |               |                    |
 |               |                    |
 |               |                    |
@@ -35,9 +35,8 @@
 |    UC8    |    Manage user roles     |          Admin           |
 |    UC9    |                          |                          |
 
-
 <p align="center">
-  <img src="" width="700">
+  <img src="./Diagrams/images/useCases.svg" width="700">
 </p>
 <p align="center"><em>Figure 2 – Use case diagram.</em></p>
 

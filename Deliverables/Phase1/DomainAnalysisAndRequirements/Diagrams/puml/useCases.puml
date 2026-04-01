@@ -1,10 +1,11 @@
 @startuml
 left to right direction
 
+title "Use Case Diagram"
 ' === Actors ===
-actor Customer
-actor Support
-actor Admin
+actor Customer #red
+actor Support #blue
+actor Admin #green
 
 ' === Use Cases ===
 usecase "UC1 - Login to the application" as UC1
