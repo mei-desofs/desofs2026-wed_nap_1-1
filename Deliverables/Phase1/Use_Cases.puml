@@ -1,0 +1,35 @@
+@startuml
+left to right direction
+
+' === Actors ===
+actor Customer
+actor Staff
+actor Administrators
+
+' === Use Cases ===
+usecase "UC1 - Login to the application" as UC1
+usecase "UC2 - Browse available movies" as UC2
+usecase "UC3 - Purchase movie" as UC3
+usecase "UC4 - Request refund" as UC4
+usecase "UC5 - View requested refunds" as UC5
+usecase "UC6 - Handle refund request" as UC6
+usecase "UC7 - Manage movies" as UC7
+usecase "UC8 - Manage user roles" as UC8
+
+' === Customer relations ===
+Customer --> UC1
+Customer --> UC2
+Customer --> UC3
+Customer --> UC4
+
+' === Refund flow ===
+Staff --> UC1
+Staff --> UC5
+Staff --> UC6
+
+' === Administrators relations ===
+Administrators --> UC1
+Administrators --> UC7
+Administrators --> UC8
+
+@enduml
