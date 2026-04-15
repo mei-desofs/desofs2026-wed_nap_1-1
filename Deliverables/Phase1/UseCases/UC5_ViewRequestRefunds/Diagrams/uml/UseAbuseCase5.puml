@@ -1,0 +1,64 @@
+@startuml
+left to right direction
+skinparam linetype ortho
+skinparam shadowing false
+skinparam backgroundColor #F9F9F9
+
+skinparam usecase {
+  BackgroundColor White
+  BorderColor Black
+  FontColor Black
+}
+
+skinparam usecase {
+  BackgroundColor<<Threat>> #FF3B30
+  FontColor<<Threat>> White
+  BorderColor<<Threat>> #C1271C
+}
+
+skinparam usecase {
+  BackgroundColor<<Mitigation>> #34C759
+  FontColor<<Mitigation>> White
+  BorderColor<<Mitigation>> #248A3D
+}
+
+actor Support
+actor Attacker #red
+
+rectangle "Refund Flow" {
+  Support -[#black]-> (View requested refunds)
+  (View requested refunds) -[#black]-> (Application/Server)
+  (Application/Server) -[#black]-> (Validate refund conditions) <<Mitigation>>
+  (Application/Server) -[#black]-> (Log refund request) <<Mitigation>>
+  (Application/Server) -[#black]-> (Restrict refund approval to Support) <<Mitigation>>
+}
+
+' --- THREATS
+(View requested refunds) -[#red]-> (Tamper order ID) : <<Threatens>>
+(Validate refund conditions) -[#red]-> (Bypass refund time window) : <<Threatens>>
+(Log refund request) -[#red]-> (Avoid detection or accountability) : <<Threatens>>
+(Restrict refund approval to Support) -[#red]-> (Privilege escalation to approve own refund) : <<Threatens>>
+
+' --- THREAT DETAILS
+(Tamper order ID) -[#black]-> (Manipulate API body manually) <<Threat>>
+(Manipulate API body manually) -[#black]-> Attacker
+(Bypass refund time window) -[#black]-> (Forge client-side timestamps) <<Threat>>
+(Forge client-side timestamps) -[#black]-> Attacker
+(Avoid detection or accountability) -[#black]-> (Clear or skip logs) <<Threat>>
+(Clear or skip logs) -[#black]-> Attacker
+(Privilege escalation to approve own refund) -[#black]-> (Impersonate support role) <<Threat>>
+(Impersonate support role) -[#black]-> Attacker
+
+' --- MITIGATIONS
+(View requested refunds) -[#black]-> (Use signed order reference or UUID) <<Mitigation>>
+(Validate refund conditions) -[#black]-> (Check server-side timestamp) <<Mitigation>>
+(Log refund request) -[#black]-> (Immutable audit logging) <<Mitigation>>
+(Restrict refund approval to Support) -[#black]-> (RoleGuard enforcement) <<Mitigation>>
+
+' --- Mitigates connections
+(Use signed order reference or UUID) -[#green]-> (Tamper order ID) : <<Mitigates>>
+(Check server-side timestamp) -[#green]-> (Bypass refund time window) : <<Mitigates>>
+(Immutable audit logging) -[#green]-> (Avoid detection or accountability) : <<Mitigates>>
+(RoleGuard enforcement) -[#green]-> (Privilege escalation to approve own refund) : <<Mitigates>>
+
+@enduml

@@ -1,0 +1,29 @@
+@startuml
+title eMovieShop - Handle Refund Request
+
+actor Support
+participant "API Client" as APIClient
+participant "RefundController" as RefundController
+participant "RefundService" as RefundService
+participant "RefundRepository" as RefundRepository
+
+
+Support -> APIClient : POST /handleRefund {refundId, action}
+activate APIClient
+APIClient -> RefundController : handleRefund(refundId, action)
+activate RefundController
+RefundController -> RefundService : processRefund(refundId, action)
+activate RefundService
+RefundService -> RefundRepository : updateRefundStatus(refundId, action)
+activate RefundRepository
+RefundRepository --> RefundService : Update confirmation
+deactivate RefundRepository
+
+RefundService --> RefundController : Refund processed response
+deactivate RefundService
+RefundController --> APIClient : 200 OK + refund status
+deactivate RefundController
+APIClient --> Support : JSON response (refund status)
+deactivate APIClient
+
+@enduml

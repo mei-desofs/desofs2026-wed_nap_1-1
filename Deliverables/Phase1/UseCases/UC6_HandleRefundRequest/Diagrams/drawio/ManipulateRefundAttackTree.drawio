@@ -1,0 +1,335 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="ManipulateRefund" id="rcA-5SQVc97dPrexlEGJ">
+    <mxGraphModel dx="3433" dy="1757" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="tfaggKmDbIngp8y-J0LZ-1" edge="1" parent="1" source="tfaggKmDbIngp8y-J0LZ-4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.25;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=0;" target="tfaggKmDbIngp8y-J0LZ-5">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="915" y="850" />
+              <mxPoint x="440" y="850" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="tfaggKmDbIngp8y-J0LZ-2" edge="1" parent="1" source="tfaggKmDbIngp8y-J0LZ-4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" target="tfaggKmDbIngp8y-J0LZ-6">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="915" y="850" />
+              <mxPoint x="730" y="850" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="tfaggKmDbIngp8y-J0LZ-3" edge="1" parent="1" source="tfaggKmDbIngp8y-J0LZ-4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" target="tfaggKmDbIngp8y-J0LZ-8">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="915" y="850" />
+              <mxPoint x="1250" y="850" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="tfaggKmDbIngp8y-J0LZ-4" parent="1" style="shape=xor;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;direction=north;" value="&lt;span style=&quot;font-size: 24px;&quot;&gt;2.1 Submit Unauthorized Refund Request&lt;/span&gt;" vertex="1">
+          <mxGeometry height="200" width="350" x="740" y="620" as="geometry" />
+        </mxCell>
+        <mxCell id="tfaggKmDbIngp8y-J0LZ-5" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;" value="&lt;font style=&quot;font-size: 18px;&quot;&gt;2.1.1 Direct API manipulation using guessed Order ID&lt;/font&gt;" vertex="1">
+          <mxGeometry height="100" width="220" x="330" y="940" as="geometry" />
+        </mxCell>
+        <mxCell id="tfaggKmDbIngp8y-J0LZ-6" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;" value="&lt;font style=&quot;font-size: 18px;&quot;&gt;2.1.2 Bypass refund eligibility (e.g., OrderStatus != COMPLETED or after 14 days)&lt;/font&gt;" vertex="1">
+          <mxGeometry height="100" width="260" x="590" y="940" as="geometry" />
+        </mxCell>
+        <mxCell id="tfaggKmDbIngp8y-J0LZ-7" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;" value="&lt;font style=&quot;font-size: 18px;&quot;&gt;2.1.3 Submit refund for an order that belongs to a different user&lt;/font&gt;" vertex="1">
+          <mxGeometry height="100" width="200" x="880" y="940" as="geometry" />
+        </mxCell>
+        <mxCell id="tfaggKmDbIngp8y-J0LZ-8" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;" value="&lt;font style=&quot;font-size: 18px;&quot;&gt;2.1.4 Exceed the single-refund-per-order limit (0..1 RefundRequest) by resubmitting with varied inputs&lt;/font&gt;" vertex="1">
+          <mxGeometry height="100" width="290" x="1120" y="940" as="geometry" />
+        </mxCell>
+        <mxCell id="tfaggKmDbIngp8y-J0LZ-9" edge="1" parent="1" source="tfaggKmDbIngp8y-J0LZ-24" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=0;" target="tfaggKmDbIngp8y-J0LZ-15">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="2015" y="800" />
+              <mxPoint x="2015" y="850" />
+              <mxPoint x="2320" y="850" />
+            </Array>
+            <mxPoint x="2015" y="820" as="sourcePoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="tfaggKmDbIngp8y-J0LZ-10" edge="1" parent="1" source="tfaggKmDbIngp8y-J0LZ-13" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;exitX=0.25;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=0;" target="tfaggKmDbIngp8y-J0LZ-16">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="2957" y="850" />
+              <mxPoint x="2690" y="850" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="tfaggKmDbIngp8y-J0LZ-11" edge="1" parent="1" source="tfaggKmDbIngp8y-J0LZ-13" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" target="tfaggKmDbIngp8y-J0LZ-17">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="2961" y="910" />
+              <mxPoint x="2961" y="910" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="tfaggKmDbIngp8y-J0LZ-12" edge="1" parent="1" source="tfaggKmDbIngp8y-J0LZ-13" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" target="tfaggKmDbIngp8y-J0LZ-18">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="2961" y="850" />
+              <mxPoint x="3236" y="850" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="tfaggKmDbIngp8y-J0LZ-13" parent="1" style="shape=xor;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;direction=north;" value="&lt;span style=&quot;font-size: 24px;&quot;&gt;2.3&amp;nbsp;Repudiation of Refund Decisions&lt;/span&gt;" vertex="1">
+          <mxGeometry height="190" width="338" x="2792" y="630" as="geometry" />
+        </mxCell>
+        <mxCell id="tfaggKmDbIngp8y-J0LZ-14" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;" value="&lt;font style=&quot;font-size: 18px;&quot;&gt;2.2.1 No frontend or backend input sanitization&lt;/font&gt;" vertex="1">
+          <mxGeometry height="100" width="220" x="1571" y="940" as="geometry" />
+        </mxCell>
+        <mxCell id="tfaggKmDbIngp8y-J0LZ-15" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;" value="&lt;font style=&quot;font-size: 18px;&quot;&gt;2.2.3 SQL injection due to unsafe query building with refund reason&lt;/font&gt;" vertex="1">
+          <mxGeometry height="100" width="196.25" x="2221.88" y="940" as="geometry" />
+        </mxCell>
+        <mxCell id="tfaggKmDbIngp8y-J0LZ-16" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;" value="&lt;font style=&quot;font-size: 18px;&quot;&gt;2.3.1 No audit trail of who approved or rejected refund&lt;/font&gt;" vertex="1">
+          <mxGeometry height="100" width="239" x="2560" y="940" as="geometry" />
+        </mxCell>
+        <mxCell id="tfaggKmDbIngp8y-J0LZ-17" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;" value="&lt;font style=&quot;font-size: 18px;&quot;&gt;2.3.2 No email notification sent to Customer (no traceability)&lt;/font&gt;" vertex="1">
+          <mxGeometry height="100" width="245" x="2834.5" y="940" as="geometry" />
+        </mxCell>
+        <mxCell id="tfaggKmDbIngp8y-J0LZ-18" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;" value="&lt;font style=&quot;font-size: 18px;&quot;&gt;2.3.3 Logs are not immutable or can be altered by Admins&lt;/font&gt;" vertex="1">
+          <mxGeometry height="100" width="251" x="3110" y="940" as="geometry" />
+        </mxCell>
+        <mxCell id="tfaggKmDbIngp8y-J0LZ-19" edge="1" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" target="tfaggKmDbIngp8y-J0LZ-7">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="970" y="850" />
+            </Array>
+            <mxPoint x="935" y="850" as="sourcePoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="tfaggKmDbIngp8y-J0LZ-20" edge="1" parent="1" source="tfaggKmDbIngp8y-J0LZ-22" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" target="tfaggKmDbIngp8y-J0LZ-24">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="2961" y="490" />
+              <mxPoint x="2020" y="490" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="tfaggKmDbIngp8y-J0LZ-21" edge="1" parent="1" source="tfaggKmDbIngp8y-J0LZ-22" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" target="tfaggKmDbIngp8y-J0LZ-13">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="tfaggKmDbIngp8y-J0LZ-22" parent="1" style="shape=xor;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;direction=north;" value="&lt;span style=&quot;font-size: 24px;&quot;&gt;2 Manipulate Refund Process&lt;/span&gt;" vertex="1">
+          <mxGeometry height="170" width="360" x="2781" y="290" as="geometry" />
+        </mxCell>
+        <mxCell id="tfaggKmDbIngp8y-J0LZ-23" edge="1" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="2015" y="850" />
+              <mxPoint x="1676" y="850" />
+            </Array>
+            <mxPoint x="2015.025641025641" y="800" as="sourcePoint" />
+            <mxPoint x="1676" y="939.9999999999998" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="tfaggKmDbIngp8y-J0LZ-24" parent="1" style="shape=or;whiteSpace=wrap;html=1;direction=north;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="&lt;font style=&quot;font-size: 24px;&quot;&gt;2.2 Inject Malicious Input in Refund Form&lt;/font&gt;" vertex="1">
+          <mxGeometry height="170" width="340" x="1850" y="630" as="geometry" />
+        </mxCell>
+        <mxCell id="tfaggKmDbIngp8y-J0LZ-25" edge="1" parent="1" source="tfaggKmDbIngp8y-J0LZ-28" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="tfaggKmDbIngp8y-J0LZ-32">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="3940" y="840" />
+              <mxPoint x="3610" y="840" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="tfaggKmDbIngp8y-J0LZ-26" edge="1" parent="1" source="tfaggKmDbIngp8y-J0LZ-28" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="3940" y="880" />
+              <mxPoint x="3940" y="880" />
+            </Array>
+            <mxPoint x="3940" y="940" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="tfaggKmDbIngp8y-J0LZ-27" edge="1" parent="1" source="tfaggKmDbIngp8y-J0LZ-28" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" target="tfaggKmDbIngp8y-J0LZ-33">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="3940" y="840" />
+              <mxPoint x="4270" y="840" />
+            </Array>
+            <mxPoint x="4300" y="950" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="tfaggKmDbIngp8y-J0LZ-28" parent="1" style="shape=or;whiteSpace=wrap;html=1;direction=north;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="&lt;font style=&quot;font-size: 24px;&quot;&gt;2.4 Privilege Escalation by Customer or Attacker&lt;/font&gt;" vertex="1">
+          <mxGeometry height="170" width="340" x="3770" y="630" as="geometry" />
+        </mxCell>
+        <mxCell id="tfaggKmDbIngp8y-J0LZ-29" edge="1" parent="1" source="tfaggKmDbIngp8y-J0LZ-31" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" target="tfaggKmDbIngp8y-J0LZ-34">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="5019" y="820" />
+              <mxPoint x="4690" y="820" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="tfaggKmDbIngp8y-J0LZ-30" edge="1" parent="1" source="tfaggKmDbIngp8y-J0LZ-31" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="tfaggKmDbIngp8y-J0LZ-36">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="5019" y="820" />
+              <mxPoint x="5350" y="820" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="tfaggKmDbIngp8y-J0LZ-31" parent="1" style="shape=xor;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;direction=north;" value="&lt;span style=&quot;font-size: 24px;&quot;&gt;2.5&amp;nbsp;Support Abuses Refund Permissions&lt;/span&gt;" vertex="1">
+          <mxGeometry height="190" width="338" x="4850" y="610" as="geometry" />
+        </mxCell>
+        <mxCell id="tfaggKmDbIngp8y-J0LZ-32" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;" value="&lt;font style=&quot;font-size: 18px;&quot;&gt;2.4.1 API route missing RoleGuard for refund decisions&lt;/font&gt;" vertex="1">
+          <mxGeometry height="100" width="260" x="3480" y="940" as="geometry" />
+        </mxCell>
+        <mxCell id="tfaggKmDbIngp8y-J0LZ-33" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;" value="&lt;font style=&quot;font-size: 18px;&quot;&gt;2.4.3 Frontend loads privileged interface via devtools override&lt;/font&gt;" vertex="1">
+          <mxGeometry height="100" width="260" x="4150" y="940" as="geometry" />
+        </mxCell>
+        <mxCell id="tfaggKmDbIngp8y-J0LZ-34" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;" value="&lt;font style=&quot;font-size: 18px;&quot;&gt;2.5.1 System doesn’t enforce refund rules in service layer (e.g., support can refund PENDING orders)&lt;/font&gt;" vertex="1">
+          <mxGeometry height="100" width="300" x="4540" y="940" as="geometry" />
+        </mxCell>
+        <mxCell id="tfaggKmDbIngp8y-J0LZ-35" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;" value="&lt;font style=&quot;font-size: 18px;&quot;&gt;2.5.2 Support repeatedly refunds same order by bypassing UI restrictions&lt;/font&gt;" vertex="1">
+          <mxGeometry height="100" width="260" x="4910" y="940" as="geometry" />
+        </mxCell>
+        <mxCell id="tfaggKmDbIngp8y-J0LZ-36" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;" value="&lt;font style=&quot;font-size: 18px;&quot;&gt;2.5.3 Support refunds unrelated user’s order without verification&lt;/font&gt;" vertex="1">
+          <mxGeometry height="100" width="260" x="5220" y="940" as="geometry" />
+        </mxCell>
+        <mxCell id="tfaggKmDbIngp8y-J0LZ-37" edge="1" parent="1" source="tfaggKmDbIngp8y-J0LZ-22" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=1;entryY=0.5;entryDx=0;entryDy=0;entryPerimeter=0;" target="tfaggKmDbIngp8y-J0LZ-4">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="2961" y="490" />
+              <mxPoint x="915" y="490" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="tfaggKmDbIngp8y-J0LZ-38" edge="1" parent="1" source="tfaggKmDbIngp8y-J0LZ-22" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=1;entryY=0.5;entryDx=0;entryDy=0;entryPerimeter=0;exitX=0.25;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=0;" target="tfaggKmDbIngp8y-J0LZ-28">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="2961" y="490" />
+              <mxPoint x="3940" y="490" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="tfaggKmDbIngp8y-J0LZ-39" edge="1" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" target="tfaggKmDbIngp8y-J0LZ-31">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="5019" y="491" />
+            </Array>
+            <mxPoint x="3141" y="490" as="sourcePoint" />
+            <mxPoint x="5020" y="650" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="tfaggKmDbIngp8y-J0LZ-40" parent="1" style="shape=note;strokeWidth=2;fontSize=14;size=20;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontColor=#666600;" value="&lt;font style=&quot;font-size: 18px;&quot;&gt;Customer attempts to trigger a refund outside allowed conditions&lt;/font&gt;" vertex="1">
+          <mxGeometry height="110" width="230" x="1030" y="570" as="geometry" />
+        </mxCell>
+        <mxCell id="tfaggKmDbIngp8y-J0LZ-41" parent="1" style="shape=note;strokeWidth=2;fontSize=14;size=20;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontColor=#666600;" value="&lt;font style=&quot;font-size: 18px;&quot;&gt;Exploit the free-text reason field in RefundRequest&lt;/font&gt;" vertex="1">
+          <mxGeometry height="110" width="230" x="2143.13" y="570" as="geometry" />
+        </mxCell>
+        <mxCell id="tfaggKmDbIngp8y-J0LZ-42" parent="1" style="shape=note;strokeWidth=2;fontSize=14;size=20;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontColor=#666600;" value="&lt;font style=&quot;font-size: 18px;&quot;&gt;Support denies their own actions&lt;/font&gt;" vertex="1">
+          <mxGeometry height="110" width="230" x="3079.5" y="570" as="geometry" />
+        </mxCell>
+        <mxCell id="tfaggKmDbIngp8y-J0LZ-43" parent="1" style="shape=note;strokeWidth=2;fontSize=14;size=20;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontColor=#666600;" value="&lt;font style=&quot;font-size: 18px;&quot;&gt;Customer attempts to act as Support/Admin&lt;/font&gt;" vertex="1">
+          <mxGeometry height="110" width="230" x="4052" y="560" as="geometry" />
+        </mxCell>
+        <mxCell id="tfaggKmDbIngp8y-J0LZ-44" parent="1" style="shape=note;strokeWidth=2;fontSize=14;size=20;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontColor=#666600;" value="&lt;font style=&quot;font-size: 18px;&quot;&gt;Legit support user refunds maliciously&lt;/font&gt;" vertex="1">
+          <mxGeometry height="110" width="230" x="5120" y="540" as="geometry" />
+        </mxCell>
+        <mxCell id="tfaggKmDbIngp8y-J0LZ-45" edge="1" parent="1" source="tfaggKmDbIngp8y-J0LZ-48" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" target="tfaggKmDbIngp8y-J0LZ-49">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="2017" y="1070" />
+              <mxPoint x="1737" y="1070" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="tfaggKmDbIngp8y-J0LZ-46" edge="1" parent="1" source="tfaggKmDbIngp8y-J0LZ-48" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="tfaggKmDbIngp8y-J0LZ-50">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="tfaggKmDbIngp8y-J0LZ-47" edge="1" parent="1" source="tfaggKmDbIngp8y-J0LZ-48" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="tfaggKmDbIngp8y-J0LZ-51">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="2017" y="1070" />
+              <mxPoint x="2287" y="1070" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="tfaggKmDbIngp8y-J0LZ-48" parent="1" style="shape=or;whiteSpace=wrap;html=1;direction=north;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="&lt;span style=&quot;font-size: 18px;&quot;&gt;2.2.2 Stored XSS that executes when viewed by support/admin&lt;/span&gt;" vertex="1">
+          <mxGeometry height="100" width="240" x="1897" y="940" as="geometry" />
+        </mxCell>
+        <mxCell id="tfaggKmDbIngp8y-J0LZ-49" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;" value="&lt;font style=&quot;font-size: 18px;&quot;&gt;2.2.2.1 Identify refund field vulnerable to stored XSS (e.g., reason text)&lt;/font&gt;" vertex="1">
+          <mxGeometry height="100" width="220" x="1627" y="1128" as="geometry" />
+        </mxCell>
+        <mxCell id="tfaggKmDbIngp8y-J0LZ-50" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;" value="&lt;font style=&quot;font-size: 18px;&quot;&gt;2.2.2.2 Inject persistent JS payload in refund form&lt;/font&gt;" vertex="1">
+          <mxGeometry height="100" width="220" x="1907" y="1128" as="geometry" />
+        </mxCell>
+        <mxCell id="tfaggKmDbIngp8y-J0LZ-51" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;" value="&lt;font style=&quot;font-size: 18px;&quot;&gt;2.2.2.3 Support/admin views refund queue and triggers execution&lt;/font&gt;" vertex="1">
+          <mxGeometry height="100" width="220" x="2177" y="1128" as="geometry" />
+        </mxCell>
+        <mxCell id="tfaggKmDbIngp8y-J0LZ-52" edge="1" parent="1" source="tfaggKmDbIngp8y-J0LZ-56" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" target="tfaggKmDbIngp8y-J0LZ-57">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="3942" y="1090" />
+              <mxPoint x="3520" y="1090" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="tfaggKmDbIngp8y-J0LZ-53" edge="1" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="3942" y="1090" />
+              <mxPoint x="4092" y="1090" />
+            </Array>
+            <mxPoint x="3942" y="1040" as="sourcePoint" />
+            <mxPoint x="4092" y="1128" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="tfaggKmDbIngp8y-J0LZ-54" edge="1" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="3942" y="1090" />
+              <mxPoint x="4392" y="1090" />
+            </Array>
+            <mxPoint x="3942" y="1040" as="sourcePoint" />
+            <mxPoint x="4392" y="1128" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="tfaggKmDbIngp8y-J0LZ-55" edge="1" parent="1" source="tfaggKmDbIngp8y-J0LZ-56" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="tfaggKmDbIngp8y-J0LZ-58">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="3942" y="1090" />
+              <mxPoint x="3801" y="1090" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="tfaggKmDbIngp8y-J0LZ-56" parent="1" style="shape=or;whiteSpace=wrap;html=1;direction=north;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="&lt;span style=&quot;font-size: 18px;&quot;&gt;2.4.2 Forged JWT with elevated role claim&lt;/span&gt;" vertex="1">
+          <mxGeometry height="100" width="240" x="3830" y="940" as="geometry" />
+        </mxCell>
+        <mxCell id="tfaggKmDbIngp8y-J0LZ-57" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;" value="&lt;font style=&quot;font-size: 18px;&quot;&gt;2.4.2.1 Capture valid JWT (via login or token theft)&lt;/font&gt;" vertex="1">
+          <mxGeometry height="100" width="220" x="3410" y="1128" as="geometry" />
+        </mxCell>
+        <mxCell id="tfaggKmDbIngp8y-J0LZ-58" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;" value="&lt;font style=&quot;font-size: 18px;&quot;&gt;2.4.2.2 Decode JWT to view structure (e.g., with jwt.io)&lt;/font&gt;" vertex="1">
+          <mxGeometry height="100" width="238" x="3682" y="1128" as="geometry" />
+        </mxCell>
+        <mxCell id="tfaggKmDbIngp8y-J0LZ-59" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;" value="&lt;font style=&quot;font-size: 18px;&quot;&gt;2.4.2.3 Modify role claim to &#39;Admin&#39; or &#39;Support&#39;&lt;/font&gt;" vertex="1">
+          <mxGeometry height="100" width="220" x="3980" y="1128" as="geometry" />
+        </mxCell>
+        <mxCell id="tfaggKmDbIngp8y-J0LZ-60" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;" value="&lt;font style=&quot;font-size: 18px;&quot;&gt;2.4.2.4 Re-sign JWT (if alg = none or secret is weak)&lt;/font&gt;" vertex="1">
+          <mxGeometry height="100" width="280" x="4260" y="1128" as="geometry" />
+        </mxCell>
+        <mxCell id="tfaggKmDbIngp8y-J0LZ-61" parent="1" style="shape=note;strokeWidth=2;fontSize=14;size=20;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontColor=#666600;" value="&lt;font style=&quot;font-size: 18px;&quot;&gt;Attacker exploits flaws in refund workflows to trigger or approve refunds illegitimately by bypassing role validation, spoofing user identity, or tampering with internal logic.&lt;/font&gt;" vertex="1">
+          <mxGeometry height="110" width="429.5" x="3120.5" y="310" as="geometry" />
+        </mxCell>
+        <mxCell id="tfaggKmDbIngp8y-J0LZ-62" edge="1" parent="1" source="tfaggKmDbIngp8y-J0LZ-31" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.421;entryY=0.016;entryDx=0;entryDy=0;entryPerimeter=0;exitX=0.25;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=0;" target="tfaggKmDbIngp8y-J0LZ-35">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="tfaggKmDbIngp8y-J0LZ-63" edge="1" parent="1" source="tfaggKmDbIngp8y-J0LZ-24" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" target="tfaggKmDbIngp8y-J0LZ-48">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="2015" y="904" />
+              <mxPoint x="2015" y="904" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

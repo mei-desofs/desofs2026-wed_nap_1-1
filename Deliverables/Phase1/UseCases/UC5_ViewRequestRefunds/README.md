@@ -1,0 +1,82 @@
+# Use Case 6: Handle refund request
+
+## 1. Description
+### 1.1 Objective
+This Use Case allows users with the **Support** or **Admin** role to retrieve and view a list of all movie refund requests submitted by customers. This ensures that refund processing is based on consistent and traceable data, providing visibility into pending requests.
+
+### 1.2 Actors
+* **Support Staff:** Primary actor responsible for monitoring and assisting with refund-related issues.
+* **Admin:** Responsible for overall system auditing and transaction management.
+
+### 1.3 Use/Abuse Case Diagram
+This diagram illustrates the legitimate path for retrieving the refund list versus potential abuse scenarios, such as unprivileged users attempting to access sensitive transaction data.
+
+![Use and Abuse Cases - UC5](./Diagrams/images/UseAbuseCase5.svg)
+
+### 1.4 Pre-conditions
+* The actor must be successfully authenticated.
+* The actor must possess a valid JWT with the "Support" or "Admin" role.
+
+### 1.5 Post-conditions
+* The list of movie refund requests is successfully retrieved from the database.
+* The information is returned to the actor in a structured JSON response.
+* An audit log entry is created recording the access to the refund list data.
+
+---
+
+## 2. Interaction Flow & Architecture
+As the system is a backend-only API, the interaction follows a direct request-response pattern between the client and the server.
+
+### 2.1 Interaction Flow (API Level)
+1. **Request:** The Actor (via API Client) sends a `GET` request to `/api/refunds` including the JWT in the Authorization header.
+2. **Validation:** The `AuthMiddleware` verifies the JWT signature and the `RoleGuard` confirms the actor has Support/Admin privileges.
+3. **Business Logic:** The `RefundController` invokes the `RefundService` to retrieve all movie refund records from the repository.
+4. **Data Retrieval:** The system queries the database for records associated with existing and valid movie orders.
+5. **Response:** The system returns a `200 OK` status with the JSON array containing the refund requests details.
+
+### 2.2 Sequence Diagram
+This diagram shows the internal backend logic and the sequence of calls between the Controller, Service, and Repository, highlighting the enforcement of security rules at the service layer.
+
+![Sequence Diagram - UC5](./Diagrams/images/SequenceDiagram5.svg)
+
+---
+
+## 3. Data Flow Analysis (DFD)
+The DFD Level 2 illustrates how the request for refund data flows from the actor through the trust boundaries to the backend processes and finally from the database back to the actor.
+
+![DFD Level 2 - UC5](./Diagrams/images/DFD-level2-UC5.svg)
+
+---
+
+## 4. Threat Analysis
+Specific threats to the process of viewing refunds were evaluated using STRIDE and Attack Trees.
+
+### 4.1 STRIDE Table
+| Threat | Category | Mitigation Strategy |
+| :--- | :--- | :--- |
+| Unauthenticated user attempts to access the refund list | **Spoofing / Information Disclosure** | Mandatory JWT verification for the endpoint. |
+| A Customer role user attempts to call the Support-only endpoint | **Elevation of Privilege** | Server-side RBAC (Role-Based Access Control) enforcement. |
+| Attacker floods the API with list requests to cause a DoS | **Denial of Service** | Implementation of Rate Limiting middleware on the API. |
+| Sensitive refund data is intercepted during transit | **Information Disclosure** | Enforced use of TLS (HTTPS) for all API communications (ASVS 9.1.1). |
+
+### 4.2 Threat / Attack Tree Diagram
+The following Attack Tree describes the logical paths an adversary might take to gain unauthorized access to the list of movie refunds, focusing on the manipulation of the refund management process.
+
+![Attack Tree - UC5](./Diagrams/images/ManipulateRefundAttackTree.svg)
+
+---
+
+## 5. Security Requirements (ASVS Compliance)
+Based on the ASVS checklist, the following requirements are strictly enforced for this UC:
+
+* **ASVS 4.1.1 (Access Control):** All access control is enforced at the backend service layer. The server validates the JWT role for every request to the refund list endpoint.
+* **ASVS 13.1.3 (API Security):** API URLs do not expose sensitive information, such as session tokens or movie IDs in an insecure manner. Tokens are passed exclusively via the `Authorization: Bearer` header.
+* **ASVS 11.1.3 (Business Logic):** The application enforces appropriate limits for specific business actions. Access to the global refund list is scoped strictly to users with elevated privileges.
+* **ASVS 7.1.3 (Logging):** Security-relevant events, including successful and failed access to sensitive data like the refund list, are properly logged with timestamps, IP addresses, and actor IDs.
+* **ASVS 13.1.4 (Authorization):** Authorization decisions are made at the URI level (Controller), ensuring only authorized personnel can invoke the resource.
+
+---
+
+## 6. Secure Development Requirements
+* **Code Review:** Any changes to the retrieval logic in `RefundService` or access rules in `RoleGuard` require a security-focused peer review.
+* **Automated Testing:** Unit and integration tests must cover scenarios of unauthorized access (e.g., a Customer role attempting to GET the refund list) to ensure RBAC integrity.
