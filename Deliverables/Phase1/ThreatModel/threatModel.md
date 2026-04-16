@@ -31,6 +31,22 @@
 
 ## 3. Entry Points
 
+| ID      | Name                 | Description                                                                                           | Trust Levels                                                |
+| ------- |----------------------|-------------------------------------------------------------------------------------------------------| ----------------------------------------------------------- |
+| 1       | HTTPS Port           | All access to eMovie Shop is served via HTTPS (TLS) through direct API requests.                      | (1) Guest, (2) Invalid Credentials, (3) Authenticated User  |
+| *1.1*   | Authentication       | Customers, Support Staff, and Admins must authenticate to access protected features.                  | (1) Guest, (2) Invalid Credentials, (3) Authenticated Users |
+| *1.1.1* | Login Function       | Submits credentials; returns a signed JWT on success. Token must be included in subsequent API calls. | (4) Customer, (5) Support, (6) Admin                        |
+| 2       | API Endpoints        | All the system functionalities are exposed via REST API endpoints (e.g., /movies, /library)           | (4) Customer                                                |
+| *2.1*   | Browse Movies        | Public endpoint to view movies. API call supports filtering and pagination.                           | (4) Customer                                                |
+| *2.2*   | Purchase Movie       | Authenticated customers may trigger a purchase via a backend API call.                                | (4) Customer                                                |
+| *2.3*   | View Library         | Customers can view previously purchased movies and refund-eligible items.                             | (4) Customer                                                |
+| *2.4*   | Request Refund       | Triggers refund request for a specific OrderItem.                                                     | (4) Customer                                                |
+| 3       | Support Tools        | API endpoints intended for support-level operations.                                                  | (5) Support                                                 |
+| *3.1*   | View Refund Requests | Support users can list and approve/reject refunds.                                                    | (5) Support                                                 |
+| 4       | Admin Console        | API endpoints reserved for administrative operations.                                                 | (6) Admin                                                   |
+| *4.1*   | Manage Movie Catalog | Add/edit/remove movies and update prices or stock.                                                    | (6) Admin                                                   |
+| *4.2*   | Manage User Roles    | Assign support/admin roles to registered users.                                                       | (6) Admin  
+
 ## 4. Exit Points
 
 ## 5. Assets
