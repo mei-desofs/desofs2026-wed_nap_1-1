@@ -38,7 +38,7 @@ As the system is a backend-only API, the interaction follows a direct request-re
 ### 2.2 Sequence Diagram
 This diagram shows the internal backend logic and the sequence of calls between the Controller, Service, and Repository, highlighting the enforcement of security rules at the service layer.
 
-![Sequence Diagram - UC6](./Diagrams/images/UseCase6.svg)
+![Sequence Diagram - UC6](./Diagrams/images/SequenceDiagram6.svg)
 
 ---
 
@@ -70,11 +70,11 @@ The following Attack Tree describes the logical paths an adversary might take to
 ## 5. Security Requirements (ASVS Compliance)
 Based on the ASVS checklist, the following requirements are strictly enforced for this UC:
 
-* **ASVS 4.1.1 (Access Control):** All access control is enforced at the backend service layer. The server validates the JWT role for every request to the handle refund endpoint.
-* **ASVS 11.1.1 (Business Logic):** The application ensures business logic flows are processed in sequential order. A refund cannot be "Handled" if it hasn't been properly "Requested" and "Validated".
-* **ASVS 11.1.6 (TOCTOU):** Refund and order updates are handled as atomic transactions in the database to prevent race conditions or double-refunding.
-* **ASVS 7.1.3 (Logging):** All refund decisions (approvals/rejections) are logged as security-relevant events, including the ID of the staff member who performed the action.
-* **ASVS 13.1.4 (Authorization):** Authorization decisions are made at both the URI level (Controller) and the resource level (Service), ensuring the actor has permission to modify the specific refund record.
+* **ASVS V8.2.1 (Authorization):** All access control is enforced at the trusted backend service layer. The server validates the JWT role and permissions for every request to the refund handling endpoint, ensuring that client-side controls cannot be bypassed.
+* **ASVS V14.2.1 (Data Protection):** Sensitive data, such as session tokens (JWT) or refund IDs, are never exposed in the URL or query string. Tokens are passed exclusively via secure HTTP headers (e.g., Authorization: Bearer).
+* **ASVS V2.3.2 (Business Logic):** The application enforces business logic limits and rules. Refund processing is restricted to specific high-privilege roles (Support/Admin) and follows sequential order validation to prevent unauthorized state transitions.
+* **ASVS V16.3.1 (Logging):** All refund decisions (approvals/rejections) are logged as security-relevant events with sufficient metadata (timestamps, source IP, actor IDs, decision rationale) to allow for forensic investigation and non-repudiation.
+* **ASVS V8.3.1 (Authorization):** Authorization decisions are made at the operation level (Controller/URI). The system ensures that the subject (Support/Admin) has the explicit permission to invoke the refund handling resource and performs atomic database transactions to prevent race conditions.
 
 ---
 
