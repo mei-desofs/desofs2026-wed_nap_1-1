@@ -40,19 +40,13 @@ This diagram shows the internal backend logic and the sequence of calls between 
 
 ![Sequence Diagram - UC6](./Diagrams/images/SequenceDiagram6.svg)
 
----
-
-## 3. Data Flow Analysis (DFD)
-The DFD Level 2 illustrates how the refund decision data flows from the actor through the trust boundaries to the backend processes and finally to the database.
-
-![DFD Level 2 - UC6](./Diagrams/images/DFD-level2-UC6.svg)
 
 ---
 
-## 4. Threat Analysis
+## 3. Threat Analysis
 Specific threats to the refund handling process were evaluated using STRIDE and Attack Trees.
 
-### 4.1 STRIDE Table
+### 3.1 STRIDE Table
 | Threat | Category | Mitigation Strategy |
 | :--- | :--- | :--- |
 | Attacker impersonates Support staff to approve own refund | **Spoofing** | Mandatory JWT verification and server-side role check. |
@@ -60,14 +54,9 @@ Specific threats to the refund handling process were evaluated using STRIDE and 
 | Support staff denies having approved a fraudulent refund | **Non-Repudiation** | Detailed audit logging (ASVS 7.1.3) with cryptographically signed logs where applicable. |
 | Customer tries to access the approval endpoint | **Elevation of Privilege** | RBAC enforced via `RoleGuard` at the controller level. |
 
-### 4.2 Threat / Attack Tree Diagram
-The following Attack Tree describes the logical paths an adversary might take to force an unauthorized refund approval, such as compromising a Support account or attempting a TOCTOU (Time-of-Check to Time-of-Use) exploit.
-
-![Attack Tree - UC6](./Diagrams/images/ManipulateRefundAttackTree.svg)
-
 ---
 
-## 5. Security Requirements (ASVS Compliance)
+## 4. Security Requirements (ASVS Compliance)
 Based on the ASVS checklist, the following requirements are strictly enforced for this UC:
 
 * **ASVS V8.2.1 (Authorization):** All access control is enforced at the trusted backend service layer. The server validates the JWT role and permissions for every request to the refund handling endpoint, ensuring that client-side controls cannot be bypassed.
@@ -78,6 +67,6 @@ Based on the ASVS checklist, the following requirements are strictly enforced fo
 
 ---
 
-## 6. Secure Development Requirements
+## 5. Secure Development Requirements
 * **Code Review:** All changes to the `RefundService` logic require a security-focused peer review.
 * **Automated Testing:** Unit tests must cover scenarios of unauthorized access (e.g., a Customer attempting to PATCH a refund) and invalid state transitions (e.g., approving an already rejected refund).
