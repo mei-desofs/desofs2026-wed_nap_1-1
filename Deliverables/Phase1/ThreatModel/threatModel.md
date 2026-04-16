@@ -26,7 +26,6 @@
 | 3  | **GitHub** is used for source control, issue tracking, and CI/CD. GitHub Actions automate builds, security checks (e.g., Semgrep, Dependabot), and testing, forming a critical dependency in the SDLC.                                                  |
 | 4  | All communication with the system occurs over HTTPS, with API requests being made directly through tools such as Postman. Authentication is handled via Bearer tokens (JWT) included in the request headers. This setup assumes a correctly configured TLS-enabled server and appropriate network protections (e.g., firewall).                               |
 | 5  | The system manages sensitive data such as **user roles, purchase history, and refund requests**. This makes **secure database access and audit logging** essential for accountability and protection against data tampering.                            |
-| 6  | **Email Service** (e.g., SendGrid, Mailgun) is used to deliver transactional messages such as order confirmations and refund decisions. Communication must be authenticated and use encrypted channels (HTTPS or SMTP/TLS).                             |
 
 
 ## 3. Entry Points
@@ -65,11 +64,23 @@
 | 4     | Admin Responses          | Responses related to administrative operations.                                                       | (6) Admin                                                  |
 | *4.1* | Catalog Update Result    | Confirmation/error after adding/editing/deleting a movie in the catalog.                              | (6) Admin                                                  |
 | *4.2* | Role Assignment Feedback | Confirmation or errors when assigning roles to users.                                                 | (6) Admin                                                  |
-| 5     | Email Notifications      | Transactional emails sent after successful purchases, refunds, or role changes                        | (4) Customer, (5) Support, (6) Admin                       |
 
 ## 5. Assets
 
 ## 6. Trust Levels
+
+| ID     | Name                       | Description                                                                                                              |
+| ------ | -------------------------- |--------------------------------------------------------------------------------------------------------------------------|
+| **1**  | Guest                      | An unauthenticated actor interacting with the eMovie Shop without logging in. Limited to publicly accessible endpoints . |
+| **2**  | Invalid Credentials        | A user who attempted to authenticate but provided incorrect credentials.                                                 |
+| **3**  | Authenticated User         | A logged-in user with a valid JWT. Includes all roles: Customer, Support, or Admin.                                      |
+| **4**  | Customer                   | A user with the `CUSTOMER` role. Can browse movies, make purchases, and request refunds.                                 |
+| **5**  | Support                    | A user with the `SUPPORT` role. Can view, approve, or reject refund requests.                                            |
+| **6**  | Admin                      | A user with the `ADMIN` role. Manages movies, stock, discounts, and assigns user roles.                                  |
+| **7**  | System Administrator       | Person responsible for infrastructure, deployment, system monitoring, and security configuration.                        |
+| **8**  | Database Administrator     | Full access to the MySQL database. Can create/modify tables, manage credentials, and ensure data integrity.              |
+| **9**  | Database Read User         | A user or service with read-only access to the database (e.g., analytics or report generation).                          |
+| **10** | Database Read & Write User | A user or service with privileges to query and modify records, but not manage the database schema.                       |
 
 ## 7. Data Flow Diagrams
 
@@ -90,7 +101,6 @@ This Level 1 DFD decomposes the internal structure of the eMovie Shop system, sh
 
 - **Users** (Customer, Support, Admin) interact directly with the **Backend** via HTTPS using tools such as Postman. All operations (e.g., login, purchases, refunds) are performed through secured API calls with JWT Bearer tokens.
 - The **Backend** processes logic and persists data into a **MySQL database**, handling movie orders, refunds, and user management.
-- On certain actions (e.g., completing an order, updating roles, processing refunds), the backend triggers outgoing emails via an external **Email Service** (e.g., SendGrid), shown as a one-way data flow.
 - Red dashed lines indicate internal **trust boundaries**, while gray dashed lines represent **external communications** beyond system control.
 
 This decomposition helps clarify integration points, potential exit paths, and responsibilities of each core component — which is especially useful for threat modeling and secure architecture analysis.
