@@ -33,7 +33,6 @@ All associations use precise cardinality (`1`, `1*`, `*`, `**`, `0..1`) to refle
 |    UC6    |  Handle refund request   |         Support          |
 |    UC7    |   Manage movie catalog   |          Admin           |
 |    UC8    |    Manage user roles     |          Admin           |
-|    UC9    |     |                          |
 
 
 ![Use Case Diagram](Diagrams/images/useCases.svg)
@@ -51,8 +50,6 @@ Ensures refund processing is based on consistent and traceable data.
 Validates catalog integrity and avoids pricing errors or exploits.
 * **Users cannot purchase more than 10 movies in a single order** 
 Adds a business rule to minimize abuse and reduce risk of fraudulent bulk buys.
-* **Email notifications are only sent after successful order/refund events** 
-Ensures backend logic governs when external emails are triggered, avoiding duplicate or false notifications.
 
 **3.2 Access Control & Authentication Policies**
 * **User accounts are temporarily locked after 5 failed login attempts** 
@@ -77,7 +74,7 @@ Protects users from man-in-the-middle attacks or spoofed content sources.
 * **Authentication:** All users (Customers, Support, Admins) must log in with valid credentials before accessing any features. Sessions are securely managed and expire after inactivity.
 * **Authorization:** Role-based access control (RBAC) is enforced: Customers can browse, purchase, and request refunds; Support can only process refund requests; Admins manage the movie catalog and user roles.
 * **Use of Encryption:** Sensitive data (passwords, session tokens) is encrypted in transit (HTTPS) and at rest. Passwords are hashed using a secure algorithm (e.g., bcrypt).
-* **Input Validation:** All user input is validated and sanitized. This includes form submissions for login, purchases, refund requests, and movie management — preventing injection attacks.
+* **Input Validation:** All user input is validated and sanitized. This includes form submissions for login, purchases, refund requests, and movie management, preventing injection attacks.
 * **Error Handling:** The system gracefully handles errors and does not expose stack traces or sensitive system info to users. Unauthorized actions trigger proper security messages (e.g., “Access Denied”).
 * **System Testing & Maintenance:** The application undergoes regular security testing (e.g., static code analysis, dependency checks). Patch management is in place to address known vulnerabilities in third-party libraries or dependencies.
 * **Secure Communications:** Email and CDN services are accessed over secure HTTPS connections. External services are invoked via authenticated or encrypted protocols to preserve integrity and confidentiality.
