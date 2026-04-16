@@ -38,3 +38,25 @@
 ## 6. Trust Levels
 
 ## 7. Data Flow Diagrams
+
+### 7.1. DFD - Level 0
+
+![DFD-Level0.svg](resources/DFD-Level0.svg)
+
+This Level 0 Data Flow Diagram illustrates the major interactions between external users (Customer, Support, Admin) and the eMovie Shop system. The system is represented as a single process, encapsulating the backend and database layers. 
+
+Each user interacts with the system through distinct data flows that correspond to specific business actions, such as browsing movies, purchasing, handling refunds, or managing roles and movie catalog entries.
+This diagram establishes the system boundary and highlights the trust relationships that will be explored further in the Level 1 DFD and threat analysis.
+
+### 7.2. DFD - Level 1
+
+![DFD-Level1.svg](resources/DFD-Level1.svg)
+
+This Level 1 DFD decomposes the internal structure of the eMovie Shop system, showing detailed flows between backend, database and external services.
+
+- **Users** (Customer, Support, Admin) interact directly with the **Backend** via HTTPS using tools such as Postman. All operations (e.g., login, purchases, refunds) are performed through secured API calls with JWT Bearer tokens.
+- The **Backend** processes logic and persists data into a **MySQL database**, handling movie orders, refunds, and user management.
+- On certain actions (e.g., completing an order, updating roles, processing refunds), the backend triggers outgoing emails via an external **Email Service** (e.g., SendGrid), shown as a one-way data flow.
+- Red dashed lines indicate internal **trust boundaries**, while gray dashed lines represent **external communications** beyond system control.
+
+This decomposition helps clarify integration points, potential exit paths, and responsibilities of each core component — which is especially useful for threat modeling and secure architecture analysis.
