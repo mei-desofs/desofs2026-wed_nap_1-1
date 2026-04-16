@@ -49,6 +49,24 @@
 
 ## 4. Exit Points
 
+| ID    | Name                     | Description                                                                                           | Trust Levels                                               |
+| ----- |--------------------------|-------------------------------------------------------------------------------------------------------| ---------------------------------------------------------- |
+| 1     | HTTPS Responses          | All content is delivered via HTTPS, including API responses, HTML, JSON, and static assets.           | (1) Guest, (2) Invalid Credentials, (3) Authenticated User |
+| *1.1* | Login Response           | After submitting credentials, the backend replies with a success message and signed JWT, or an error. | (1) Guest, (2) Invalid Credentials, (3) Authenticated User |
+| *1.2* | Error Responses          | The system returns appropriate HTTP status codes and error messages (e.g., 400, 401, 403, 404).       | All trust levels                                           |
+| 2     | Customer Responses       | Data shown to authenticated customers.                                                                | (4) Customer                                               |
+| *2.1* | Movie List               | The customer sees a list of available movies, fetched via API.                                        | (4) Customer                                               |
+| *2.2* | Purchase Confirmation    | After initiating a purchase, the server returns confirmation or validation errors.                    | (4) Customer                                               |
+| *2.3* | Library / Owned Movies   | The customer can view a list of previously purchased movies.                                          | (4) Customer                                               |
+| *2.4* | Refund Request Result    | After submitting a refund request, the response includes confirmation or rejection message.           | (4) Customer                                               |
+| 3     | Support Responses        | Responses sent to support users managing refund flows.                                                | (5) Support                                                |
+| *3.1* | Refund List API          | A list of pending refund requests is returned to the support dashboard.                               | (5) Support                                                |
+| *3.2* | Refund Decision Result   | Confirmation/error response after approving or rejecting a refund request.                            | (5) Support                                                |
+| 4     | Admin Responses          | Responses related to administrative operations.                                                       | (6) Admin                                                  |
+| *4.1* | Catalog Update Result    | Confirmation/error after adding/editing/deleting a movie in the catalog.                              | (6) Admin                                                  |
+| *4.2* | Role Assignment Feedback | Confirmation or errors when assigning roles to users.                                                 | (6) Admin                                                  |
+| 5     | Email Notifications      | Transactional emails sent after successful purchases, refunds, or role changes                        | (4) Customer, (5) Support, (6) Admin                       |
+
 ## 5. Assets
 
 ## 6. Trust Levels
