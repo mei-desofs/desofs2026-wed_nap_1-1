@@ -2,9 +2,9 @@
 
 ### 2.1 Components
 
-#### 2.1.1 High-level
+#### 2.1.1 High-Level
 
-![High-Level Component Diagram](diagrams/images/HLD.svg)
+![High-Level Component Diagram](diagrams/images/HighLevelView.png)
 
 This high-level diagram outlines the core containers of the eMovieShop system, divided across backend and infrastructure responsibilities.
 
@@ -27,7 +27,7 @@ This high-level diagram outlines the core containers of the eMovieShop system, d
 
 #### 2.1.2 Backend
 
-![Backend Logical View](diagrams/images/BackendLogicalView.svg)
+![Backend Logical View](diagrams/images/BackendLogicalView.png)
 
 This diagram illustrates the internal architecture of the eMovieShop backend, designed with layered responsibilities and Domain-Driven Design (DDD).
 
@@ -46,7 +46,7 @@ domain logic, and data persistence.
 
 ### 2.2 Deployment
 
-![Deployment View](diagrams/images/DeploymentView.svg)
+![Deployment View](diagrams/images/DeploymentView.png)
 
 This deployment diagram represents the physical architecture of eMovieShop, deployed across three main servers and supported 
 by external services.
@@ -92,7 +92,14 @@ This operating model can be enforced via Docker container users or systemd servi
 | **Clean & Safe Code Practices** | Code is organized into layered components (DTO, Service, Controller, etc.), centralizes security logic (e.g., Auth Middleware), and uses best practices like clear naming, error handling, and input sanitation.                                            |
 | **Session Binding and Entropy** | JWTs are signed using RS256/HS512 and generated with ≥64 bits of entropy. Tokens will no longer be stored in `localStorage`, but in secure, `HttpOnly` cookies to reduce XSS risk.                                                                          |
 
-eGameShop’s architecture integrates key secure design patterns across both backend and frontend. **Secure by Default** is enforced via the `Auth Middleware`, which blocks unauthenticated users before reaching controllers, while the frontend only attaches JWT tokens for authorized API calls. **Layered Security** appears in both diagrams: React handles client-side form validation, while the backend enforces constraints through DTOs, services, and immutable domain value objects like `Email` or `GameTitle`. External services like SendGrid and the CDN are only used **after appropriate access control and validation**. **Least Privilege** is reflected in the `RoleGuard` service, restricting backend logic based on user roles, and in use cases tied to specific actors (e.g., only support can process refunds). The system embraces **Open Design** — JWT, RBAC, and authorization mechanisms are explicitly modeled in diagrams and thoroughly documented. Lastly, **Coding Best Practices** are seen in the clear separation of concerns from API to domain in the backend, modularized components and state management on the frontend, and DDD patterns in the domain model.
+eMovieShop’s architecture integrates key secure design patterns across both backend and frontend. **Secure by Default** is 
+enforced via the `Auth Middleware`, which blocks unauthenticated users before reaching controllers. **Layered Security** 
+appears in both diagrams: React handles client-side form validation, while the backend enforces constraints through DTOs, 
+services, and immutable domain value objects like `Email` or`MovieTitle`. **Least Privilege** is reflected in the `RoleGuard` 
+service, restricting backend logic based on user roles, and in use cases tied to specific actors (e.g., only support can process refunds). 
+The system embraces **Open Design** — JWT, RBAC, and authorization mechanisms are explicitly modeled in diagrams and thoroughly
+documented. Lastly, **Coding Best Practices** are seen in the clear separation of concerns from API to domain in the backend 
+and DDD patterns in the domain model.
 
 ### 2.5 Sequence Diagrams
 
