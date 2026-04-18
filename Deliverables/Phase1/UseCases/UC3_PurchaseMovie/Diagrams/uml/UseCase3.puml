@@ -1,0 +1,53 @@
+@startuml
+
+title "Sequence Diagram: As a Customer, I want to purchase movies"
+
+actor Customer
+participant "API Client" as API
+participant RoleGuard as RG
+participant OrderController as OC
+participant OrderService as OS
+participant OrderRepository as OR
+participant MovieRepository as MR
+
+activate Customer
+Customer -> API: Submit purchase request
+activate API
+API -> OC: POST /api/orders {movieIds, quantities, receiptName, JWT}
+activate OC
+OC -> RG: Validate role = CUSTOMER
+activate RG
+RG --> OC: Authorization result
+deactivate RG
+
+OC -> OS: Process order creation
+activate OS
+OS -> OS: Validate payload and business limits
+OS -> OS: Validate order size <= 10 movies
+OS -> OS: Validate receiptName
+OS -> MR: Check movie existence and stock
+activate MR
+MR --> OS: Return validation data
+deactivate MR
+OS -> OS: Validate sufficient stock for requested movies
+
+OS -> OR: Create order (transaction)
+activate OR
+OR --> OS: Return created order data
+deactivate OR
+
+OS -> MR: Update movie stock (transaction)
+activate MR
+MR --> OS: Confirm stock updates
+deactivate MR
+
+OS --> OC: Return operation result
+deactivate OS
+OC --> API: Return 201 Created + order summary
+deactivate OC
+
+API --> Customer: Display purchase confirmation
+deactivate API
+deactivate Customer
+
+@enduml
