@@ -1,0 +1,16 @@
+@startuml
+actor User as "Customer/Support/Admin"
+participant "API Client" as API
+participant "AuthController" as AC
+participant "AuthService" as AS
+participant "UserRepository" as UR
+
+User -> API: Enter username and password
+API -> AC: POST /login {username, password}
+AC -> AS: Validate credentials
+AS -> UR: Fetch user by username
+UR --> AS: Return user data
+AS --> AC: Generate JWT if valid
+AC --> API: Return JWT or error
+API --> User: Display login success or failure
+@enduml

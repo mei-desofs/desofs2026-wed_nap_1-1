@@ -1,15 +1,15 @@
-# Use Case 6: Handle refund request
+# Use Case 2: View Available Movies
 
 ## 1. Description
 ### 1.1 Objective
-This Use Case allows users with the **Support** or **Admin** role to retrieve and view a list of all movie refund requests submitted by customers. This ensures that refund processing is based on consistent and traceable data, providing visibility into pending requests.
+This Use Case allows any user to retrieve and view the list of available movies in the eMovieShop catalog. 
+It provides customers with visibility into what movies are currently on offer so they can make purchasing decisions.
 
 ### 1.2 Actors
-* **Support Staff:** Primary actor responsible for monitoring and assisting with refund-related issues.
-* **Admin:** Responsible for overall system auditing and transaction management.
+* **Customer:** Primary actor browsing the movie catalog.
 
 ### 1.3 Use/Abuse Case Diagram
-This diagram illustrates the legitimate path for retrieving the refund list versus potential abuse scenarios, such as unprivileged users attempting to access sensitive transaction data.
+This diagram illustrates the legitimate path for retrieving the m list versus potential abuse scenarios, such as unprivileged users attempting to access sensitive transaction data.
 
 ![Use and Abuse Cases - UC5](./Diagrams/images/UseAbuseCase5.svg)
 
@@ -46,12 +46,12 @@ This diagram shows the internal backend logic and the sequence of calls between 
 Specific threats to the process of viewing refunds were evaluated using STRIDE and Attack Trees.
 
 ### 3.1 STRIDE Table
-| Threat | Category | Mitigation Strategy |
-| :--- | :--- | :--- |
-| Unauthenticated user attempts to access the refund list | **Spoofing / Information Disclosure** | Mandatory JWT verification for the endpoint. |
-| A Customer role user attempts to call the Support-only endpoint | **Elevation of Privilege** | Server-side RBAC (Role-Based Access Control) enforcement. |
-| Attacker floods the API with list requests to cause a DoS | **Denial of Service** | Implementation of Rate Limiting middleware on the API. |
-| Sensitive refund data is intercepted during transit | **Information Disclosure** | Enforced use of TLS (HTTPS) for all API communications (ASVS 9.1.1). |
+| Threat                                                          | Category                              | Mitigation Strategy                                                  |
+|:----------------------------------------------------------------|:--------------------------------------|:---------------------------------------------------------------------|
+| Unauthenticated user attempts to access the refund list         | **Spoofing / Information Disclosure** | Mandatory JWT verification for the endpoint.                         |
+| A Customer role user attempts to call the Support-only endpoint | **Elevation of Privilege**            | Server-side RBAC (Role-Based Access Control) enforcement.            |
+| Attacker floods the API with list requests to cause a DoS       | **Denial of Service**                 | Implementation of Rate Limiting middleware on the API.               |
+| Sensitive refund data is intercepted during transit             | **Information Disclosure**            | Enforced use of TLS (HTTPS) for all API communications (ASVS 9.1.1). |
 
 ---
 

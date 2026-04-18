@@ -1,0 +1,37 @@
+@startuml
+
+title eMovieShop - View Available Movies
+
+actor Client
+participant "API Client" as APIClient
+participant MovieController as MovieController
+participant MovieService as MovieService
+participant MovieRepository as MovieRepository
+
+activate Client
+
+    Client -> APIClient: GET /movies
+    activate APIClient
+
+        APIClient -> MovieController: getAvailableMovies()
+        activate MovieController
+
+            MovieController -> MovieService: getAvailableMovies()
+            activate MovieService
+
+                MovieService -> MovieRepository: findAvailableMovies()
+                activate MovieRepository
+
+                    MovieRepository --> MovieService: Return movie list
+                deactivate MovieRepository
+                MovieService --> MovieController: Return movie catalog
+            deactivate MovieService
+
+            MovieController --> APIClient: Return movie catalog
+        deactivate MovieController
+
+        APIClient --> Client: JSON Response (movie catalog)
+    deactivate APIClient
+deactivate Client
+
+@enduml
