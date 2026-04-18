@@ -1,0 +1,61 @@
+@startuml
+
+title eMovieShop - Manage Movie Catalog
+
+actor Admin
+participant "API Client" as APIClient
+participant MovieController as MovieController
+participant MovieService as MovieService
+participant MovieRepository as MovieRepository
+
+activate Admin
+
+    Admin -> APIClient: GET /movies
+    activate APIClient
+
+        APIClient -> MovieController: getMovieCatalog()
+        activate MovieController
+
+            MovieController -> MovieService: getMovieCatalog()
+            activate MovieService
+
+                MovieService -> MovieRepository: findAllMovies()
+                activate MovieRepository
+
+                    MovieRepository --> MovieService: Return movie data
+                deactivate MovieRepository
+                MovieService --> MovieController: Return movie list
+            deactivate MovieService
+
+            MovieController --> APIClient: Return movie catalog
+        deactivate MovieController
+
+        APIClient --> Admin: JSON Response (movie catalog)
+    deactivate APIClient
+
+    Admin -> APIClient: POST/PUT/DELETE /movies/{id}
+    activate APIClient
+
+        APIClient -> MovieController: manageMovie()
+        activate MovieController
+
+            MovieController -> MovieService: validateAndApplyChanges()
+            activate MovieService
+
+                MovieService -> MovieRepository: save/update/deleteMovie()
+                activate MovieRepository
+
+                    MovieRepository --> MovieService: Confirm operation
+                deactivate MovieRepository
+                MovieService --> MovieController: Return success/failure
+            deactivate MovieService
+
+            MovieController --> APIClient: Return operation result
+        deactivate MovieController
+
+        APIClient --> Admin: JSON Response (success/failure)
+    deactivate APIClient
+
+deactivate Admin
+
+@enduml

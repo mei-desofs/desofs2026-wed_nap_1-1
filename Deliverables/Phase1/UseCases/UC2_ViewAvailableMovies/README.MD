@@ -11,7 +11,7 @@ It provides customers with visibility into what movies are currently on offer so
 ### 1.3 Use/Abuse Case Diagram
 This diagram illustrates the legitimate path for retrieving the m list versus potential abuse scenarios, such as unprivileged users attempting to access sensitive transaction data.
 
-![Use and Abuse Cases - UC5](./Diagrams/images/UseAbuseCase5.svg)
+![Use and Abuse Cases - UC5](./diagrams/images/UseAbuseCase2.svg)
 
 ### 1.4 Pre-conditions
 * The actor must be successfully authenticated.
