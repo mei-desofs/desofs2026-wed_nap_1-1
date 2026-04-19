@@ -105,28 +105,28 @@ and DDD patterns in the domain model.
 
 **UC1:**
 
-![Use Case 1 Sequence Diagram](../UseCases/UC1_Login/diagrams/images/SequenceDiagram1.svg)
+![Use Case 1 Sequence Diagram](../UseCases/UC1_Login/diagrams/images/UseCase1.png)
 
 **UC2:**
 
-![Use Case 2 Sequence Diagram](../UseCases/UC2_ViewAvailableMovies/diagrams/images/SequenceDiagram2.svg)
+![Use Case 2 Sequence Diagram](../UseCases/UC2_BrowseAvailableMovies/diagrams/images/UseCase2.png)
 
 **UC3:**
 
-![Use Case 3 Sequence Diagram](../UseCases/UC3_Login/diagrams/images/SequenceDiagram3.svg)
+![Use Case 3 Sequence Diagram](../UseCases/UC3_PurchaseMovie/diagrams/images/UseCase3.png)
 
 **UC4:**
 
-![Use Case 4 Sequence Diagram](../UseCases/UC4_Login/diagrams/images/SequenceDiagram4.svg)
+![Use Case 4 Sequence Diagram](../UseCases/UC4_Login/diagrams/images/UseCase4.png)
 
 **UC5:**
-![Use Case 5 Sequence Diagram](../UseCases/UC5_ViewRequestRefunds/diagrams/images/SequenceDiagram5.svg)
+![Use Case 5 Sequence Diagram](../UseCases/UC5_ViewRequestRefunds/diagrams/images/UseCase5.png)
 
 **UC6:**
-![Use Case 6 Sequence Diagram](../UseCases/UC6_HandleRefundRequest/diagrams/images/SequenceDiagram6.svg)
+![Use Case 6 Sequence Diagram](../UseCases/UC6_HandleRefundRequest/diagrams/images/UseCase6.png)
 
 **UC7:**
-![Use Case 7 Sequence Diagram](../UseCases/UC7_Login/diagrams/images/SequenceDiagram7.svg)
+![Use Case 7 Sequence Diagram](../UseCases/UC7_ManageMovieCatalog/diagrams/images/UseCase7.png)
 
 **UC8:**
-![Use Case 8 Sequence Diagram](../UseCases/UC8_Login/diagrams/images/SequenceDiagram8.svg)
+![Use Case 8 Sequence Diagram](../UseCases/UC8_Login/diagrams/images/UseCase8.png)

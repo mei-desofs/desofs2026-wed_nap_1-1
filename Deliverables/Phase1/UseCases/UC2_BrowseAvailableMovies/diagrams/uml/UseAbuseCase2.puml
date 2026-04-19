@@ -1,0 +1,88 @@
+@startuml
+left to right direction
+skinparam linetype ortho
+skinparam shadowing false
+skinparam backgroundColor #FAFAFA
+
+skinparam usecase {
+  BackgroundColor #FFFFFF
+  BorderColor #888888
+  FontColor #222222
+}
+skinparam usecase {
+  BackgroundColor<<Threat>> #FFCDD2
+  FontColor<<Threat>> #B71C1C
+  BorderColor<<Threat>> #EF9A9A
+}
+skinparam usecase {
+  BackgroundColor<<Mitigation>> #C8E6C9
+  FontColor<<Mitigation>> #1B5E20
+  BorderColor<<Mitigation>> #A5D6A7
+}
+skinparam usecase {
+  BackgroundColor<<Vulnerability>> #ECEFF1
+  FontColor<<Vulnerability>> #37474F
+  BorderColor<<Vulnerability>> #B0BEC5
+}
+
+skinparam actor {
+  BackgroundColor #FFFFFF
+  BorderColor #888888
+}
+
+title UC2 — Browse Available Movies: Use/Abuse Case Diagram
+
+actor Customer
+actor Attacker #FF8A80
+
+' --- LEGITIMATE FLOW
+rectangle "Browse Available Movies Flow" {
+  Customer --> (Browse available movies)
+  (Browse available movies) --> (Send GET /api/movies)
+  (Send GET /api/movies) --> (AuthMiddleware validates JWT) <<Mitigation>>
+  (AuthMiddleware validates JWT) --> (MovieService fetches catalog)
+  (MovieService fetches catalog) --> (Return movie list to client)
+}
+
+' --- VULNERABILITIES
+(Send GET /api/movies) <<Vulnerability>>
+(AuthMiddleware validates JWT) <<Vulnerability>>
+(MovieService fetches catalog) <<Vulnerability>>
+
+' --- PAIR 1: Unauthenticated access
+(AuthMiddleware validates JWT) <-- (Unauthenticated access) #red : <<Threatens>>
+(Unauthenticated access) <<Threat>>
+(Unauthenticated access) <-- Attacker
+(Reject requests without valid JWT) <<Mitigation>>
+(Reject requests without valid JWT) --> (Unauthenticated access) #green : <<Mitigates>>
+
+' --- PAIR 2: Forged or stolen JWT
+(AuthMiddleware validates JWT) <-- (Forged or stolen JWT) #red : <<Threatens>>
+(Forged or stolen JWT) <<Threat>>
+(Forged or stolen JWT) <-- Attacker
+(JWT signature validation - JWKS RS256) <<Mitigation>>
+(JWT signature validation - JWKS RS256) --> (Forged or stolen JWT) #green : <<Mitigates>>
+
+' --- PAIR 3: JWT intercepted in transit
+(Send GET /api/movies) <-- (JWT intercepted in transit) #red : <<Threatens>>
+(JWT intercepted in transit) <<Threat>>
+(JWT intercepted in transit) <----- Attacker
+(TLS / HTTPS enforcement) <<Mitigation>>
+(TLS / HTTPS enforcement) --> (JWT intercepted in transit) #green : <<Mitigates>>
+
+' --- PAIR 4: DoS / catalog scraping
+(Send GET /api/movies) <-- (DoS / catalog scraping) #red : <<Threatens>>
+(DoS / catalog scraping) <<Threat>>
+(DoS / catalog scraping) <-- Attacker
+(Rate limiting middleware) <<Mitigation>>
+(Rate limiting middleware) --> (DoS / catalog scraping) #green : <<Mitigates>>
+
+' --- PAIR 5: SQL injection
+(MovieService fetches catalog) <-- (SQL injection via query params) #red : <<Threatens>>
+(SQL injection via query params) <<Threat>>
+(SQL injection via query params) <-- Attacker
+(Server-side query param validation) <<Mitigation>>
+(Server-side query param validation) --> (SQL injection via query params) #green : <<Mitigates>>
+
+
+@enduml

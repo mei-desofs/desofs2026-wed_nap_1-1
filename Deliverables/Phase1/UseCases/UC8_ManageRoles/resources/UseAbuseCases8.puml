@@ -1,0 +1,106 @@
+@startuml
+left to right direction
+skinparam linetype ortho
+skinparam shadowing false
+skinparam backgroundColor #F9F9F9
+
+skinparam usecase {
+  BackgroundColor White
+  BorderColor Black
+  FontColor Black
+}
+
+skinparam usecase {
+  BackgroundColor<<Threat>> Black
+  FontColor<<Threat>> White
+  BorderColor<<Threat>> Black
+}
+
+skinparam usecase {
+  BackgroundColor<<Mitigation>> #34C759
+  FontColor<<Mitigation>> White
+  BorderColor<<Mitigation>> #248A3D
+}
+
+skinparam usecase {
+  BackgroundColor<<External>> #5AC8FA
+  FontColor<<External>> White
+  BorderColor<<External>> #3A99D9
+}
+
+skinparam usecase {
+  BackgroundColor<<Vulnerability>> #B0B0B0
+  FontColor<<Vulnerability>> Black
+  BorderColor<<Vulnerability>> #808080
+}
+
+actor Admin
+actor Attacker #red
+
+rectangle "Manage User Roles" {
+  Admin --> (Access user role management)
+  (Access user role management) --> (Check Admin role via RoleGuard) <<Mitigation>>
+  (Check Admin role via RoleGuard) --> (Access granted) <<Mitigation>>
+  (Access granted) --> (Fetch user list)
+  (Fetch user list) --> (Display user list)
+  Admin --> (Assign/Remove roles)
+  (Assign/Remove roles) --> (Check Admin role via RoleGuard) <<Mitigation>>
+  (Check Admin role via RoleGuard) --> (Access granted) <<Mitigation>>
+  (Access granted) --> (Process role modification)
+  (Process role modification) --> (Update user roles in database)
+  (Update user roles in database) --> (Return success/failure)
+  (Return success/failure) --> (Display success/failure message)
+}
+
+' --- VULNERABILITIES (Setting up skinparam)
+(Update user roles in database) <<Vulnerability>>
+(Access user role management) <<Vulnerability>>
+(Check Admin role via RoleGuard) <<Vulnerability>>
+(Fetch user list) <<Vulnerability>>
+(Modify user roles) <<Vulnerability>>
+(Assign/Remove roles) <<Vulnerability>>
+
+' --- THREATS (Setting up skinparam)
+(Unauthorized access attempt) <<Threat>>
+(Bypass RoleGuard) <<Threat>>
+(Privilege escalation) <<Threat>>
+(SQL Injection) <<Threat>>
+(Data leakage of user roles) <<Threat>>
+(Tampering with roles) <<Threat>>
+(Exploit misconfigured RoleGuard) <<Threat>>
+(Malicious role assignment) <<Threat>>
+(Expose sensitive user data) <<Threat>>
+
+' --- THREATS
+(Access user role management) <-- (Unauthorized access attempt) #red : <<Threatens>>
+(Check Admin role via RoleGuard) <-- (Bypass RoleGuard) #red : <<Threatens>>
+(Fetch user list) <-- (Data leakage of user roles) #red : <<Threatens>>
+(Assign/Remove roles) <-- (Privilege escalation) #red : <<Threatens>>
+(Update user roles in database) <-- (Tampering with roles) #red : <<Threatens>>
+
+' --- THREAT DETAILS (from tree)
+(Unauthorized access attempt) <-- Attacker
+(Bypass RoleGuard) <-- (Exploit misconfigured RoleGuard) <<Threat>>
+(Exploit misconfigured RoleGuard) <-- Attacker
+(Data leakage of user roles) <-- (Expose sensitive user data) <<Threat>>
+(Expose sensitive user data) <-- Attacker
+(Privilege escalation) <-- (Malicious role assignment) <<Threat>>
+(Malicious role assignment) <-- Attacker
+(Tampering with roles) <-- (SQL Injection) <<Threat>>
+(SQL Injection) <-- Attacker
+
+' --- MITIGATIONS
+(Access user role management) --> (Enforce RBAC via RoleGuard) <<Mitigation>>
+(Check Admin role via RoleGuard) --> (Validate JWT and role claims) <<Mitigation>>
+(Fetch user list) --> (Filter sensitive data in API response) <<Mitigation>>
+(Assign/Remove roles) --> (Log role changes for audit) <<Mitigation>>
+(Update user roles in database) --> (Sanitize input and use ORM) <<Mitigation>>
+
+' --- Mitigates arrows
+(Enforce RBAC via RoleGuard) --> (Unauthorized access attempt) #green : <<Mitigates>>
+(Validate JWT and role claims) --> (Bypass RoleGuard) #green : <<Mitigates>>
+(Filter sensitive data in API response) --> (Data leakage of user roles) #green : <<Mitigates>>
+(Log role changes for audit) --> (Privilege escalation) #green : <<Mitigates>>
+(Sanitize input and use ORM) --> (Tampering with roles) #green : <<Mitigates>>
+
+@enduml
