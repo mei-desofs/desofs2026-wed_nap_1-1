@@ -231,6 +231,40 @@ ___
 
 #### 2.2.2. Attack Trees
 
+| **Attack Tree Scenario**                   | **UC(s) Covered**    | **STRIDE Category Covered**                              |
+|--------------------------------------------|----------------------|----------------------------------------------------------|
+| 1. **Credential Access**                   | UC1 (Login)          | Spoofing, Information Disclosure                         |
+| 2. **Manipulate Refund Process**           | UC4, UC5, UC6        | Tampering, Repudiation, Elevation of Privilege           |
+| 3. **Unauthorized Admin Access**           | UC7, UC8             | Elevation of Privilege, Spoofing                         |
+| 4. **Steal/Leak Personal Data**            | UC1–UC6              | Information Disclosure, Repudiation                      |
+| 5. **Disrupt System Availability (DoS)**   | UC1–UC6              | Denial of Service                                        |
+| 6. **Exploit Role Change Mechanism**       | UC8                  | Tampering, Spoofing, Elevation of Privilege, Repudiation |
+
+
+* **Attack Tree - Unauthorized Access**
+
+![Attack Tree - Unauthorized Access](resources/Attack%20Tree-1.svg)
+
+* **Attack Tree - Manipulate Refund Process**
+
+![Attack Tree-2.svg](resources/Attack%20Tree-2.svg)
+
+* **Attack Tree - Unauthorized Admin Access**
+
+![Attack Tree-3.svg](resources/Attack%20Tree-3.svg)
+
+* **Attack Tree - Steal/Leak Personal Data**
+
+![Attack Tree-4.svg](resources/Attack%20Tree-4.svg)
+
+* **Attack Tree - Disrupt System Availability (DoS)**
+
+![Attack Tree-5.svg](resources/Attack%20Tree-5.svg)
+
+* **Attack Tree - Exploit Role Change Mechanism**
+
+![Attack Tree-6.svg](resources/Attack%20Tree-6.svg)
+
 ___
 
 #### 2.2.3. Use/Abuse Cases
@@ -239,7 +273,7 @@ The Use/Abuse Cases are shown in the individuals reports of each use case.
 * UC1: [Use/Abuse Case UC1](../UseCases/UC1_Login/README.MD)
 * UC2: [Use/Abuse Case UC2](../UseCases/UC2_ViewAvailableMovies/README.MD)
 * UC3: [Use/Abuse Case UC3](../UseCases/UC3_PurchaseMovie/README.md)
-* UC4:
+* UC4: [Use/Abuse Case UC4](../UseCases/UC4_RequestRefund/README.md)
 * UC5: [Use/Abuse Case UC5](../UseCases/UC5_ViewRequestRefunds/README.md)
 * UC6: [Use/Abuse Case UC6](../UseCases/UC6_HandleRefundRequest/README.md)
 * UC7: [Use/Abuse Case UC7](../UseCases/UC7_ManageMovieCatalog/README.MD)

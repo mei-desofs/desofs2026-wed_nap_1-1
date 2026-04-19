@@ -92,3 +92,9 @@ Based on the ASVS checklist, the following requirements are enforced for the Man
 ---
 
 ## 5. Secure Development Requirements
+
+- **Code Review:** Any changes to the `UserService` role assignment logic, the `RoleGuard` configuration, or the `/users/{id}/roles` endpoints require a security-focused peer review, particularly regarding how role claims are validated and how the principle of least privilege is enforced.
+
+- **Automated Testing:** Unit and integration tests must cover scenarios of unauthorized role modification (e.g., a Customer or Support actor attempting to call role management endpoints), invalid role values, and attempts to assign roles not defined in the system, ensuring the backend returns `403 Forbidden` without leaking role or user information in error messages.
+
+- **Audit Log Integrity:** All role modification events must be logged with sufficient metadata. Log entries must be immutable and stored in a location not accessible to the application itself, to prevent tampering or suppression of evidence.
