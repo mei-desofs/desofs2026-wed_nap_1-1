@@ -1,6 +1,9 @@
 # Threat Model
+___
 
-## 1. Threat Model Information
+## 1. Decompose the Application
+
+### 1.1 Threat Model Information
 
 * **Application Name**: eMovie Shop
 
@@ -14,9 +17,9 @@
 
 * **Reviewer**: Professor Paulo Baltarejo Sousa and Professor Nuno Pereira
 
+___
 
-
-## 2. External Dependencies
+### 1.2. External Dependencies
 
 | ID | Description                                                                                                                                                                                                                                                                                                                     |
 |----|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -27,7 +30,9 @@
 | 5  | The system manages sensitive data such as **user roles, purchase history, and refund requests**. This makes **secure database access and audit logging** essential for accountability and protection against data tampering.                                                                                                    |
 | 6  | **Auth0** is used as an external Identity Provider for user authentication, and JWT issuance. The system depends on Auth0 for secure token generation and validation (e.g., via JWKS). Proper configuration of roles, claims, and token verification is required to prevent authentication and authorization flaws.             |
 
-## 3. Entry Points
+___
+
+### 1.3. Entry Points
 
 | ID       | Name                  | Description                                                                                                         | Trust Levels                                                  |
 |----------|-----------------------|---------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------|
@@ -45,7 +50,9 @@
 | *4.1*    | Manage Movie Catalog  | Add/edit/remove movies and update prices or stock.                                                                  | (6) Admin                                                     |
 | *4.2*    | Manage User Roles     | Assign support/admin roles to registered users.                                                                     | (6) Admin                                                     |
 
-## 4. Exit Points
+___
+
+### 1.4. Exit Points
 
 | ID      | Name                         | Description                                                                                                      | Trust Levels                                                 |
 |---------|------------------------------|------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------|
@@ -64,7 +71,9 @@
 | *4.1*   | Catalog Update Result        | Confirmation/error after adding/editing/deleting a movie in the catalog.                                         | (6) Admin                                                    |
 | *4.2*   | Role Assignment Feedback     | Confirmation or errors when assigning roles to users.                                                            | (6) Admin                                                    |
 
-## 5. Assets
+___
+
+### 1.5. Assets
 
 | ID    | Name                                      | Description                                                                                                                                                                                                                         | Trust Levels                                                                        |
 |-------|-------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------|
@@ -105,7 +114,9 @@
 | 8     | External Services                         | Third-party integrations.                                                                                                                                                                                                           |                                                                                     |
 | 8.1   | Identity Provider (Auth0)                 | External authentication and authorization service responsible for user registration, login, and JWT issuance. Must ensure secure token issuance, signature validation (e.g., JWKS), and correct configuration of roles and claims.. | (1) Guest, (2) Invalid Credentials, (3) Authenticated User                          |
 
-## 6. Trust Levels
+___
+
+### 1.6. Trust Levels
 
 | ID       | Name                         | Description                                                                                                              |
 |----------|------------------------------|--------------------------------------------------------------------------------------------------------------------------|
@@ -120,9 +131,11 @@
 | **9**    | Database Read User           | A user or service with read-only access to the database (e.g., analytics or report generation).                          |
 | **10**   | Database Read & Write User   | A user or service with privileges to query and modify records, but not manage the database schema.                       |
 
-## 7. Data Flow Diagrams
+___
 
-### 7.1. DFD - Level 0
+### 1.7. Data Flow Diagrams
+
+#### 1.7.1. DFD - Level 0
 
 ![DFD-Level0.svg](resources/DFD-Level0.svg)
 
@@ -131,14 +144,202 @@ This Level 0 Data Flow Diagram illustrates the major interactions between extern
 Each user interacts with the system through distinct data flows that correspond to specific business actions, such as browsing movies, purchasing, handling refunds, or managing roles and movie catalog entries.
 This diagram establishes the system boundary and highlights the trust relationships that will be explored further in the Level 1 DFD and threat analysis.
 
-### 7.2. DFD - Level 1
+#### 1.7.2. DFD - Level 1
 
 ![DFD-Level1.svg](resources/DFD-Level1.svg)
 
 This Level 1 DFD decomposes the internal structure of the eMovie Shop system, showing detailed flows between backend, database and external services.
 
-- **Users** (Customer, Support, Admin) interact directly with the **Backend** via HTTPS using tools such as Postman. All operations (e.g., login, purchases, refunds) are performed through secured API calls with JWT Bearer tokens.
+- **Users** (Customer, Support, Admin) interact directly with the **Backend** via HTTPS using tools such as Postman. All operations (e.g. , purchases, refunds) are performed through secured API calls with JWT Bearer tokens.
 - The **Backend** processes logic and persists data into a **MySQL database**, handling movie orders, refunds, and user management.
+- On authentication-related actions (e.g., user login), the backend communicates with an external Authentication Service (e.g., Auth0). User credentials are securely forwarded to the external service, which validates them and returns an access token (JWT).
+   * This interaction is represented as a bidirectional data flow between the backend and the external authentication provider.
 - Red dashed lines indicate internal **trust boundaries**, while gray dashed lines represent **external communications** beyond system control.
 
 This decomposition helps clarify integration points, potential exit paths, and responsibilities of each core component — which is especially useful for threat modeling and secure architecture analysis.
+
+___
+
+## 2. Determining and Ranking Threats
+
+### 2.1. Threat Categorization
+
+eMovie Shop follows an attacker-centric approach to threat modeling. Threats are categorized using the **STRIDE** methodology to ensure coverage across security properties such as authentication, integrity, confidentiality, and availability.
+
+| STRIDE Category              | Violated Property   | Description                                         |
+|------------------------------|---------------------|-----------------------------------------------------|
+| **Spoofing**                 | Authentication      | Pretending to be another user or component          |
+| **Tampering**                | Integrity           | Unauthorized modification of data or code           |
+| **Repudiation**              | Non-repudiation     | Denial of an action due to a lack of accountability |
+| **Information Disclosure**   | Confidentiality     | Exposure of sensitive data to unauthorized parties  |
+| **Denial of Service**        | Availability        | Resource exhaustion or service disruption           |
+| **Elevation of Privilege**   | Authorization       | Unauthorized permission escalation                  |
+
+___
+
+### 2.2. Threat Analysis
+
+#### 2.2.1. STRIDE
+
+**API Clients → Backend (User / Backend Boundary)**
+
+| ID     | Category                   | Description                                                                                                                                                     |
+|--------|----------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| U1     | Spoofing                   | An attacker submits forged or stolen JWTs in the `Authorization` header to impersonate a legitimate user on any protected endpoint.                             |
+| U2     | Spoofing                   | An attacker performs brute-force or credential stuffing against `POST /auth/login`, attempting to obtain valid credentials.                                     |
+| U3     | Tampering                  | A malicious actor modifies the request body in transit (e.g., altering a refund request payload) if TLS is not enforced end-to-end.                             |
+| U4     | Information Disclosure     | Credentials or JWT tokens are intercepted via network sniffing if the connection between the API client and the backend is not protected by TLS.                |
+| U5     | Denial of Service          | An attacker floods the backend with repeated requests to resource-intensive endpoints (e.g., `GET /movies`, `POST /auth/login`), causing service degradation.   |
+| U6     | Elevation of Privilege     | A Customer role user manually crafts requests to support or admin endpoints (e.g., `GET /refunds`, `PATCH /movies/:id`) bypassing client-side restrictions.     |
+
+**Backend (Node.js API)**
+
+| ID     | Category                 | Description                                                                                                                                                                   |
+|--------|--------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| B1     | Spoofing                 | The backend accepts manipulated or weakly validated JWTs due to improper signature verification, allowing an attacker to forge identity claims.                               |
+| B2     | Spoofing                 | The Auth0 `client_secret` is exposed (e.g., hardcoded in source control), allowing an attacker to forge token requests directly against Auth0.                                |
+| B3     | Tampering                | Missing input sanitization in fields such as refund reasons or movie descriptions allows stored content injection that corrupts data integrity.                               |
+| B4     | Tampering                | CORS misconfiguration or improper `Authorization` header handling allows cross-origin requests to abuse public or semi-protected endpoints.                                   |
+| B5     | Repudiation              | Absence of audit logging for sensitive operations (refund approval/rejection, role changes, movie catalog edits) makes it impossible to attribute actions to specific actors. |
+| B6     | Information Disclosure   | Overly verbose error messages or unfiltered API responses expose internal details (e.g., stack traces, user roles, internal IDs) to unauthorized parties.                     |
+| B7     | Denial of Service        | Lack of rate limiting on the login endpoint or refund submission endpoint allows automated abuse that saturates the backend API.                                              |
+| B8     | Elevation of Privilege   | A route lacks a `RoleGuard` or the guard is misconfigured, allowing a lower-privilege actor to invoke operations outside their permitted scope.                               |
+
+**Backend → Auth0 (Backend / External Authentication Service Boundary)**
+
+| ID     | Category                 | Description                                                                                                                                                                           |
+|--------|--------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| A1     | Spoofing                 | An attacker intercepts the ROPC token request between the backend and Auth0 (e.g., via a compromised network path) and replays captured credentials.                                  |
+| A2     | Spoofing                 | Auth0 tenant misconfiguration (e.g., ROPC grant disabled, wrong audience) causes authentication failures that an attacker could exploit to force fallback mechanisms.                 |
+| A3     | Tampering                | The `client_id`, `client_secret`, or `audience` values are tampered with in the backend environment, redirecting authentication requests to an attacker-controlled identity provider. |
+| A4     | Information Disclosure   | The ROPC token request payload containing `username` and `password` is exposed if the backend-to-Auth0 communication is not enforced over TLS.                                        |
+| A5     | Denial of Service        | An attacker triggers repeated failed authentication attempts causing Auth0's rate limiter or anomaly detection to lock out legitimate users.                                          |
+| A6     | Elevation of Privilege   | A leaked Auth0 `client_secret` allows an attacker to obtain tokens for arbitrary users directly from Auth0, bypassing the backend entirely.                                           |
+
+**Backend → Database (Backend / Database Boundary)**
+
+| ID     | Category                 | Description                                                                                                                                                                       |
+|--------|--------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| D1     | Spoofing                 | Backend services running with overly permissive database accounts can issue unauthorized queries, effectively impersonating a higher-privilege database role.                     |
+| D2     | Tampering                | SQL injection via unsanitized parameters in endpoints such as refund submission or movie catalog management alters or deletes critical records.                                   |
+| D3     | Tampering                | A compromised backend service with write access beyond its scope modifies records (e.g., order status, refund decisions) without proper authorization checks.                     |
+| D4     | Repudiation              | Absence of database-level audit logging makes it impossible to trace unauthorized or malicious inserts, updates, or deletions to a specific actor or session.                     |
+| D5     | Information Disclosure   | Insufficient row-level access controls in database queries expose purchase records, refund data, or user information belonging to other customers.                                |
+| D6     | Denial of Service        | Unbounded or unpaginated queries (e.g., fetching the full movie catalog or all refund records without limits) saturate database resources and degrade overall system performance. |
+
+___
+
+#### 2.2.2. Attack Trees
+
+___
+
+#### 2.2.3. Use/Abuse Cases
+
+The Use/Abuse Cases are shown in the individuals reports of each use case.
+* UC1: [Use/Abuse Case UC1](../UseCases/UC1_Login/README.MD)
+* UC2: [Use/Abuse Case UC2](../UseCases/UC2_ViewAvailableMovies/README.MD)
+* UC3: [Use/Abuse Case UC3](../UseCases/UC3_PurchaseMovie/README.md)
+* UC4:
+* UC5: [Use/Abuse Case UC5](../UseCases/UC5_ViewRequestRefunds/README.md)
+* UC6: [Use/Abuse Case UC6](../UseCases/UC6_HandleRefundRequest/README.md)
+* UC7: [Use/Abuse Case UC7](../UseCases/UC7_ManageMovieCatalog/README.MD)
+* UC8: [Use/Abuse Case UC8](../UseCases/UC8_ManageRoles/README.md)
+
+___
+
+#### 2.2.4. Other threats (Threat catalogs)
+
+___
+
+### 2.3. Ranking of Threats
+
+To assess and prioritize the identified threats in eMovie Shop, we apply a **Qualitative Risk Model** based on two key dimensions:
+
+- **Cost (Impact):** The severity of the consequence if the threat is exploited.
+- **Probability (Likelihood):** The estimated frequency or feasibility of the threat occurring.
+
+Each threat is assigned a score from 1 (lowest) to 5 (highest) in both dimensions. The **risk value** is calculated by multiplying the cost and probability:
+
+> **Risk = Cost × Probability**
+
+| Cost           | Value   | Description                                                             |
+|----------------|---------|-------------------------------------------------------------------------|
+| Negligible     | 1       | Minor issue with no impact on users or business.                        |
+| Minor          | 2       | Temporary inconvenience, affects only non-critical functionality.       |
+| Moderate       | 3       | Breach of limited data or functionality, requires attention.            |
+| Major          | 4       | Exposes important data or system features, damages trust or operations. |
+| Catastrophic   | 5       | Systemic failure, major data leak, or critical business impact.         |
+
+| Probability     | Value   | Description                                                                |
+|-----------------|---------|----------------------------------------------------------------------------|
+| Very Unlikely   | 1       | Highly unlikely or rare, requires advanced tools or physical access.       |
+| Unlikely        | 2       | Possible under certain conditions, low incentive or difficulty exploiting. |
+| Possible        | 3       | Realistic threat, mitigated by existing controls, but still exploitable.   |
+| Likely          | 4       | Frequently seen in similar systems, moderate technical skill required.     |
+| Very Likely     | 5       | Actively exploited in the wild or trivially exploitable in current setup.  |
+
+Based on the qualitative model, the following risk scores have been calculated for the identified threats in eMovie Shop:
+
+**API Clients → Backend (User / Backend Boundary)**
+
+| ID    | Threat                                        | Category                 | Cost   | Probability   | Risk   |
+|-------|-----------------------------------------------|--------------------------|--------|---------------|--------|
+| U1    | Forged/stolen JWT used to impersonate user    | Spoofing                 | 4      | 3             | 12     |
+| U2    | Brute-force / credential stuffing on login    | Spoofing                 | 4      | 4             | 16     |
+| U3    | Request body tampered in transit              | Tampering                | 3      | 2             | 6      |
+| U4    | Credentials/JWT intercepted via sniffing      | Information Disclosure   | 4      | 2             | 8      |
+| U5    | Endpoint flooding causing DoS                 | Denial of Service        | 3      | 4             | 12     |
+| U6    | Customer crafts requests to admin endpoints   | Elevation of Privilege   | 4      | 3             | 12     |
+
+**Backend (Node.js API)**
+
+| ID    | Threat                                             | Category                 | Cost   | Probability   | Risk   |
+|-------|----------------------------------------------------|--------------------------|--------|---------------|--------|
+| B1    | Forged JWT accepted due to weak validation         | Spoofing                 | 5      | 2             | 10     |
+| B2    | Auth0 client_secret exposed in source control      | Spoofing                 | 5      | 3             | 15     |
+| B3    | Missing input sanitization allows data injection   | Tampering                | 3      | 3             | 9      |
+| B4    | CORS misconfiguration abuses endpoints             | Tampering                | 3      | 2             | 6      |
+| B5    | No audit log for sensitive operations              | Repudiation              | 4      | 3             | 12     |
+| B6    | Verbose errors expose internal details             | Information Disclosure   | 3      | 4             | 12     |
+| B7    | No rate limiting on login/refund endpoints         | Denial of Service        | 3      | 4             | 12     |
+| B8    | Missing/misconfigured RoleGuard on route           | Elevation of Privilege   | 5      | 3             | 15     |
+
+**Backend → Auth0 (External Authentication Service Boundary)**
+
+| ID    | Threat                                               | Category                | Cost  | Probability   | Risk   |
+|-------|------------------------------------------------------|-------------------------|-------|---------------|--------|
+| A1    | ROPC request intercepted and credentials replayed    | Spoofing                | 4     | 2             | 8      |
+| A2    | Auth0 tenant misconfiguration exploited              | Spoofing                | 4     | 2             | 8      |
+| A3    | client_id/secret tampered to redirect to rogue IdP   | Tampering               | 5     | 1             | 5      |
+| A4    | ROPC payload exposed if TLS not enforced to Auth0    | Information Disclosure  | 4     | 2             | 8      |
+| A5    | Repeated failures trigger Auth0 lockout of users     | Denial of Service       | 3     | 3             | 9      |
+| A6    | Leaked client_secret allows direct Auth0 token req   | Elevation of Privilege  | 5     | 2             | 10     |
+
+**Backend → Database (Backend / Database Boundary)**
+
+| ID    | Threat                                               | Category                 | Cost   | Probability   | Risk   |
+|-------|------------------------------------------------------|--------------------------|--------|---------------|--------|
+| D1    | Overpermissive DB account impersonates higher role   | Spoofing                 | 4      | 2             | 8      |
+| D2    | SQL injection via unsanitized parameters             | Tampering                | 5      | 3             | 15     |
+| D3    | Compromised backend modifies records out of scope    | Tampering                | 4      | 2             | 8      |
+| D4    | No DB audit log, actions untraceable                 | Repudiation              | 4      | 3             | 12     |
+| D5    | Row-level controls missing, data cross-exposure      | Information Disclosure   | 4      | 3             | 12     |
+| D6    | Unbounded queries saturate database resources        | Denial of Service        | 3      | 3             | 9      |
+
+___
+
+## 3. Determining Countermeasures and Mitigation
+
+### 3.1. STRIDE Mitigation & Countermeasures Techniques
+
+___
+
+### 3.2. Security Test Planning
+
+___
+
+### 3.3. Threat Profile
+
+___
+
+## 4. ASVS Cheklist
