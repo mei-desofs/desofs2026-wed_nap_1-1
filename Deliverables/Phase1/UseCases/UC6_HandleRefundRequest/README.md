@@ -51,7 +51,7 @@ Specific threats to the refund handling process were evaluated using STRIDE and 
 | :--- | :--- | :--- |
 | Attacker impersonates Support staff to approve own refund | **Spoofing** | Mandatory JWT verification and server-side role check. |
 | Malicious user modifies the refund ID in the request | **Tampering** | Validation of the refund ID against the database records before processing. |
-| Support staff denies having approved a fraudulent refund | **Non-Repudiation** | Detailed audit logging (ASVS 7.1.3) with cryptographically signed logs where applicable. |
+| Support staff denies having approved a fraudulent refund | **Non-Repudiation** | Detailed audit logging (ASVS 16.3.2) with sufficient metadata to support forensic investigation and non-repudiation. |
 | Customer tries to access the approval endpoint | **Elevation of Privilege** | RBAC enforced via `RoleGuard` at the controller level. |
 
 ---
@@ -59,11 +59,12 @@ Specific threats to the refund handling process were evaluated using STRIDE and 
 ## 4. Security Requirements (ASVS Compliance)
 Based on the ASVS checklist, the following requirements are strictly enforced for this UC:
 
-* **ASVS V8.2.1 (Authorization):** All access control is enforced at the trusted backend service layer. The server validates the JWT role and permissions for every request to the refund handling endpoint, ensuring that client-side controls cannot be bypassed.
-* **ASVS V14.2.1 (Data Protection):** Sensitive data, such as session tokens (JWT) or refund IDs, are never exposed in the URL or query string. Tokens are passed exclusively via secure HTTP headers (e.g., Authorization: Bearer).
-* **ASVS V2.3.2 (Business Logic):** The application enforces business logic limits and rules. Refund processing is restricted to specific high-privilege roles (Support/Admin) and follows sequential order validation to prevent unauthorized state transitions.
-* **ASVS V16.3.1 (Logging):** All refund decisions (approvals/rejections) are logged as security-relevant events with sufficient metadata (timestamps, source IP, actor IDs, decision rationale) to allow for forensic investigation and non-repudiation.
-* **ASVS V8.3.1 (Authorization):** Authorization decisions are made at the operation level (Controller/URI). The system ensures that the subject (Support/Admin) has the explicit permission to invoke the refund handling resource and performs atomic database transactions to prevent race conditions.
+* **ASVS V8.2.1 (Authorization: General Authorization Design):** The application ensures that function-level access to the refund handling endpoint is restricted to consumers with explicit permissions. Only users with the Support or Admin role are authorized to approve or reject refund requests, enforced at the trusted backend service layer.
+* **ASVS V14.2.1 (Data Protection: General Data Protection):** Sensitive data, such as session tokens (JWT) or refund IDs, are never exposed in the URL or query string. Tokens are passed exclusively via secure HTTP headers (e.g., Authorization: Bearer).
+* **ASVS V2.3.1 (Business Logic Security):** The application only processes refund state transitions in the expected sequential order. A refund request must be in a "Pending" state before it can be approved or rejected, preventing unauthorized or out-of-order state changes.
+* **ASVS V2.3.2 (Business Logic Security):** The application enforces business logic limits as defined in the documentation. Constraints such as restricting refund processing to high-privilege roles and enforcing atomic state updates are implemented at the service layer to prevent exploitation of business logic flaws.
+* **ASVS V16.3.2 (Security Logging: Security Events):** All refund decisions (approvals and rejections) are logged as security-relevant authorization events, including the requested resource, actor identity, decision outcome, timestamp, and source IP. This provides the metadata necessary for forensic investigation and non-repudiation.
+* **ASVS V8.3.1 (Authorization: Operation Level Authorization):** Authorization rules are enforced at a trusted service layer and do not rely on controls that an untrusted consumer could manipulate. The system validates the subject's (Support/Admin) permissions at the controller and service layers before any state change is committed to the database.
 
 ---
 
