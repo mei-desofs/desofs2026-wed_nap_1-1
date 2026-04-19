@@ -57,17 +57,18 @@ This diagram shows the internal backend logic and the sequence of calls between 
 ---
 
 ## 3. Threat Analysis
-Specific threats to the process of managing the movie catalog were evaluated using STRIDE and Attack Trees.
+Specific threats to the process of managing the movie catalog were evaluated using STRIDE and Attack Trees. Threat IDs and risk scores reference the system-wide [Threat Model](../../ThreatModel/threatModel.md).
 
 ### 3.1 STRIDE Table
-| Threat                                                                          | Category                              | Mitigation Strategy                                                                                  |
-|:--------------------------------------------------------------------------------|:--------------------------------------|:-----------------------------------------------------------------------------------------------------|
-| Unauthenticated user attempts to access or modify the movie catalog             | **Spoofing / Information Disclosure** | Mandatory JWT verification via `AuthMiddleware`; `401` returned on failure.                          |
-| Attacker uses a stolen or forged JWT to impersonate an Admin                    | **Spoofing**                          | JWT validated against Auth0 JWKS (RS256); short expiry (1h/10min inactivity).                        |
-| Non-Admin role (Customer/Support) attempts to invoke catalog mutation endpoints | **Elevation of Privilege**            | Server-side RBAC enforced by `RoleGuard`; `403` returned on role mismatch.                           |
-| Attacker submits malformed or oversized payloads to corrupt catalog data        | **Tampering**                         | Input validation at the service layer; price capped at €500, fields validated for type and length.   |
-| Attacker floods the catalog API with requests to cause a DoS                    | **Denial of Service**                 | Rate limiting middleware applied to all `/api/movies` endpoints; `429` returned on threshold breach. |
-| Movie catalog data is intercepted or tampered with during transit               | **Information Disclosure**            | Enforced use of TLS (HTTPS) for all API communications (ASVS V12.1.1).                               |
+| Threat                                                                                                       | Category                   | Mitigation Strategy                                                                                                        |
+|:-------------------------------------------------------------------------------------------------------------|:---------------------------|:---------------------------------------------------------------------------------------------------------------------------|
+| Attacker uses a forged or stolen JWT to impersonate an Admin (U1, B1 — Risk 12/10)                           | **Spoofing**               | JWT signature validated against Auth0 JWKS (RS256) on every request; Admin tokens expire after 1h/10min inactivity.        |
+| Non-Admin role (Customer/Support) crafts requests to invoke catalog mutation endpoints (U6, B8 — Risk 12/15) | **Elevation of Privilege** | `RoleGuard` enforces `Admin` role server-side on all mutation endpoints; `403` returned on any role mismatch.              |
+| Attacker submits malformed payloads to corrupt catalog data (B3 — Risk 9)                                    | **Tampering**              | Input validation at the service layer; price capped at €500, fields validated for type and length; `400` on invalid input. |
+| SQL injection via unsanitized movie fields in add/edit operations (D2 — Risk 15)                             | **Tampering**              | Parameterized queries and ORM-based repository prevent direct SQL construction from user-supplied input.                   |
+| No audit trail for catalog mutations allows Admin actions to be denied (B5, D4 — Risk 12)                    | **Repudiation**            | All catalog mutations (add/edit/delete) are logged with user ID, action type, affected movie ID, timestamp, and source IP. |
+| Attacker floods catalog API endpoints to cause DoS (U5, B7 — Risk 12)                                        | **Denial of Service**      | Rate limiting middleware applied to all `/api/movies` endpoints; `429` returned on threshold breach.                       |
+| Catalog data or mutation payloads intercepted or tampered with in transit (U3, U4 — Risk 6/8)                | **Information Disclosure** | TLS enforced for all client-to-backend communications (ASVS V12.1.1); no plaintext fallback permitted.                     |
 
 ---
 

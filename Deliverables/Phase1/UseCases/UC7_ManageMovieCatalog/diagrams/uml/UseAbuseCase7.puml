@@ -1,0 +1,105 @@
+@startuml
+left to right direction
+skinparam linetype ortho
+skinparam shadowing false
+skinparam backgroundColor #FAFAFA
+
+skinparam usecase {
+  BackgroundColor #FFFFFF
+  BorderColor #888888
+  FontColor #222222
+}
+skinparam usecase {
+  BackgroundColor<<Threat>> #FFCDD2
+  FontColor<<Threat>> #B71C1C
+  BorderColor<<Threat>> #EF9A9A
+}
+skinparam usecase {
+  BackgroundColor<<Mitigation>> #C8E6C9
+  FontColor<<Mitigation>> #1B5E20
+  BorderColor<<Mitigation>> #A5D6A7
+}
+skinparam usecase {
+  BackgroundColor<<Vulnerability>> #ECEFF1
+  FontColor<<Vulnerability>> #37474F
+  BorderColor<<Vulnerability>> #B0BEC5
+}
+
+skinparam actor {
+  BackgroundColor #FFFFFF
+  BorderColor #888888
+}
+
+title UC7 — Manage Movie Catalog: Use/Abuse Case Diagram
+
+actor Admin
+actor Attacker #FF8A80
+
+' --- LEGITIMATE FLOW
+rectangle "Manage Movie Catalog Flow" {
+  Admin --> (Manage movie catalog)
+  (Manage movie catalog) --> (Send API request)
+  (Send API request) --> (AuthMiddleware validates JWT) <<Mitigation>>
+  (AuthMiddleware validates JWT) --> (RoleGuard checks Admin role) <<Mitigation>>
+  (RoleGuard checks Admin role) --> (MovieService applies operation)
+  (MovieService applies operation) --> (MovieRepository persists changes)
+  (MovieRepository persists changes) --> (Return result to client)
+}
+
+' --- VULNERABILITIES
+(Send API request) <<Vulnerability>>
+(AuthMiddleware validates JWT) <<Vulnerability>>
+(RoleGuard checks Admin role) <<Vulnerability>>
+(MovieService applies operation) <<Vulnerability>>
+(MovieRepository persists changes) <<Vulnerability>>
+
+' --- PAIR 1: Forged or stolen JWT
+(AuthMiddleware validates JWT) <-- (Forged or stolen JWT) #red : <<Threatens>>
+(Forged or stolen JWT) <<Threat>>
+(Forged or stolen JWT) <-- Attacker
+(JWT signature validation - JWKS RS256) <<Mitigation>>
+(JWT signature validation - JWKS RS256) --> (Forged or stolen JWT) #green : <<Mitigates>>
+
+' --- PAIR 2: Privilege escalation
+(RoleGuard checks Admin role) <-- (Non-Admin role invokes mutation endpoint) #red : <<Threatens>>
+(Non-Admin role invokes mutation endpoint) <<Threat>>
+(Non-Admin role invokes mutation endpoint) <-- Attacker
+(RoleGuard Admin enforcement) <<Mitigation>>
+(RoleGuard Admin enforcement) --> (Non-Admin role invokes mutation endpoint) #green : <<Mitigates>>
+
+' --- PAIR 3: Malformed payload
+(MovieService applies operation) <-- (Malformed or oversized payload) #red : <<Threatens>>
+(Malformed or oversized payload) <<Threat>>
+(Malformed or oversized payload) <-- Attacker
+(Server-side payload validation) <<Mitigation>>
+(Server-side payload validation) --> (Malformed or oversized payload) #green : <<Mitigates>>
+
+' --- PAIR 4: SQL injection
+(MovieRepository persists changes) <-- (SQL injection via movie fields) #red : <<Threatens>>
+(SQL injection via movie fields) <<Threat>>
+(SQL injection via movie fields) <-- Attacker
+(Parameterized queries / ORM) <<Mitigation>>
+(Parameterized queries / ORM) --> (SQL injection via movie fields) #green : <<Mitigates>>
+
+' --- PAIR 5: Repudiation
+(MovieRepository persists changes) <-- (Admin denies catalog mutation) #red : <<Threatens>>
+(Admin denies catalog mutation) <<Threat>>
+(Admin denies catalog mutation) <-- Attacker
+(Immutable audit log for all mutations) <<Mitigation>>
+(Immutable audit log for all mutations) --> (Admin denies catalog mutation) #green : <<Mitigates>>
+
+' --- PAIR 6: DoS
+(Send API request) <-- (DoS via endpoint flooding) #red : <<Threatens>>
+(DoS via endpoint flooding) <<Threat>>
+(DoS via endpoint flooding) <-- Attacker
+(Rate limiting middleware) <<Mitigation>>
+(Rate limiting middleware) --> (DoS via endpoint flooding) #green : <<Mitigates>>
+
+' --- PAIR 7: Interception in transit
+(Send API request) <-- (Payload intercepted in transit) #red : <<Threatens>>
+(Payload intercepted in transit) <<Threat>>
+(Payload intercepted in transit) <-- Attacker
+(TLS / HTTPS enforcement) <<Mitigation>>
+(TLS / HTTPS enforcement) --> (Payload intercepted in transit) #green : <<Mitigates>>
+
+@enduml

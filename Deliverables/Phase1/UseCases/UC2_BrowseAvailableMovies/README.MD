@@ -46,16 +46,18 @@ This diagram shows the internal backend logic and the sequence of calls between 
 ---
 
 ## 3. Threat Analysis
-Specific threats to the process of browsing available movies were evaluated using STRIDE and Attack Trees.
+Specific threats to the process of browsing available movies were evaluated using STRIDE and Attack Trees. Threat IDs and risk scores reference the system-wide [Threat Model](../../ThreatModel/threatModel.md).
 
 ### 3.1 STRIDE Table
-| Threat                                                                       | Category                                       | Mitigation Strategy                                                                        |
-|:-----------------------------------------------------------------------------|:-----------------------------------------------|:-------------------------------------------------------------------------------------------|
-| Unauthenticated user attempts to access the movie catalog                    | **Spoofing / Information Disclosure**          | Mandatory JWT verification via `AuthMiddleware`; `401` returned on failure.                |
-| Attacker uses a stolen or forged JWT to impersonate a Customer               | **Spoofing**                                   | JWT validated against Auth0 JWKS (RS256); short expiry (6h/30min inactivity).              |
-| Attacker manipulates query parameters (e.g., SQL injection via search field) | **Tampering**                                  | Server-side validation and sanitization of all query parameters before processing.         |
-| Attacker floods the catalog endpoint to cause a DoS or scrape all data       | **Denial of Service / Information Disclosure** | Rate limiting middleware applied to `GET /api/movies`; `429` returned on threshold breach. |
-| Movie catalog data (prices, availability) is intercepted in transit          | **Information Disclosure**                     | Enforced use of TLS (HTTPS) for all API communications (ASVS V12.1.1).                     |
+| Threat                                                                                        | Category                   | Mitigation Strategy                                                                                               |
+|:----------------------------------------------------------------------------------------------|:---------------------------|:------------------------------------------------------------------------------------------------------------------|
+| Attacker uses a forged or stolen JWT to impersonate a Customer (U1, B1 — Risk 12/10)          | **Spoofing**               | JWT signature validated against Auth0 JWKS (RS256) on every request; unsigned or malformed tokens rejected `401`. |
+| Customer manually crafts requests targeting Support or Admin endpoints (U6 — Risk 12)         | **Elevation of Privilege** | `RoleGuard` enforces `Customer` role server-side; any role mismatch returns `403 Forbidden`.                      |
+| Attacker injects malicious input via query parameters, e.g., search field (B3 — Risk 9)       | **Tampering**              | Server-side validation of all query parameters for type, format, and range before reaching `MovieService`.        |
+| Verbose error responses expose stack traces or internal service details (B6 — Risk 12)        | **Information Disclosure** | Generic error messages returned to clients; internal identifiers and stack traces never included in responses.    |
+| Attacker floods `GET /api/movies` to cause DoS or scrape full catalog data (U5, B7 — Risk 12) | **Denial of Service**      | Rate limiting middleware applied to the endpoint; `429` returned on threshold breach.                             |
+| Unbounded catalog query with no pagination saturates database resources (D6 — Risk 9)         | **Denial of Service**      | Query result sets are paginated and limited server-side; requests without valid pagination parameters rejected.   |
+| JWT or credentials intercepted in transit via network sniffing (U4 — Risk 8)                  | **Information Disclosure** | TLS enforced for all client-to-backend communications (ASVS V12.1.1); no plaintext fallback permitted.            |
 
 ---
 
