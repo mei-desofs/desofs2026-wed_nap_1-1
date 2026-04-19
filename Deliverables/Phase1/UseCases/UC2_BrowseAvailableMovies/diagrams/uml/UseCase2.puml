@@ -1,6 +1,6 @@
 @startuml
 
-title eMovieShop - View Available Movies
+title eMovieShop - Browse Available Movies
 
 actor Client
 participant "API Client" as APIClient
