@@ -1,0 +1,26 @@
+@startuml
+actor Admin
+participant "API Client" as API
+participant "UserController" as UC
+participant "UserService" as US
+participant "UserRepository" as UR
+
+Admin -> API: Access user role management
+API -> UC: GET /users
+UC -> US: Retrieve users with roles
+US -> UR: Query all users
+UR --> US: Return user data
+US --> UC: Return user list
+UC --> API: Return user data
+API -> Admin: Display user list
+
+Admin -> API: Assign/Remove roles
+API -> UC: POST/DELETE /users/{id}/roles
+UC -> US: Validate and apply role changes
+US -> UR: Update user roles
+UR --> US: Confirm update
+US --> UC: Return success/failure
+UC --> API: Return operation result
+API -> Admin: Display success/failure message
+@enduml
+
