@@ -1,0 +1,86 @@
+@startuml
+left to right direction
+skinparam linetype ortho
+skinparam shadowing false
+skinparam backgroundColor #F9F9F9
+
+skinparam usecase {
+  BackgroundColor White
+  BorderColor Black
+  FontColor Black
+}
+skinparam usecase {
+  BackgroundColor<<Threat>> Black
+  FontColor<<Threat>> White
+  BorderColor<<Threat>> Black
+}
+skinparam usecase {
+  BackgroundColor<<Mitigation>> #34C759
+  FontColor<<Mitigation>> White
+  BorderColor<<Mitigation>> #248A3D
+}
+skinparam usecase {
+  BackgroundColor<<External>> #5AC8FA
+  FontColor<<External>> White
+  BorderColor<<External>> #3A99D9
+}
+skinparam usecase {
+  BackgroundColor<<Vulnerability>> #B0B0B0
+  FontColor<<Vulnerability>> Black
+  BorderColor<<Vulnerability>> #808080
+}
+
+actor User
+actor Attacker #red
+
+rectangle "Login Flow" {
+  User --> (Login to app)
+  (Login to app) --> (Submit credentials)
+  (Submit credentials) --> (AuthController)
+  (AuthController) --> (Delegate to Auth0 via ROPC) <<External>>
+  (Delegate to Auth0 via ROPC) --> (Auth0 validates credentials) <<External>>
+  (Auth0 validates credentials) --> (Auth0 issues JWT) <<External>>
+  (Auth0 issues JWT) --> (Return JWT to client) <<Mitigation>>
+  (AuthController) --> (Apply Role Guard on backend) <<Mitigation>>
+  (AuthController) --> (Send login email event) <<External>>
+}
+
+' --- VULNERABILITIES
+(Submit credentials) <<Vulnerability>>
+(Delegate to Auth0 via ROPC) <<Vulnerability>>
+(Return JWT to client) <<Vulnerability>>
+(Apply Role Guard on backend) <<Vulnerability>>
+
+' --- THREATS
+(Brute-force attack) <<Threat>>
+(Network sniffing) <<Threat>>
+(Intercept credentials) <<Threat>>
+(client_secret exposure) <<Threat>>
+(Token replay attack) <<Threat>>
+(Malicious payload) <<Threat>>
+
+' --- THREAT CONNECTIONS
+(Submit credentials) <-- (Brute-force attack) #red : <<Threatens>>
+(Submit credentials) <-- (Intercept credentials) #red : <<Threatens>>
+(Intercept credentials) <-- (Network sniffing) <<Threat>>
+(Network sniffing) <-- Attacker
+(Brute-force attack) <-- Attacker
+(Delegate to Auth0 via ROPC) <-- (client_secret exposure) #red : <<Threatens>>
+(client_secret exposure) <-- (Malicious payload) <<Threat>>
+(Malicious payload) <-- Attacker
+(Return JWT to client) <-- (Token replay attack) #red : <<Threatens>>
+(Token replay attack) <-- Attacker
+
+' --- MITIGATIONS
+(Submit credentials) --> (Enforce rate limit + lockout) <<Mitigation>>
+(Intercept credentials) --> (Use TLS / HTTPS) <<Mitigation>>
+(client_secret exposure) --> (Store secret in env variables) <<Mitigation>>
+(Token replay attack) --> (Short token expiry + rotation) <<Mitigation>>
+
+' --- MITIGATES ARROWS
+(Enforce rate limit + lockout) --> (Brute-force attack) #green : <<Mitigates>>
+(Use TLS / HTTPS) --> (Intercept credentials) #green : <<Mitigates>>
+(Store secret in env variables) --> (client_secret exposure) #green : <<Mitigates>>
+(Short token expiry + rotation) --> (Token replay attack) #green : <<Mitigates>>
+
+@enduml

@@ -58,6 +58,8 @@ This diagram shows the internal backend logic and the sequence of calls between 
 ---
 
 ## 3. Threat Analysis
+Specific threats to the process of viewing refunds were evaluated using STRIDE.
+
 
 ### 3.1 STRIDE Table
 

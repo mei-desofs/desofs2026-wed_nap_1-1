@@ -3,14 +3,14 @@ actor User as "Customer/Support/Admin"
 participant "API Client" as API
 participant "AuthController" as AC
 participant "AuthService" as AS
-participant "UserRepository" as UR
+participant "Auth0" as AUTH0
 
 User -> API: Enter username and password
 API -> AC: POST /login {username, password}
-AC -> AS: Validate credentials
-AS -> UR: Fetch user by username
-UR --> AS: Return user data
-AS --> AC: Generate JWT if valid
-AC --> API: Return JWT or error
+AC -> AS: login(username, password)
+AS -> AUTH0: POST /oauth/token(username, password)
+AUTH0 --> AS: Return {access_token, token_type, expires_in}
+AS --> AC: Return TokenDTO
+AC --> API: 200 OK {access_token, ...} or 401
 API --> User: Display login success or failure
 @enduml
