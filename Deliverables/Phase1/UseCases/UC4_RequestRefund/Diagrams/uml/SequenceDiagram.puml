@@ -1,0 +1,77 @@
+@startuml SequenceDiagram4
+
+title "Sequence Diagram: As a Customer, I want to request a refund"
+
+actor Customer
+participant "API Client" as API
+participant AuthMiddleware as AM
+participant RefundController as RC
+participant RoleGuard as RG
+participant RefundService as RS
+participant OrderRepository as OR
+participant RefundRepository as RR
+participant AuditLogger as AL
+
+activate Customer
+Customer -> API: Submit refund request
+activate API
+
+API -> AM: POST /api/refunds {orderId, reason, JWT}
+activate AM
+AM -> AM: Validate JWT signature and claims
+AM --> API: Authenticated context
+deactivate AM
+
+API -> RC: createRefund(orderId, reason, userContext)
+activate RC
+RC -> RG: Validate role = CUSTOMER
+activate RG
+RG --> RC: Authorization result
+deactivate RG
+
+RC -> RS: Process refund request
+activate RS
+RS -> RS: Validate payload and sanitize reason
+RS -> OR: Find order by orderId
+activate OR
+OR --> RS: Order data
+deactivate OR
+
+RS -> RS: Validate ownership (order.customerId == userId)
+RS -> RS: Validate order status = COMPLETED
+RS -> RS: Validate purchase date <= 14 days
+RS -> RR: Check existing refund request for order
+activate RR
+RR --> RS: Existing request status (or none)
+deactivate RR
+
+alt Refund request is valid
+	RS -> RR: Create refund request (status = REQUESTED)
+	activate RR
+	RR --> RS: Created refund request
+	deactivate RR
+
+	RS -> AL: Log security event (refund_requested)
+	activate AL
+	AL --> RS: Log confirmation
+	deactivate AL
+
+	RS --> RC: Refund request created
+	RC --> API: 201 Created + refund summary
+else Validation failed
+	RS -> AL: Log security event (refund_request_failed)
+	activate AL
+	AL --> RS: Log confirmation
+	deactivate AL
+
+	RS --> RC: Validation error
+	RC --> API: 400/403/409 + error details
+end
+
+deactivate RS
+deactivate RC
+API --> Customer: Display operation result
+deactivate API
+deactivate Customer
+
+@enduml

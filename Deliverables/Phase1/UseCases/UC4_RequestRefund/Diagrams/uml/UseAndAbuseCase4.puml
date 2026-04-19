@@ -1,0 +1,100 @@
+@startuml UseAndAbuseCase4
+left to right direction
+skinparam linetype ortho
+skinparam shadowing false
+skinparam backgroundColor #F9F9F9
+
+skinparam usecase {
+  BackgroundColor White
+  BorderColor Black
+  FontColor Black
+}
+skinparam usecase {
+  BackgroundColor<<Threat>> Black
+  FontColor<<Threat>> White
+  BorderColor<<Threat>> Black
+}
+skinparam usecase {
+  BackgroundColor<<Mitigation>> #34C759
+  FontColor<<Mitigation>> White
+  BorderColor<<Mitigation>> #248A3D
+}
+skinparam usecase {
+  BackgroundColor<<External>> #5AC8FA
+  FontColor<<External>> White
+  BorderColor<<External>> #3A99D9
+}
+skinparam usecase {
+  BackgroundColor<<Vulnerability>> #B0B0B0
+  FontColor<<Vulnerability>> Black
+  BorderColor<<Vulnerability>> #808080
+}
+
+actor Customer
+actor "Attacker" as Attacker
+
+rectangle "Refund Flow" {
+  Customer --> (Request refund)
+  (Request refund) --> (Select own completed order)
+  (Select own completed order) --> (Submit refund reason)
+  (Submit refund reason) --> (Send refund request)
+  (Send refund request) --> (Application/Server)
+  (Application/Server) --> (Validate JWT and role) <<Mitigation>>
+  (Application/Server) --> (Validate ownership and 14-day window) <<Mitigation>>
+  (Application/Server) --> (Prevent duplicate refund requests) <<Mitigation>>
+  (Application/Server) --> (Apply rate limiting and request size limits) <<Mitigation>>
+  (Application/Server) --> (Log refund request outcome) <<Mitigation>>
+}
+
+' --- VULNERABILITIES
+(Send refund request) <<Vulnerability>>
+(Validate JWT and role) <<Vulnerability>>
+(Validate ownership and 14-day window) <<Vulnerability>>
+(Prevent duplicate refund requests) <<Vulnerability>>
+(Apply rate limiting and request size limits) <<Vulnerability>>
+(Log refund request outcome) <<Vulnerability>>
+
+' --- THREATS
+(Unauthenticated request or forged token) <<Threat>>
+(Submit refund for another user's order) <<Threat>>
+(Tamper order ID in API body) <<Threat>>
+(Bypass 14-day refund window) <<Threat>>
+(Submit duplicate refund requests) <<Threat>>
+(Flood refund endpoint) <<Threat>>
+(Avoid detection and accountability) <<Threat>>
+
+' --- THREAT CONNECTIONS
+(Validate JWT and role) <-- (Unauthenticated request or forged token) #red : <<Threatens>>
+(Validate ownership and 14-day window) <-- (Submit refund for another user's order) #red : <<Threatens>>
+(Validate ownership and 14-day window) <-- (Tamper order ID in API body) #red : <<Threatens>>
+(Validate ownership and 14-day window) <-- (Bypass 14-day refund window) #red : <<Threatens>>
+(Prevent duplicate refund requests) <-- (Submit duplicate refund requests) #red : <<Threatens>>
+(Apply rate limiting and request size limits) <-- (Flood refund endpoint) #red : <<Threatens>>
+(Log refund request outcome) <-- (Avoid detection and accountability) #red : <<Threatens>>
+
+(Unauthenticated request or forged token) <-- Attacker
+(Submit refund for another user's order) <-- Attacker
+(Tamper order ID in API body) <-- Attacker
+(Bypass 14-day refund window) <-- Attacker
+(Submit duplicate refund requests) <-- Attacker
+(Flood refund endpoint) <-- Attacker
+(Avoid detection and accountability) <-- Attacker
+
+' --- MITIGATIONS
+(Validate JWT and role) --> (AuthMiddleware JWT validation) <<Mitigation>>
+(Validate ownership and 14-day window) --> (Server-side ownership check) <<Mitigation>>
+(Validate ownership and 14-day window) --> (Server-side timestamp check) <<Mitigation>>
+(Prevent duplicate refund requests) --> (Unique constraint + transaction) <<Mitigation>>
+(Apply rate limiting and request size limits) --> (Rate limiter + payload limit) <<Mitigation>>
+(Log refund request outcome) --> (Immutable audit logging) <<Mitigation>>
+
+' --- MITIGATES ARROWS
+(AuthMiddleware JWT validation) --> (Unauthenticated request or forged token) #green : <<Mitigates>>
+(Server-side ownership check) --> (Submit refund for another user's order) #green : <<Mitigates>>
+(Server-side ownership check) --> (Tamper order ID in API body) #green : <<Mitigates>>
+(Server-side timestamp check) --> (Bypass 14-day refund window) #green : <<Mitigates>>
+(Unique constraint + transaction) --> (Submit duplicate refund requests) #green : <<Mitigates>>
+(Rate limiter + payload limit) --> (Flood refund endpoint) #green : <<Mitigates>>
+(Immutable audit logging) --> (Avoid detection and accountability) #green : <<Mitigates>>
+
+@enduml
