@@ -198,11 +198,11 @@ ___
 |--------|--------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | B1     | Spoofing                 | The backend accepts manipulated or weakly validated JWTs due to improper signature verification, allowing an attacker to forge identity claims.                               |
 | B2     | Spoofing                 | The Auth0 `client_secret` is exposed (e.g., hardcoded in source control), allowing an attacker to forge token requests directly against Auth0.                                |
-| B3     | Tampering                | Missing input sanitization in fields such as refund reasons or movie descriptions allows stored content injection that corrupts data integrity.                               |
+| B3     | Tampering                | Missing input sanitization in fields (eg., refund reasons. movie descriptions) allows stored content injection that corrupts data integrity.                                  |
 | B4     | Tampering                | CORS misconfiguration or improper `Authorization` header handling allows cross-origin requests to abuse public or semi-protected endpoints.                                   |
 | B5     | Repudiation              | Absence of audit logging for sensitive operations (refund approval/rejection, role changes, movie catalog edits) makes it impossible to attribute actions to specific actors. |
 | B6     | Information Disclosure   | Overly verbose error messages or unfiltered API responses expose internal details (e.g., stack traces, user roles, internal IDs) to unauthorized parties.                     |
-| B7     | Denial of Service        | Lack of rate limiting on the login endpoint or refund submission endpoint allows automated abuse that saturates the backend API.                                              |
+| B7     | Denial of Service        | Lack of rate limiting on resource-intensive endpoints (eg., login ,refund submission) allows automated abuse that saturates the backend API.                                  |
 | B8     | Elevation of Privilege   | A route lacks a `RoleGuard` or the guard is misconfigured, allowing a lower-privilege actor to invoke operations outside their permitted scope.                               |
 
 **Backend → Auth0 (Backend / External Authentication Service Boundary)**
@@ -293,16 +293,16 @@ Based on the qualitative model, the following risk scores have been calculated f
 
 **Backend (Node.js API)**
 
-| ID    | Threat                                             | Category                 | Cost   | Probability   | Risk   |
-|-------|----------------------------------------------------|--------------------------|--------|---------------|--------|
-| B1    | Forged JWT accepted due to weak validation         | Spoofing                 | 5      | 2             | 10     |
-| B2    | Auth0 client_secret exposed in source control      | Spoofing                 | 5      | 3             | 15     |
-| B3    | Missing input sanitization allows data injection   | Tampering                | 3      | 3             | 9      |
-| B4    | CORS misconfiguration abuses endpoints             | Tampering                | 3      | 2             | 6      |
-| B5    | No audit log for sensitive operations              | Repudiation              | 4      | 3             | 12     |
-| B6    | Verbose errors expose internal details             | Information Disclosure   | 3      | 4             | 12     |
-| B7    | No rate limiting on login/refund endpoints         | Denial of Service        | 3      | 4             | 12     |
-| B8    | Missing/misconfigured RoleGuard on route           | Elevation of Privilege   | 5      | 3             | 15     |
+| ID    | Threat                                               | Category                 | Cost   | Probability   | Risk   |
+|-------|------------------------------------------------------|--------------------------|--------|---------------|--------|
+| B1    | Forged JWT accepted due to weak validation           | Spoofing                 | 5      | 2             | 10     |
+| B2    | Auth0 client_secret exposed in source control        | Spoofing                 | 5      | 3             | 15     |
+| B3    | Missing input sanitization allows data injection     | Tampering                | 3      | 3             | 9      |
+| B4    | CORS misconfiguration abuses endpoints               | Tampering                | 3      | 2             | 6      |
+| B5    | No audit log for sensitive operations                | Repudiation              | 4      | 3             | 12     |
+| B6    | Verbose errors expose internal details               | Information Disclosure   | 3      | 4             | 12     |
+| B7    | No rate limiting on on resource-intensive endpoints  | Denial of Service        | 3      | 4             | 12     |
+| B8    | Missing/misconfigured RoleGuard on route             | Elevation of Privilege   | 5      | 3             | 15     |
 
 **Backend → Auth0 (External Authentication Service Boundary)**
 
@@ -332,14 +332,96 @@ ___
 
 ### 3.1. STRIDE Mitigation & Countermeasures Techniques
 
+#### 3.3.1 STRIDE Mitigation & Countermeasures Techniques
+
+| **Threat ID**   | **Description**                                                  | **Countermeasures**                                                                                                                                                                                                                          |
+|-----------------|------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| U1              | Forged/stolen JWT used to impersonate a legitimate user          | Validate JWT signature, issuer, audience, and expiry on every request; Use short-lived tokens; Implement token revocation via Auth0 blacklisting.                                                                                            |
+| U2              | Brute-force / credential stuffing against the login endpoint     | Enforce rate limiting and account lockout after repeated failures; Enable Auth0 Attack Protection (brute-force and breached password detection).                                                                                             |
+| U3              | Request body tampered in transit                                 | Enforce TLS (HTTPS) for all client-to-backend communication; Reject requests over unencrypted channels; Apply HSTS headers.                                                                                                                  |
+| U4              | Credentials or JWT intercepted via network sniffing              | Enforce TLS end-to-end; Never transmit credentials or tokens over plain HTTP; Apply HSTS to prevent protocol downgrade attacks.                                                                                                              |
+| U5              | Endpoint flooding causing backend Denial of Service              | Apply rate limiting middleware on all endpoints; Implement per-IP and per-user throttling; Return `429 Too Many Requests` with retry-after headers.                                                                                          |
+| U6              | Customer crafts requests to support/admin-only endpoints         | Enforce server-side RBAC via `RoleGuard` on every protected route; Never rely on client-supplied role claims without server-side verification.                                                                                               |
+| B1              | Forged JWT accepted due to weak or missing validation            | Use RS256 or HS512 signing algorithms; Strictly validate `iss`, `aud`, `exp`, and `sub` claims on every request; Reject tokens with unexpected claims.                                                                                       |
+| B2              | Auth0 `client_secret` exposed in source control                  | Store `client_id`, `client_secret`, and `audience` exclusively in environment variables; Integrate secrets scanning (e.g., GitGuardian, GitHub secret scanning) into the CI/CD pipeline; Rotate secrets immediately upon suspected exposure. |
+| B3              | Missing input sanitization allows data injection                 | Sanitize and validate all user-supplied input on the backend; Use an ORM with parameterized queries; Reject inputs that exceed expected length or type.                                                                                      |
+| B4              | CORS misconfiguration abuses semi-protected endpoints            | Restrict CORS to explicitly trusted origins; Validate the `Authorization` header presence and format on all protected routes; Disable wildcard CORS in production.                                                                           |
+| B5              | No audit log for sensitive operations                            | Implement structured audit logging for all sensitive actions (login attempts, refund decisions, role changes, catalog edits); Include timestamp, actor ID, source IP, and outcome; Store logs in an append-only store.                       |
+| B6              | Verbose error messages expose internal implementation            | Return generic error messages in production; Disable stack traces in API responses; Use centralized error handling middleware that sanitizes output before returning.                                                                        |
+| B7              | No rate limiting on on resource-intensive endpoints              | Apply rate limiting middleware on resource-intensive endpoints; Track failed attempts per IP and per account; Lock out after threshold is exceeded.                                                                                          |
+| B8              | Missing or misconfigured `RoleGuard` on a route                  | Enforce `RoleGuard` on every non-public endpoint; Apply deny-by-default access control (reject unless explicitly permitted); Include integration tests that assert unauthorized access returns `403 Forbidden`.                              |
+| A1              | ROPC token request intercepted and credentials replayed          | Enforce TLS on all backend-to-Auth0 communication; Use short-lived tokens with `expires_in`; Validate token freshness on every use.                                                                                                          |
+| A2              | Auth0 tenant misconfiguration exploited by attacker              | Regularly audit Auth0 tenant settings (ROPC grant status, allowed audiences, connection policies); Enable Auth0 anomaly detection and alert on configuration changes.                                                                        |
+| A3              | client_id/secret tampered to redirect auth to rogue IdP          | Store Auth0 configuration exclusively in server-side environment variables; Restrict environment access to authorized personnel; Verify the Auth0 token issuer (`iss`) on every JWT validation.                                              |
+| A4              | ROPC payload exposed if TLS not enforced toward Auth0            | Enforce HTTPS for all outbound requests to Auth0; Validate the Auth0 endpoint certificate; Never allow self-signed certificates in the token exchange path.                                                                                  |
+| A5              | Repeated failures trigger Auth0 lockout of legitimate users      | Enable Auth0 brute-force protection with appropriate thresholds; Implement backend-side rate limiting before the request reaches Auth0 to absorb abuse early.                                                                                |
+| A6              | Leaked `client_secret` allows direct token requests to Auth0     | Apply the same secret management controls as B2; Scope the Auth0 application to the minimum required grants; Monitor Auth0 logs for token issuance from unexpected sources.                                                                  |
+| D1              | Overpermissive DB account impersonates higher-privilege role     | Apply least-privilege principles to database accounts; Use separate accounts per service role (read-only for browsing, write for orders); Restrict direct DB access via firewall rules.                                                      |
+| D2              | SQL injection via unsanitized parameters                         | Use an ORM with parameterized queries exclusively; Validate and type-check all inputs before they reach the data layer; Run static analysis tools (e.g., SonarQube) to detect injection-prone patterns.                                      |
+| D3              | Compromised backend modifies records outside its scope           | Enforce application-level ownership checks before any write operation (e.g., `WHERE user_id = ?`); Use separate DB roles with scoped write permissions per domain.                                                                           |
+| D4              | No database audit log, actions untraceable                       | Log all CRUD operations through the backend service layer with actor ID, timestamp, and affected record; Protect log integrity with append-only storage or external log forwarding.                                                          |
+| D5              | Row-level controls missing, data cross-exposure                  | Apply `WHERE user_id = ?` filters on all user-scoped queries; Enforce ownership checks at the service layer before returning any record; Conduct security-focused code reviews on data access methods.                                       |
+| D6              | Unbounded queries saturate database resources                    | Enforce mandatory pagination on all list endpoints; Apply query limits at the ORM layer; Add performance and load tests to detect unbounded query patterns.                                                                                  |
 ___
 
 ### 3.2. Security Test Planning
+
+#### 3.3.2 Security Test Planning
+
+| **Countermeasure(s)**                                                                                | **Test Planning**                                                                                                                                                                                          |
+|------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Enforce server-side RBAC via `RoleGuard` on every protected route                                    | Using Postman, send requests to support/admin-only endpoints (e.g., `GET /refunds`, `PATCH /movies/:id`) with a Customer-role JWT and verify a `403 Forbidden` response is returned.                       |
+| Validate JWT signature, issuer, audience, and expiry on every request                                | Tamper with a valid JWT (modify payload claims or signature) and submit it to a protected endpoint; verify the backend rejects it with `401 Unauthorized`.                                                 |
+| Use RS256 or HS512; strictly validate `iss`, `aud`, and `exp` claims                                 | Submit an expired token, a token with an incorrect `aud`, and a token signed with a different key; confirm all are rejected with appropriate error responses.                                              |
+| Enforce rate limiting and account lockout on `POST /auth/login`                                      | Simulate repeated failed login attempts (e.g., using a Postman collection runner or a script) and verify lockout or `429 Too Many Requests` is triggered after the defined threshold.                      |
+| Enable Auth0 Attack Protection (brute-force and breached password detection)                         | In the Auth0 dashboard, verify that brute-force protection is active; trigger the threshold and confirm Auth0 blocks further attempts and logs the event.                                                  |
+| Enforce TLS end-to-end; apply HSTS; reject plain HTTP requests                                       | Attempt to call the API over plain HTTP and verify it is either rejected or redirected; inspect response headers with `curl -I` to confirm `Strict-Transport-Security` is present.                         |
+| Store `client_secret` and Auth0 config in environment variables; integrate secrets scanning in CI/CD | Inspect the source code repository and build artifacts to confirm no credentials are hardcoded; run a secrets scanning tool (e.g., GitGuardian or `git-secrets`) against the commit history.               |
+| Sanitize and validate all user-supplied input on the backend                                         | Inject malformed or oversized payloads into fields such as refund reason or movie description and verify the backend returns a validation error without persisting or reflecting the input.                |
+| Use ORM with parameterized queries; run static analysis for injection patterns                       | Attempt SQL injection via query parameters and request body fields (e.g., `' OR 1=1 --`); verify the ORM prevents execution; run SonarQube or Semgrep and confirm no injection-prone patterns are flagged. |
+| Disable wildcard CORS; restrict to explicitly trusted origins                                        | Send API requests from an untrusted origin using a modified `Origin` header and verify the server returns a CORS error; confirm no wildcard `Access-Control-Allow-Origin` header is present.               |
+| Return generic error messages in production; use centralized error handling                          | Use OWASP ZAP or Postman to trigger server errors (e.g., malformed requests, invalid IDs) and verify that responses contain no stack traces, file paths, or internal identifiers.                          |
+| Implement structured audit logging for all sensitive actions                                         | Trigger sensitive operations (login, refund approval/rejection, role change, catalog edit) and inspect the audit log store to verify each entry includes timestamp, actor ID, source IP, and outcome.      |
+| Apply rate limiting on all endpoints; enforce per-IP and per-user throttling                         | Flood a resource-intensive endpoint (e.g., `GET /movies`, `POST /refunds`) with rapid successive requests and verify `429` responses are returned and normal traffic recovers after the window expires.    |
+| Enforce mandatory pagination on all list endpoints; apply ORM query limits                           | Call list endpoints (e.g., `GET /movies`, `GET /refunds`) without pagination parameters and verify the backend enforces a maximum result limit; confirm no unbounded query reaches the database.           |
+| Apply least-privilege DB accounts; restrict permissions per service role                             | Attempt write operations using a read-only database account (via direct DB client or backend inspection) and verify they are rejected; review DB user grants to confirm minimum privilege is applied.      |
+| Apply `WHERE user_id = ?` ownership filters on all user-scoped queries                               | Authenticate as Customer A and attempt to retrieve or modify records belonging to Customer B (e.g., orders, refunds) by manipulating IDs in the request; verify the backend returns `403` or `404`.        |
+| Enforce HTTPS for all backend-to-Auth0 communication; validate Auth0 endpoint certificate            | Inspect outbound requests from the backend to Auth0 (e.g., via proxy or integration test logs) and confirm all calls use HTTPS with a valid certificate; verify no fallback to HTTP exists.                |
+| Monitor Auth0 logs for token issuance from unexpected sources                                        | In the Auth0 dashboard, review the log stream after normal operation and after a simulated `client_secret` leak scenario; verify alerts are triggered for anomalous token issuance patterns.               |
+| Enforce application-level ownership checks before any write operation                                | Submit PATCH/DELETE requests targeting records not owned by the authenticated user (varying IDs in the path); verify the service layer rejects the operation before it reaches the database.               |
+| Log all CRUD operations through the backend with actor ID and affected record                        | Perform a sequence of create, update, and delete operations and verify each is recorded in the audit log with the correct actor, record reference, timestamp, and operation type.                          |
 
 ___
 
 ### 3.3. Threat Profile
 
-___
+#### 3.3.3 Threat Profile
 
-## 4. ASVS Cheklist
+| **Threat ID**   | **Threat Description**                                               | **Non Mitigated**  | **Partially Mitigated**   | **Fully Mitigated**   |
+|-----------------|----------------------------------------------------------------------|:------------------:|:-------------------------:|:---------------------:|
+| U1              | Forged/stolen JWT used to impersonate a legitimate user.             |                    |             X             |                       |
+| U2              | Brute-force / credential stuffing against the login endpoint.        |                    |             X             |                       |
+| U3              | Request body tampered in transit.                                    |                    |                           |           X           |
+| U4              | Credentials or JWT intercepted via network sniffing.                 |                    |                           |           X           |
+| U5              | Endpoint flooding causing backend Denial of Service.                 |                    |             X             |                       |
+| U6              | Customer crafts requests to support/admin-only endpoints.            |                    |                           |           X           |
+| B1              | Forged JWT accepted due to weak or missing validation.               |                    |                           |           X           |
+| B2              | Auth0 `client_secret` exposed in source control.                     |                    |             X             |                       |
+| B3              | Missing input sanitization allows data injection.                    |                    |                           |           X           |
+| B4              | CORS misconfiguration abuses semi-protected endpoints.               |                    |                           |           X           |
+| B5              | No audit log for sensitive operations.                               |                    |             X             |                       |
+| B6              | Verbose error messages expose internal implementation details.       |                    |                           |           X           |
+| B7              | No rate limiting on resource-intensive endpoints.                    |                    |                           |           X           |
+| B8              | Missing or misconfigured `RoleGuard` on a route.                     |                    |                           |           X           |
+| A1              | ROPC token request intercepted and credentials replayed.             |                    |                           |           X           |
+| A2              | Auth0 tenant misconfiguration exploited by attacker.                 |                    |             X             |                       |
+| A3              | client_id/secret tampered to redirect authentication to a rogue IdP. |                    |             X             |                       |
+| A4              | ROPC payload exposed if TLS not enforced toward Auth0.               |                    |                           |           X           |
+| A5              | Repeated failures trigger Auth0 lockout of legitimate users.         |                    |             X             |                       |
+| A6              | Leaked `client_secret` allows direct token requests to Auth0.        |                    |             X             |                       |
+| D1              | Overpermissive DB account impersonates higher-privilege role.        |                    |                           |           X           |
+| D2              | SQL injection via unsanitized parameters.                            |                    |                           |           X           |
+| D3              | Compromised backend modifies records outside its scope.              |                    |             X             |                       |
+| D4              | No database audit log, actions untraceable.                          |                    |             X             |                       |
+| D5              | Row-level controls missing, data cross-exposure.                     |                    |                           |           X           |
+| D6              | Unbounded queries saturate database resources.                       |                    |                           |           X           |
