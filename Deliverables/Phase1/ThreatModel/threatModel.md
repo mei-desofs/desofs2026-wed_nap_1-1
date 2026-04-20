@@ -1,15 +1,13 @@
 # Threat Model
 ___
 
-## 1. Decompose the Application
+## 1 Threat Model Information
 
-### 1.1 Threat Model Information
-
-* **Application Name**: eMovie Shop
+* **Application Name**: eMovies Shop
 
 * **Application Version**: 1.0
 
-* **Description**: eMovie Shop is an application for browsing, purchasing (excluding payment integration), managing, and refunding physical copies of movies in a videoclub store. Customers can view available movies, make purchase order and request refunds. Support users handle refund requests, while Admins oversee the movies catalog and manage user roles. Authentication and authorization are handled through an external identity provider (Auth0), which issues JWTs used to secure API requests and enforce role-based access control (RBAC). The backend validates these tokens to ensure proper access control across all operations. The system relies on HTTPS for secure communication and assumes a properly configured TLS-enabled server and network protections.
+* **Description**: eMoviesShop is an application for browsing, purchasing (excluding payment integration), managing, and refunding physical copies of movies in a videoclub store. Customers can view available movies, place purchase orders and request refunds. Support users handle refund requests, while Admins oversee the movie catalog and manage user roles. Authentication and authorization are handled through an external identity provider (Auth0), which issues JWTs used to secure API requests and enforce role-based access control (RBAC). The backend validates these tokens to ensure proper access control across all operations. The system relies on HTTPS for secure communication and assumes a properly configured TLS-enabled server and network protections.
 
 * **Document Owner**: DESOFT-2026-wed_nap_1
 
@@ -19,7 +17,7 @@ ___
 
 ___
 
-### 1.2. External Dependencies
+## 2. External Dependencies
 
 | ID | Description                                                                                                                                                                                                                                                                                                                     |
 |----|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -32,18 +30,18 @@ ___
 
 ___
 
-### 1.3. Entry Points
+## 3. Entry Points
 
 | ID       | Name                  | Description                                                                                                         | Trust Levels                                                  |
 |----------|-----------------------|---------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------|
 | 1        | HTTPS Port            | All access to eMovie Shop is served via HTTPS (TLS) through direct API requests.                                    | (1) Guest, (2) Invalid Credentials, (3) Authenticated User    |
 | *1.1*    | Authentication        | Users authenticate via an external Identity Provider (Auth0) to access protected features.                          | (1) Guest, (2) Invalid Credentials, (3) Authenticated Users   |
-| *1.1.1*  | Login Function        | Users submit credentials to Auth0 and receive a signed JWT on success. This token must be included in API calls.    | (4) Customer, (5) Support, (6) Admin                          |
-| 2        | API Endpoints         | All the system functionalities are exposed via REST API endpoints (e.g., /movies, /library)                         | (4) Customer                                                  |
+| *1.1.1*  | Login Function        | Users submit credentials to Auth0 and receive a signed JWT on success. This token must be included in API calls. Login endpoints are rate-limited to 30 requests/min per IP.    | (4) Customer, (5) Support, (6) Admin                          |
+| 2        | API Endpoints         | All the system functionalities are exposed via REST API endpoints (e.g., /movies, /library). Baseline abuse controls: 120 requests/min per authenticated user and 300 requests/min per IP.                         | (4) Customer                                                  |
 | *2.1*    | Browse Movies         | Public endpoint to view movies. API call supports filtering and pagination.                                         | (4) Customer                                                  |
 | *2.2*    | Purchase Movie        | Authenticated customers may trigger a purchase via a backend API call.                                              | (4) Customer                                                  |
 | *2.3*    | View Library          | Customers can view previously purchased movies and refund-eligible items.                                           | (4) Customer                                                  |
-| *2.4*    | Request Refund        | Triggers refund request for a specific OrderItem.                                                                   | (4) Customer                                                  |
+| *2.4*    | Request Refund        | Triggers refund request for a specific OrderItem. Request payload is constrained by API size limits (1 MB global, 256 KB refund endpoint).                                                                  | (4) Customer                                                  |
 | 3        | Support Tools         | API endpoints intended for support-level operations.                                                                | (5) Support                                                   |
 | *3.1*    | View Refund Requests  | Support users can list and approve/reject refunds.                                                                  | (5) Support                                                   |
 | 4        | Admin Console         | API endpoints reserved for administrative operations.                                                               | (6) Admin                                                     |
@@ -52,13 +50,13 @@ ___
 
 ___
 
-### 1.4. Exit Points
+## 4. Exit Points
 
 | ID      | Name                         | Description                                                                                                      | Trust Levels                                                 |
 |---------|------------------------------|------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------|
 | 1       | HTTPS Responses              | All content is delivered via HTTPS, including API responses, HTML, JSON, and static assets.                      | (1) Guest, (2) Invalid Credentials, (3) Authenticated User   |
 | *1.1*   | Login Response               | Authentication is handled by Auth0, which returns a signed JWT or an error. The backend only validates tokens.   | (1) Guest, (2) Invalid Credentials, (3) Authenticated User   |
-| *1.2*   | Error Responses              | The system returns appropriate HTTP status codes and error messages (e.g., 400, 401, 403, 404).                  | All trust levels                                             |
+| *1.2*   | Error Responses              | The system returns appropriate HTTP status codes and error messages(e.g., 400, 401, 403, 404, 409, 429, 500). Error payloads are sanitized and include a correlation ID for investigation.                   | All trust levels                                             |
 | 2       | Customer Responses           | Data shown to authenticated customers.                                                                           | (4) Customer                                                 |
 | *2.1*   | Movie List                   | The customer sees a list of available movies, fetched via API.                                                   | (4) Customer                                                 |
 | *2.2*   | Purchase Confirmation        | After initiating a purchase, the server returns confirmation or validation errors.                               | (4) Customer                                                 |
@@ -73,7 +71,7 @@ ___
 
 ___
 
-### 1.5. Assets
+## 5. Assets
 
 | ID    | Name                                      | Description                                                                                                                                                                                                                         | Trust Levels                                                                        |
 |-------|-------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------|
@@ -116,11 +114,11 @@ ___
 
 ___
 
-### 1.6. Trust Levels
+## 6. Trust Levels
 
 | ID       | Name                         | Description                                                                                                              |
 |----------|------------------------------|--------------------------------------------------------------------------------------------------------------------------|
-| **1**    | Guest                        | An unauthenticated actor interacting with the eMovie Shop without logging in. Limited to publicly accessible endpoints.  |
+| **1**    | Guest                        | An unauthenticated actor interacting with the eMovieShop without logging in. Limited to publicly accessible endpoints.  |
 | **2**    | Invalid Credentials          | Actor that failed authentication via Auth0 and does not possess a valid JWT.                                             |
 | **3**    | Authenticated User           | A user authenticated via Auth0 with a valid JWT. Includes all roles: Customer, Support, or Admin.                        |
 | **4**    | Customer                     | A user with the `CUSTOMER` role. Can browse movies, make purchases, and request refunds.                                 |
@@ -133,9 +131,9 @@ ___
 
 ___
 
-### 1.7. Data Flow Diagrams
+## 7. Data Flow Diagrams
 
-#### 1.7.1. DFD - Level 0
+### 7.1. DFD - Level 0
 
 ![DFD-Level0.svg](resources/DFD-Level0.svg)
 
@@ -144,13 +142,13 @@ This Level 0 Data Flow Diagram illustrates the major interactions between extern
 Each user interacts with the system through distinct data flows that correspond to specific business actions, such as browsing movies, purchasing, handling refunds, or managing roles and movie catalog entries.
 This diagram establishes the system boundary and highlights the trust relationships that will be explored further in the Level 1 DFD and threat analysis.
 
-#### 1.7.2. DFD - Level 1
+### 7.2. DFD - Level 1
 
 ![DFD-Level1.svg](resources/DFD-Level1.svg)
 
 This Level 1 DFD decomposes the internal structure of the eMovie Shop system, showing detailed flows between backend, database and external services.
 
-- **Users** (Customer, Support, Admin) interact directly with the **Backend** via HTTPS using tools such as Postman. All operations (e.g. , purchases, refunds) are performed through secured API calls with JWT Bearer tokens.
+- **Users** (Customer, Support, Admin) interact directly with the **Backend** via HTTPS using tools such as Postman. All operations (e.g., login, purchases, refunds) are performed through secured API calls with JWT Bearer tokens.
 - The **Backend** processes logic and persists data into a **MySQL database**, handling movie orders, refunds, and user management.
 - On authentication-related actions (e.g., user login), the backend communicates with an external Authentication Service (e.g., Auth0). User credentials are securely forwarded to the external service, which validates them and returns an access token (JWT).
    * This interaction is represented as a bidirectional data flow between the backend and the external authentication provider.
