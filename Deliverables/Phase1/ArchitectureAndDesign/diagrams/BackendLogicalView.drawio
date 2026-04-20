@@ -1,6 +1,6 @@
-<mxfile host="drawio-plugin" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36" modified="2026-04-17T23:17:24.893Z" etag="f8LjAQHiD7PAzxX0HLac" version="22.1.22" type="embed">
+<mxfile host="drawio-plugin" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36" modified="2026-04-20T15:01:44.386Z" etag="L7D0BW4vwGEpTXrlllJo" version="22.1.22" type="embed">
   <diagram name="Página-1" id="D9-v5cLNnKl-X-IDeI5g">
-    <mxGraphModel dx="1124" dy="791" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+    <mxGraphModel dx="361" dy="362" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -180,6 +180,23 @@
           <mxGeometry x="1" width="20" height="20" relative="1" as="geometry">
             <mxPoint x="-27" y="7" as="offset" />
           </mxGeometry>
+        </mxCell>
+        <mxCell id="4" value="«Helper»&lt;br&gt;&lt;div&gt;&lt;b&gt;AuthHelper&lt;/b&gt;&lt;/div&gt;&lt;div&gt;&lt;b&gt;(Auth0)&lt;/b&gt;&lt;/div&gt;&lt;div&gt;&lt;br style=&quot;text-wrap-mode: nowrap;&quot;&gt;&lt;/div&gt;" style="html=1;dropTarget=0;whiteSpace=wrap;verticalAlign=top;align=center;fontSize=10;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="468.13" y="658" width="127.5" height="49" as="geometry" />
+        </mxCell>
+        <mxCell id="5" value="" style="shape=module;jettyWidth=8;jettyHeight=4;" vertex="1" parent="4">
+          <mxGeometry x="1" width="20" height="20" relative="1" as="geometry">
+            <mxPoint x="-27" y="7" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;startFill=0;dashed=1;endFill=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" edge="1" parent="1" source="Bslhzf8x6nEx3pWIfFEr-79" target="4">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="530" y="675" as="targetPoint" />
+            <mxPoint x="530" y="618" as="sourcePoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="7" value="&lt;div&gt;uses to issue JWT tokens&lt;/div&gt;" style="text;align=center;fontStyle=0;verticalAlign=middle;spacingLeft=3;spacingRight=3;strokeColor=none;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;html=1;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="469" y="619.75" width="125" height="21" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
