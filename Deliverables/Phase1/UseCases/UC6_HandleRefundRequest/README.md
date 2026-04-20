@@ -59,12 +59,11 @@ Specific threats to the refund handling process were evaluated using STRIDE and 
 ## 4. Security Requirements (ASVS Compliance)
 Based on the ASVS checklist, the following requirements are strictly enforced for this UC:
 
-* **ASVS V8.2.1 (Authorization: General Authorization Design):** The application ensures that function-level access to the refund handling endpoint is restricted to consumers with explicit permissions. Only users with the Support or Admin role are authorized to approve or reject refund requests, enforced at the trusted backend service layer.
-* **ASVS V14.2.1 (Data Protection: General Data Protection):** Sensitive data, such as session tokens (JWT) or refund IDs, are never exposed in the URL or query string. Tokens are passed exclusively via secure HTTP headers (e.g., Authorization: Bearer).
-* **ASVS V2.3.1 (Business Logic Security):** The application only processes refund state transitions in the expected sequential order. A refund request must be in a "Pending" state before it can be approved or rejected, preventing unauthorized or out-of-order state changes.
-* **ASVS V2.3.2 (Business Logic Security):** The application enforces business logic limits as defined in the documentation. Constraints such as restricting refund processing to high-privilege roles and enforcing atomic state updates are implemented at the service layer to prevent exploitation of business logic flaws.
-* **ASVS V16.3.2 (Security Logging: Security Events):** All refund decisions (approvals and rejections) are logged as security-relevant authorization events, including the requested resource, actor identity, decision outcome, timestamp, and source IP. This provides the metadata necessary for forensic investigation and non-repudiation.
-* **ASVS V8.3.1 (Authorization: Operation Level Authorization):** Authorization rules are enforced at a trusted service layer and do not rely on controls that an untrusted consumer could manipulate. The system validates the subject's (Support/Admin) permissions at the controller and service layers before any state change is committed to the database.
+* **ASVS V2.3.2 (Validation and Business Logic):** Refund state transitions are only processed when the request is still in the expected pending state and linked to a valid order. The operation is rejected if the workflow is out of sequence or the submitted refund identifier does not match an existing record.
+* **ASVS V8.2.1 and V8.3.1 (Authorization):** Function-level access to the refund handling endpoint is restricted to consumers with explicit permissions, and authorization is enforced at the trusted service layer rather than in client-controlled logic. Only users with the Support or Admin role may approve or reject refund requests.
+* **ASVS V12.3.1 (Secure Communication):** All communication between the client and the backend API is protected with TLS so that refund data and authentication material are not exposed in transit.
+* **ASVS V16.3.2 and V16.3.3 (Security Logging):** All refund decisions, rejected access attempts, and invalid state-transition attempts are logged with the requested resource, actor identity, decision outcome, timestamp, and source IP to support forensic investigation and non-repudiation.
+* **ASVS V16.5.1 (Error Handling):** The API returns generic errors when access is denied or another unexpected failure occurs, without exposing sensitive internal details.
 
 ---
 

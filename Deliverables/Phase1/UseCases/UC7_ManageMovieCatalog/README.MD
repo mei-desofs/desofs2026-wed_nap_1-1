@@ -75,14 +75,13 @@ Specific threats to the process of managing the movie catalog were evaluated usi
 ## 4. Security Requirements (ASVS Compliance)
 Based on the ASVS v5.0 checklist, the following requirements are most relevant to this UC:
 
-* **ASVS V9.1.1 — L1 (Self-contained Tokens):** Self-contained tokens must be validated using their digital signature before 
-any claim is trusted. The `AuthMiddleware` validates the JWT signature against Auth0's JWKS endpoint (RS256) before any claim 
-such as `sub`, `role`, `exp`, or `iat` is trusted by the `MovieController` or `RoleGuard`. Expired, malformed, or unsigned tokens 
-are rejected with `401 Unauthorized`.
+* **ASVS V2.2.1 — L1 (Validation and Business Logic):** Input must be validated to enforce business or functional expectations 
+for each field. All payload fields for add/edit operations (title, genre, price, stock quantity) are validated server-side for type, 
+format, and permitted range before reaching `MovieService`. Invalid payloads are rejected with `400 Bad Request`.
 
-* **ASVS V9.2.1 — L1 (Self-contained Tokens):** If a validity time span is present in the token, the token must be rejected if 
-expired. Admin JWTs expire after 1 hour or 10 minutes of inactivity — the shortest expiry of any role, reflecting the elevated 
-privilege level. The backend enforces the `exp` claim on every request.
+* **ASVS V2.3.2 — L2 (Validation and Business Logic):** Business logic limits must be implemented per the application's documentation. 
+The service enforces the domain constraint that movie prices must be positive and must not exceed €500, and that stock quantities must 
+be non-negative integers, preventing pricing errors or inventory exploits.
 
 * **ASVS V8.2.1 — L1 (Authorization):** Function-level access must be restricted to consumers with explicit authorization. 
 The `RoleGuard` enforces that only JWTs carrying the `Admin` role can invoke catalog mutation endpoints (`POST`, `PUT`, `DELETE /api/movies`). 
@@ -92,13 +91,14 @@ Requests from other roles are rejected with `403 Forbidden` at the controller la
 controls. The `RoleGuard` operates server-side within the `MovieService`, ensuring that catalog modification logic is never reachable 
 without a valid authorization decision, regardless of client behavior.
 
-* **ASVS V2.2.1 — L1 (Validation and Business Logic):** Input must be validated to enforce business or functional expectations 
-for each field. All payload fields for add/edit operations (title, genre, price, stock quantity) are validated server-side for type, 
-format, and permitted range before reaching `MovieService`. Invalid payloads are rejected with `400 Bad Request`.
+* **ASVS V9.1.1 — L1 (Self-contained Tokens):** Self-contained tokens must be validated using their digital signature before 
+any claim is trusted. The `AuthMiddleware` validates the JWT signature against Auth0's JWKS endpoint (RS256) before any claim 
+such as `sub`, `role`, `exp`, or `iat` is trusted by the `MovieController` or `RoleGuard`. Expired, malformed, or unsigned tokens 
+are rejected with `401 Unauthorized`.
 
-* **ASVS V2.3.2 — L2 (Validation and Business Logic):** Business logic limits must be implemented per the application's documentation. 
-The service enforces the domain constraint that movie prices must be positive and must not exceed €500, and that stock quantities must 
-be non-negative integers, preventing pricing errors or inventory exploits.
+* **ASVS V9.2.1 — L1 (Self-contained Tokens):** If a validity time span is present in the token, the token must be rejected if 
+expired. Admin JWTs expire after 1 hour or 10 minutes of inactivity — the shortest expiry of any role, reflecting the elevated 
+privilege level. The backend enforces the `exp` claim on every request.
 
 * **ASVS V16.2.1 — L2 (Security Logging and Error Handling):** Each log entry must include necessary metadata such as when, where, 
 who, and what. All catalog access and mutation events are logged with timestamp, Admin user ID, action type (GET/POST/PUT/DELETE), 

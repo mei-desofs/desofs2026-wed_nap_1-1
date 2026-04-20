@@ -86,18 +86,17 @@ Specific threats to the purchase workflow were evaluated using STRIDE.
 ---
 
 ## 4. Security Requirements (ASVS Compliance)
-Based on the ASVS checklist, the following requirements are strictly enforced for this UC:
+Based on the ASVS 5.0 checklist, the following requirements are strictly enforced for this UC:
 
+* **ASVS V2.2.1 and V2.2.2 (Input Validation):** All purchase payload fields, including movie identifiers, quantities, and `receiptName`, are validated against expected structure and business rules before processing.
+* **ASVS V2.3.4 (Business Logic Security):** The application enforces the correct business flow for movie purchases, including stock checks, valid catalog references, and order quantity limits, so a limited stock item cannot be double-booked by manipulating application logic.
+* **ASVS V2.4.1 (Anti-automation):** Purchase attempts are rate-limited to reduce abuse, scraping, and denial-of-service conditions.
+* **ASVS V5.3.1 (File Handling):** Receipt files are stored outside the public web surface and are not executable as server-side code when accessed directly.
+* **ASVS V5.3.2 (File Handling):** The receipt filename is derived from trusted or strictly validated data, and the resolved absolute path must remain inside the designated receipts directory to prevent path traversal, LFI, and RFI-style abuse.
 * **ASVS V8.2.1 (Authorization):** Access control is enforced at the backend service layer. The server validates the JWT role for every request to the purchase endpoint.
-* **ASVS V1 (Encoding and Sanitization):** All purchase payload fields, including movie identifiers, quantities, and `receiptName`, are validated and sanitized before processing.
-* **ASVS V5.1.3 (Input Validation):** The `receiptName` field is validated against an allow-list of permitted characters (alphanumeric, spaces, hyphens, underscores) and limited to 100 characters. Path separators (`/`, `\`), null bytes, and special OS characters are rejected.
-* **ASVS V12.3.1 (File Upload,   Path Traversal):** The resolved absolute path of the receipt file is verified to reside within the designated receipts directory, preventing path traversal attacks even if sanitization is bypassed.
-* **ASVS V12.3.6 (File Storage):** Receipt files are stored in a sandboxed directory with restricted permissions (`600`), inaccessible via direct URL, and not served by the web server.
-* **ASVS V5.3.8 (OS Command Injection):** The `receiptName` is never passed to OS shell commands or system-level interpreters. All file operations use direct I/O APIs. The allow-list sanitization rejects shell metacharacters as defense-in-depth.
-* **ASVS V2.3.2 (Business Logic):** The application enforces the correct business flow for movie purchases, including stock checks, valid catalog references, and order quantity limits (max 10 per order, price ≤ €500).
-* **ASVS V2 (TOCTOU):** Order creation and stock updates are handled as atomic transactions to prevent race conditions and inconsistent purchases.
-* **ASVS V16.3.1 (Logging):** All successful and failed purchase attempts,   including receipt file creation success/failure,  are logged as security-relevant events with actor and request context.
-* **ASVS V8.3.1 (Authorization):** Authorization decisions are made at both the URI level and the resource/service level, ensuring only authorized actors can create orders.
+* **ASVS V8.3.1 and V8.3.3 (Authorization):** Authorization decisions are enforced at the trusted service layer and based on the originating consumer's permissions, ensuring only authorized actors can create orders.
+* **ASVS V12.1.2 and V12.3.1 (Secure Communication):** All communication between the API client, the backend, and supporting services is protected with TLS to prevent interception in transit.
+* **ASVS V16.2.1 and V16.3.1 (Security Logging):** All successful and failed purchase attempts, including receipt file creation success or failure, are logged as security-relevant events with actor and request context.
 
 ---
 

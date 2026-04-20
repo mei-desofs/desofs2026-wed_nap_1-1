@@ -13,7 +13,7 @@ availability, so they can make informed purchasing decisions.
 This diagram illustrates the legitimate path for retrieving the movie catalog versus potential abuse scenarios, such as 
 unauthenticated users attempting to access the catalog or attackers scraping pricing and availability data.
 
-![Use and Abuse Cases - UC2](./diagrams/images/UseAbuseCase2.svg)
+![Use and Abuse Cases - UC2](./diagrams/images/UseAbuseCase2.png)
 
 ### 1.4 Pre-conditions
 * The actor must be successfully authenticated via Auth0.
@@ -41,7 +41,7 @@ As the system is a backend-only API, the interaction follows a direct request-re
 ### 2.2 Sequence Diagram
 This diagram shows the internal backend logic and the sequence of calls between the Controller, Service, and Repository, highlighting the enforcement of security rules at the service layer.
 
-![Sequence Diagram - UC2](./Diagrams/images/SequenceDiagram2.svg)
+![Sequence Diagram - UC2](./Diagrams/images/UseCase2.png)
 
 ---
 
@@ -62,34 +62,20 @@ Specific threats to the process of browsing available movies were evaluated usin
 ---
 
 ## 4. Security Requirements (ASVS Compliance)
-Based on the ASVS v5.0 checklist, the following requirements are most relevant to this UC:
+Based on the ASVS 5.0 checklist, the following requirements are most relevant to this UC:
 
-* **ASVS V9.1.1 — L1 (Self-contained Tokens):** Self-contained tokens must be validated using their digital signature before 
-any claim is trusted. The `AuthMiddleware` validates the JWT signature against Auth0's JWKS endpoint (RS256) before any claim 
-such as `sub`, `role`, `exp`, or `iat` is trusted by the `MovieController` or `RoleGuard`. Expired, malformed, or unsigned tokens 
-are rejected with `401 Unauthorized`.
+* **ASVS V2.2.1 and V2.2.2 (Input Validation):** All query parameters, such as genre filters, search terms, and pagination values, are validated server-side to enforce business expectations before reaching `MovieService`. Only movies with available `StockQuantity` are returned, preserving the domain invariant at the service layer.
 
-* **ASVS V9.2.1 — L1 (Self-contained Tokens):** If a validity time span is present in the token, the token must be rejected if 
-expired. Customer JWTs expire after 6 hours or 30 minutes of inactivity; the backend enforces the `exp` claim on every request to 
-`GET /api/movies`, ensuring stale sessions cannot be reused.
+* **ASVS V2.4.1 (Anti-automation):** Rate limiting is applied to `GET /api/movies` to prevent catalog scraping and denial-of-service conditions. Requests exceeding the defined threshold per time window are rejected with `429 Too Many Requests`.
 
-* **ASVS V8.2.1 — L1 (Authorization):** Function-level access must be restricted to consumers with explicit authorization. 
-The `RoleGuard` enforces that only JWTs carrying the `Customer` role can invoke `GET /api/movies`. Requests from unauthenticated 
-users or other roles are rejected with `403 Forbidden` at the controller layer.
+* **ASVS V8.2.1 and V8.3.1 (Authorization):** Function-level access is restricted to consumers with explicit permissions. The `RoleGuard` ensures that only authenticated customers can invoke `GET /api/movies`; other users are rejected with `403 Forbidden` at the controller layer.
+* **ASVS V9.1.1 and V9.2.1 (Self-contained Tokens):** The JWT issued by Auth0 is validated using its digital signature before any claim is trusted, and the `exp` / `nbf` validity window is enforced on every request. Expired, malformed, or unsigned tokens are rejected with `401 Unauthorized`.
 
-* **ASVS V2.2.1 — L1 (Validation and Business Logic):** Input must be validated to enforce business or functional expectations 
-for each field. All query parameters (e.g., genre filter, search term, pagination values) are validated server-side for type, 
-format, and permitted range before reaching `MovieService`. Only movies with available `StockQuantity` are returned, enforcing 
-the domain invariant at the service layer.
+* **ASVS V9.2.2 and V9.2.3 (Self-contained Tokens):** The backend only accepts tokens intended for this API and validates the `aud` claim before using the token contents for authorization decisions.
 
-* **ASVS V4.2.1 — L2 (API and Web Service):** Anti-automation controls must be in place to protect against excessive calls. 
-Rate limiting is applied to `GET /api/movies` to prevent catalog scraping and denial-of-service conditions. Requests exceeding 
-the defined threshold per time window are rejected with `429 Too Many Requests`.
+* **ASVS V12.1.2 and V12.3.1 (Secure Communication):** All communication between the API client, the backend, and Auth0 is enforced over TLS to prevent interception of credentials or tokens in transit.
 
-* **ASVS V16.2.1 — L2 (Security Logging and Error Handling):** Each log entry must include necessary metadata such as when, 
-where, who, and what. All access to the movie catalog endpoint is logged with timestamp, requesting user ID, assigned role, 
-and source IP. Failed authentication and authorization attempts are captured as security-relevant events. Error responses 
-never expose stack traces or internal service details to the client.
+* **ASVS V16.2.1 and V16.3.1 (Security Logging):** Each log entry includes the relevant metadata, such as when, where, who, and what. All accesses to the movie catalog endpoint are logged with timestamp, requesting user ID, assigned role, and source IP, and failed authentication and authorization attempts are captured as security-relevant events.
 
 ---
 

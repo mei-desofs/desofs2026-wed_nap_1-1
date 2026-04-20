@@ -9,7 +9,6 @@ It enables the Admin to assign or remove roles from users, ensuring proper acces
 
 * **Admin**: Primary actor responsible for managing user roles.
 
-
 ### 1.3 Use/Abuse Case Diagram
 
 This diagram illustrates the legitimate flow for managing user roles, as well as potential abuse scenarios such as privilege escalation or unauthorized role modification.
@@ -81,13 +80,11 @@ Specific threats to the process of viewing refunds were evaluated using STRIDE.
 ## 4. Security Requirements (ASVS Compliance)
 Based on the ASVS checklist, the following requirements are enforced for the Manage User Roles use case:
 
-* **ASVS V8.2.1 (Authorization)**: All role management operations are enforced at the backend service layer. The system validates the JWT and confirms the Admin role for every request to user management endpoints (e.g., /users and /users/{id}/roles), ensuring client-side controls cannot be bypassed.
-* **ASVS V8.3.1 (Authorization)**: Authorization is enforced at the operation level (Controller/Endpoint). The system ensures that only users with the Admin role are explicitly permitted to assign, remove, or modify user roles via the RoleGuard mechanism.
-* **ASVS V14.2.1 (Data Protection)**: Sensitive authentication data (JWTs) are transmitted exclusively via secure HTTP headers (Authorization: Bearer token). No credentials or tokens are exposed in URLs, query parameters, or logs.
-* **ASVS V2.3.2 (Business Logic)**: Role assignment and modification follow strict business rules. Only predefined roles can be assigned, and only Admin users are allowed to perform role changes. Unauthorized or inconsistent role states are rejected at service level.
-* **ASVS V5.3.2 (Input Validation)**: All inputs related to role updates (user IDs, role identifiers) are validated and sanitised. The system rejects malformed or unexpected role values to prevent injection or logic manipulation.
+* **ASVS V2.2.1 (Validation and Business Logic):** All inputs related to role updates (user IDs, role identifiers) are validated and sanitised. The system rejects malformed or unexpected role values to prevent injection or logic manipulation, and the persistence layer uses parameterized queries for database interactions.
+* **ASVS V2.3.2 (Validation and Business Logic):** Role assignment and modification follow strict business rules. Only predefined roles can be assigned, and only Admin users are allowed to perform role changes. Unauthorized or inconsistent role states are rejected at service level.
+* **ASVS V8.2.1 and V8.3.1 (Authorization):** All role management operations are enforced at the backend service layer. The system validates the JWT and confirms the Admin role for every request to user management endpoints (e.g., /users and /users/{id}/roles), ensuring client-side controls cannot be bypassed. Authorization is applied before any role change is committed.
+* **ASVS V12.3.1 (Secure Communication):** Sensitive authentication data (JWTs) are transmitted exclusively via secure HTTP headers (Authorization: Bearer token) over TLS. No credentials or tokens are exposed in URLs, query parameters, or logs.
 * **ASVS V16.3.1 (Logging)**: All security-relevant events are logged, including successful and failed attempts to retrieve users or modify roles. Logs include timestamps, actor ID, target user ID, and operation type to support auditing and forensic analysis.
-* **ASVS V12.1.1 (Error Handling & Injection Resistance)**: The system uses ORM-based persistence and parameterized queries to prevent injection attacks (e.g., SQL injection) during role update operations.
 
 ---
 

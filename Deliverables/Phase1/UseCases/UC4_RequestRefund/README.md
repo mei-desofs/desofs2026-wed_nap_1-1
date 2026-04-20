@@ -87,13 +87,13 @@ Specific threats to the refund request workflow were evaluated using STRIDE.
 ## 4. Security Requirements (ASVS Compliance)
 Based on the ASVS checklist, the following requirements are strictly enforced for this UC:
 
-* **ASVS V8.2.1 (Authorization):** Access control is enforced at the backend service layer. The server validates the JWT role for every request to the refund endpoint.
-* **ASVS V8.3.1 (Authorization):** Authorization decisions are made at both the URI level and the resource/service level, ensuring only the customer who owns the order can create a refund request.
 * **ASVS V1 (Encoding and Sanitization):** All refund payload fields, including the order identifier and refund reason, are validated and sanitized before processing.
 * **ASVS V2.3.2 (Business Logic):** The application enforces the correct business flow for refund requests, including ownership checks, completed-order validation, the 14-day refund window, and duplicate-request prevention.
 * **ASVS V2 (Concurrency / Consistency):** Refund eligibility validation and refund request creation are handled as an atomic transaction to prevent race conditions and inconsistent state.
-* **ASVS V16.3.1 (Logging):** All successful and failed refund request attempts are logged as security-relevant events with actor and request context.
+* **ASVS V8.2.1 (Authorization):** Access control is enforced at the backend service layer. The server validates the JWT role for every request to the refund endpoint.
+* **ASVS V8.3.1 (Authorization):** Authorization decisions are made at both the URI level and the resource/service level, ensuring only the customer who owns the order can create a refund request.
 * **ASVS V14.2.1 (Data Protection):** Sensitive data, such as session tokens and order identifiers, are not exposed in the URL or query string. Tokens are passed exclusively via secure HTTP headers.
+* **ASVS V16.3.1 (Logging):** All successful and failed refund request attempts are logged as security-relevant events with actor and request context.
 
 ---
 

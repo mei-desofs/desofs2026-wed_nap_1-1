@@ -5,7 +5,6 @@ title "Sequence Diagram: As a Customer, I want to purchase movies"
 actor Customer
 participant "API Client" as API
 participant OrderController as OC
-participant RoleGuard as RG
 participant OrderService as OS
 participant OrderRepository as OR
 participant MovieRepository as MR
@@ -17,10 +16,6 @@ Customer -> API: Submit purchase request
 activate API
 API -> OC: POST /api/orders {movieIds, quantities, receiptName, JWT}
 activate OC
-OC -> RG: Validate role = CUSTOMER
-activate RG
-RG --> OC: Authorization result
-deactivate RG
 
 OC -> OS: Process order creation
 activate OS

@@ -4,9 +4,7 @@ title "Sequence Diagram: As a Customer, I want to request a refund"
 
 actor Customer
 participant "API Client" as API
-participant AuthMiddleware as AM
 participant RefundController as RC
-participant RoleGuard as RG
 participant RefundService as RS
 participant OrderRepository as OR
 participant RefundRepository as RR
@@ -16,18 +14,8 @@ activate Customer
 Customer -> API: Submit refund request
 activate API
 
-API -> AM: POST /api/refunds {orderId, reason, JWT}
-activate AM
-AM -> AM: Validate JWT signature and claims
-AM --> API: Authenticated context
-deactivate AM
-
 API -> RC: createRefund(orderId, reason, userContext)
 activate RC
-RC -> RG: Validate role = CUSTOMER
-activate RG
-RG --> RC: Authorization result
-deactivate RG
 
 RC -> RS: Process refund request
 activate RS

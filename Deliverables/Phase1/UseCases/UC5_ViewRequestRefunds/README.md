@@ -51,18 +51,17 @@ Specific threats to the process of viewing refunds were evaluated using STRIDE a
 | Unauthenticated user attempts to access the refund list | **Spoofing / Information Disclosure** | Mandatory JWT verification for the endpoint. |
 | A Customer role user attempts to call the Support-only endpoint | **Elevation of Privilege** | Server-side RBAC (Role-Based Access Control) enforcement. |
 | Attacker floods the API with list requests to cause a DoS | **Denial of Service** | Implementation of Rate Limiting middleware on the API. |
-| Sensitive refund data is intercepted during transit | **Information Disclosure** | Enforced use of TLS (HTTPS) for all API communications (ASVS 12.2.1). |
+| Sensitive refund data is intercepted during transit | **Information Disclosure** | Enforced use of TLS (HTTPS) for all API communications (ASVS V12.3.1). |
 
 ---
 
 ## 4. Security Requirements (ASVS Compliance)
 Based on the ASVS checklist, the following requirements are strictly enforced for this UC:
 
-* **ASVS V8.2.1 (Authorization : General Authorization Design):** The application ensures that function-level access to the refund list endpoint is restricted to consumers with explicit permissions. Only users with the Support or Admin role are authorized to invoke this endpoint, enforced at the trusted backend service layer.
-* **ASVS V14.2.1 (Data Protection: General Data Protection):** Sensitive data, such as session tokens (JWT) or movie IDs, are never exposed in the URL or query string. Tokens are passed exclusively via secure HTTP headers (e.g., Authorization: Bearer).
-* **ASVS V2.3.2 (Business Logic Security):** The application enforces business logic limits as defined in the documentation. Access restrictions and behavioral constraints for the refund list operation are implemented at the service and domain layers to prevent exploitation of business logic flaws.
-* **ASVS V16.3.2 (Security Logging: Security Events):** Failed authorization attempts to access the refund list are logged, including access denied by the RoleGuard due to insufficient role. For sensitive data access, authorization decisions are also recorded. Log entries include the requested resource, required role, and actual role of the requestor.
-* **ASVS V8.3.1 (Authorization: Operation Level Authorization):** Authorization rules are enforced at a trusted service layer and do not rely on controls that an untrusted consumer could manipulate. The system validates the subject's (Support/Admin) permissions at the controller and service layers before granting access to the requested resource.
+* **ASVS V8.2.1 and V8.3.1 (Authorization):** Function-level access to the refund list endpoint is restricted to consumers with explicit permissions, and authorization is enforced at the trusted service layer rather than in client-controlled logic. Only users with the Support or Admin role may invoke this endpoint.
+* **ASVS V12.3.1 (Secure Communication):** All communication between the client and the backend API is protected with TLS so that refund data and authentication material are not exposed in transit.
+* **ASVS V16.2.1, V16.3.2, and V16.3.3 (Security Logging and Error Handling):** Successful access, failed authorization attempts, and attempts to bypass security controls are logged with the required metadata, including the requested resource, required role, and actual role of the requestor.
+* **ASVS V16.5.1 (Error Handling):** The API returns generic errors when access is denied or another unexpected failure occurs, without exposing sensitive internal details.
 
 ---
 

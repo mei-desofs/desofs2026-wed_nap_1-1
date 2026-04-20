@@ -72,11 +72,10 @@ Specific threats to the process of viewing refunds were evaluated using STRIDE.
 
 Based on the ASVS checklist, the following requirements are strictly enforced for this UC:
 
-* **ASVS V2.1.1 (Authentication):** User authentication is fully delegated to Auth0, a certified identity provider. The backend never stores or processes plaintext passwords.
-* **ASVS V2.3.1 (Authentication):** Credentials are transmitted exclusively over TLS. The `username` and `password` fields are sent in the request body, never in the URL or query string.
-* **ASVS V3.2.1 (Session Management):** Upon successful authentication, a signed JWT is issued by Auth0 with a defined expiration. The backend validates the token signature and expiry on every subsequent request.
-* **ASVS V9.1.1 (Communications):** All communication between the API client, the backend, and Auth0 is enforced over TLS to prevent interception of credentials or tokens in transit.
-* **ASVS V16.3.1 (Logging):** Authentication events (successful logins and failed attempts) are logged with sufficient metadata (timestamps, source IP, and actor identity) to support forensic investigation and anomaly detection.
+* **ASVS V6.1.1 and V6.3.1 (Authentication):** User authentication is fully delegated to Auth0, a certified identity provider, and the login flow is protected against credential stuffing and brute-force attempts. The backend never stores or processes plaintext passwords.
+* **ASVS V6.8.2 (Authentication with an Identity Provider):** Credentials are delegated to Auth0 and the integrity of the returned authentication assertion or JWT is validated before the application accepts it.
+* **ASVS V12.2.1 and V12.3.1 (Secure Communication):** All communication between the API client, the backend, and Auth0 is enforced over TLS to prevent interception of credentials or tokens in transit.
+* **ASVS V16.3.1 and V16.3.3 (Security Logging):** Authentication events (successful logins and failed attempts) and attempts to bypass authentication controls are logged with sufficient metadata (timestamps, source IP, and actor identity) to support forensic investigation and anomaly detection.
 
 ---
 

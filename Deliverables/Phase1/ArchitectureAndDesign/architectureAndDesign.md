@@ -131,7 +131,7 @@ These values are intentionally aligned with the operational baselines defined in
 
 **UC1:**
 
-![Use Case 1 Sequence Diagram](../UseCases/UC1_Login/diagrams/images/UseCase1.png)
+![Use Case 1 Sequence Diagram](../UseCases/UC1_Login/resources/UseCase1.svg)
 
 **UC2:**
 
@@ -139,20 +139,20 @@ These values are intentionally aligned with the operational baselines defined in
 
 **UC3:**
 
-![Use Case 3 Sequence Diagram](../UseCases/UC3_PurchaseMovie/diagrams/images/UseCase3.png)
+![Use Case 3 Sequence Diagram](../UseCases/UC3_PurchaseMovie/diagrams/images/UseCase3.svg)
 
 **UC4:**
 
-![Use Case 4 Sequence Diagram](../UseCases/UC4_RequestRefund/diagrams/images/UseCase4.png)
+![Use Case 4 Sequence Diagram](../UseCases/UC4_RequestRefund/diagrams/images/SequenceDiagram4.svg)
 
 **UC5:**
-![Use Case 5 Sequence Diagram](../UseCases/UC5_ViewRequestRefunds/diagrams/images/UseCase5.png)
+![Use Case 5 Sequence Diagram](../UseCases/UC5_ViewRequestRefunds/diagrams/images/SequenceDiagram5.svg)
 
 **UC6:**
-![Use Case 6 Sequence Diagram](../UseCases/UC6_HandleRefundRequest/diagrams/images/UseCase6.png)
+![Use Case 6 Sequence Diagram](../UseCases/UC6_HandleRefundRequest/diagrams/images/SequenceDiagram6.svg)
 
 **UC7:**
 ![Use Case 7 Sequence Diagram](../UseCases/UC7_ManageMovieCatalog/diagrams/images/UseCase7.png)
 
 **UC8:**
-![Use Case 8 Sequence Diagram](../UseCases/UC8_ManageRoles/diagrams/images/UseCase8.png)
+![Use Case 8 Sequence Diagram](../UseCases/UC8_ManageRoles/resources/UseCase8.svg)
