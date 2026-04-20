@@ -57,7 +57,7 @@ This diagram shows the internal backend logic and the sequence of calls between 
 ---
 
 ## 3. Threat Analysis
-Specific threats to the process of viewing refunds were evaluated using STRIDE.
+Specific threats to the process of managing user roles were evaluated using STRIDE.
 
 
 ### 3.1 STRIDE Table
@@ -70,7 +70,7 @@ Specific threats to the process of viewing refunds were evaluated using STRIDE.
 | Malicious role assignment (granting excessive permissions)                | **Elevation of Privilege**   | Principle of Least Privilege and audit logging of all role modifications.              |
 | Injection attack targeting role update operations (*SQL Injection*)       | **Tampering**                | Input sanitization and use of ORM/prepared statements for all database interactions.   |
 | Unauthorized modification of role data in transit                         | **Tampering**                | Enforced TLS (HTTPS) for all API communications (ASVS 9.1.1).                          |
-| Exposure of sensitive user-role data (*Data leakage*)                     | **Information Disclosure**   | Filtered API responses and restriction of endpoints to Admin മാത്രം users.             |
+| Exposure of sensitive user-role data (*Data leakage*)                     | **Information Disclosure**   | Filtered API responses and restriction of endpoints to Admin users only.              |
 | Lack of traceability of role changes                                      | **Repudiation**              | Audit logging including actor identity, target user, and performed changes.            |
 | API flooding targeting role management endpoints                          | **Denial of Service**        | Rate limiting and request throttling on sensitive endpoints.                           |
 

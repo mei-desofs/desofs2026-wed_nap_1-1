@@ -2,11 +2,10 @@
 
 ## 1. Description
 ### 1.1 Objective
-This Use Case allows users with the **Support** or **Admin** role to retrieve and view a list of all movie refund requests submitted by customers. This ensures that refund processing is based on consistent and traceable data, providing visibility into pending requests.
+This Use Case allows users with the **Support** role to retrieve and view a list of movie refund requests submitted by customers. This ensures that refund processing is based on consistent and traceable data, providing visibility into pending requests.
 
 ### 1.2 Actors
 * **Support Staff:** Primary actor responsible for monitoring and assisting with refund-related issues.
-* **Admin:** Responsible for overall system auditing and transaction management.
 
 ### 1.3 Use/Abuse Case Diagram
 This diagram illustrates the legitimate path for retrieving the refund list versus potential abuse scenarios, such as unprivileged users attempting to access sensitive transaction data.
@@ -15,7 +14,7 @@ This diagram illustrates the legitimate path for retrieving the refund list vers
 
 ### 1.4 Pre-conditions
 * The actor must be successfully authenticated.
-* The actor must possess a valid JWT with the "Support" or "Admin" role.
+* The actor must possess a valid JWT with the `Support` role.
 
 ### 1.5 Post-conditions
 * The list of movie refund requests is successfully retrieved from the database.
@@ -29,7 +28,7 @@ As the system is a backend-only API, the interaction follows a direct request-re
 
 ### 2.1 Interaction Flow (API Level)
 1. **Request:** The Actor (via API Client) sends a `GET` request to `/api/refunds` including the JWT in the Authorization header.
-2. **Validation:** The `AuthMiddleware` verifies the JWT signature and the `RoleGuard` confirms the actor has Support/Admin privileges.
+2. **Validation:** The `AuthMiddleware` verifies the JWT signature and the `RoleGuard` confirms the actor has Support privileges.
 3. **Business Logic:** The `RefundController` invokes the `RefundService` to retrieve all movie refund records from the repository.
 4. **Data Retrieval:** The system queries the database for records associated with existing and valid movie orders.
 5. **Response:** The system returns a `200 OK` status with the JSON array containing the refund requests details.
@@ -58,7 +57,7 @@ Specific threats to the process of viewing refunds were evaluated using STRIDE a
 ## 4. Security Requirements (ASVS Compliance)
 Based on the ASVS checklist, the following requirements are strictly enforced for this UC:
 
-* **ASVS V8.2.1 and V8.3.1 (Authorization):** Function-level access to the refund list endpoint is restricted to consumers with explicit permissions, and authorization is enforced at the trusted service layer rather than in client-controlled logic. Only users with the Support or Admin role may invoke this endpoint.
+* **ASVS V8.2.1 and V8.3.1 (Authorization):** Function-level access to the refund list endpoint is restricted to consumers with explicit permissions, and authorization is enforced at the trusted service layer rather than in client-controlled logic. Only users with the Support role may invoke this endpoint in the current design.
 * **ASVS V12.3.1 (Secure Communication):** All communication between the client and the backend API is protected with TLS so that refund data and authentication material are not exposed in transit.
 * **ASVS V16.2.1, V16.3.2, and V16.3.3 (Security Logging and Error Handling):** Successful access, failed authorization attempts, and attempts to bypass security controls are logged with the required metadata, including the requested resource, required role, and actual role of the requestor.
 * **ASVS V16.5.1 (Error Handling):** The API returns generic errors when access is denied or another unexpected failure occurs, without exposing sensitive internal details.
