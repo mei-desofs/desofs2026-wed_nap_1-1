@@ -1,5 +1,20 @@
 # Use Case 5: View requested refunds
 
+## Index
+- [1. Description](#1-description)
+	- [1.1 Objective](#11-objective)
+	- [1.2 Actors](#12-actors)
+	- [1.3 Use/Abuse Case Diagram](#13-useabuse-case-diagram)
+	- [1.4 Pre-conditions](#14-pre-conditions)
+	- [1.5 Post-conditions](#15-post-conditions)
+- [2. Interaction Flow & Architecture](#2-interaction-flow--architecture)
+	- [2.1 Interaction Flow (API Level)](#21-interaction-flow-api-level)
+	- [2.2 Sequence Diagram](#22-sequence-diagram)
+- [3. Threat Analysis](#3-threat-analysis)
+	- [3.1 STRIDE Table](#31-stride-table)
+- [4. Security Requirements (ASVS Compliance)](#4-security-requirements-asvs-compliance)
+- [5. Secure Development Requirements](#5-secure-development-requirements)
+
 ## 1. Description
 ### 1.1 Objective
 This Use Case allows users with the **Support** role to retrieve and view a list of movie refund requests submitted by customers. This ensures that refund processing is based on consistent and traceable data, providing visibility into pending requests.
