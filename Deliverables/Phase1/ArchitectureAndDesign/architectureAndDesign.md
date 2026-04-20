@@ -146,13 +146,17 @@ These values are intentionally aligned with the operational baselines defined in
 ![Use Case 4 Sequence Diagram](../UseCases/UC4_RequestRefund/diagrams/images/SequenceDiagram4.svg)
 
 **UC5:**
+
 ![Use Case 5 Sequence Diagram](../UseCases/UC5_ViewRequestRefunds/diagrams/images/SequenceDiagram5.svg)
 
 **UC6:**
+
 ![Use Case 6 Sequence Diagram](../UseCases/UC6_HandleRefundRequest/diagrams/images/SequenceDiagram6.svg)
 
 **UC7:**
+
 ![Use Case 7 Sequence Diagram](../UseCases/UC7_ManageMovieCatalog/diagrams/images/UseCase7.png)
 
 **UC8:**
+
 ![Use Case 8 Sequence Diagram](../UseCases/UC8_ManageRoles/resources/UseCase8.svg)
