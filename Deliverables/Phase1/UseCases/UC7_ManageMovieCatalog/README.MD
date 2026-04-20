@@ -13,7 +13,7 @@ Admins are the only users permitted to create, edit, or remove catalog entries, 
 This diagram illustrates the legitimate path for managing the movie catalog versus potential abuse scenarios, such as unprivileged 
 users attempting to modify catalog data.
 
-![Use and Abuse Cases - UC7](./diagrams/images/UseAbuseCase7.svg)
+![Use and Abuse Cases - UC7](./diagrams/images/UseAbuseCase7.png)
 
 ### 1.4 Pre-conditions
 * The actor must be successfully authenticated via Auth0.

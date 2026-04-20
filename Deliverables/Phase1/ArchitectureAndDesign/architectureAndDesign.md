@@ -10,12 +10,18 @@ This high-level diagram outlines the core containers of the eMovieShop system, d
 
 - **User** interacts with the application via an **API Client**, accessing the **eMovieShop Backend**.
 
+**External Services**:
+
+- **Auth0** is the external identity provider responsible for all authentication flows. It issues signed JWTs after the user 
+authenticates. The backend validates every incoming token against Auth0's JWKS endpoint. It never generates tokens itself. 
+Auth0 also exposes user profile and role metadata consumed by the backend's authorization layer.
+
 **Backend Container**:
 
 - **eMovieShop Backend** is a secured REST API.
 - It handles:
-    - **JWT-based authentication** via middleware.
-    - **Role-based authorization** (RBAC) using a `RoleGuard` helper.
+    - **JWT validation** via middleware, verifying tokens issued and signed by Auth0.
+    - **Role-based authorization** (RBAC) using a `RoleGuard` helper, sourcing roles from Auth0 token claims.
     - Execution of core business logic for ordering, refunding, user role management, and movie catalog administration.
 - The backend interacts with a **Database** for persistent state.
 
@@ -31,8 +37,8 @@ This high-level diagram outlines the core containers of the eMovieShop system, d
 
 This diagram illustrates the internal architecture of the eMovieShop backend, designed with layered responsibilities and Domain-Driven Design (DDD).
 
-- Incoming requests enter through the **Backend API**, carrying a `Bearer <JWT>` in the `Authorization` header.
-- Requests are intercepted by the **Auth Middleware**, which verifies the JWT and blocks unauthorized access before reaching the controller layer.
+- Incoming requests enter through the **Backend API**, carrying a `Bearer <JWT>` in the `Authorization` header. The JWT is issued by **Auth0** after successful authentication.
+- Requests are intercepted by the **Auth Middleware**, which validates the JWT signature against Auth0's JWKS endpoint, checks token expiry and audience, and blocks unauthorized access before reaching the controller layer.
 - The **Controller** handles HTTP routing and delegates logic to the **Service Layer** using structured **DTOs**, which serve as a serialization and data-mapping layer.
 - The **Service Layer** performs business operations such as movie purchases, refund processing, and role assignments.
     - It consults **Domain Models** through a **Model API**.
@@ -51,12 +57,17 @@ domain logic, and data persistence.
 This deployment diagram represents the physical architecture of eMovieShop, deployed across three main servers and supported 
 by external services.
 
-- **Users** access the system via an HTTP client which:
-    - Calls the **Backend Server API**, attaching a `Bearer <JWT>` token from `localStorage`.
+- **Users** authenticate through **Auth0** (external IdP), which issues a signed JWT access token upon successful login.
+- Users then access the system via an HTTP client which:
+    - Calls the **Backend Server API**, attaching the `Bearer <JWT>` token received from Auth0 in the `Authorization` header.
 - The **Backend Server** is responsible for:
-    - **Validating JWT tokens** via middleware.
-    - **Enforcing role-based access** using a `RoleGuard` component.
+    - **Validating JWT tokens** via middleware by fetching Auth0's public JWKS and verifying the token signature, issuer (`iss`), and audience (`aud`).
+    - **Enforcing role-based access** using a `RoleGuard` component, reading role claims embedded in the Auth0 token.
     - Executing core business logic like purchases, refunds, and role changes.
+- The **Auth0 External Service** provides:
+    - OAuth 2.0 / OpenID Connect login flows.
+    - Centralized user identity and role management.
+    - Token revocation and session lifecycle management.
 - The **Database Server** handles persistence for:
     - Users, roles, movies, orders, and refund requests.
     - Audit trails are recorded separately in the **Database Audit Logger**.
@@ -76,30 +87,34 @@ This operating model can be enforced via Docker container users or systemd servi
 
 ### 2.3 Technology Stack
 
-|   Component    | Technology Stack |
-|:--------------:|:----------------:|
-|    Backend     |       Java       |
-|    Database    |      MySQL       |
+|     Component     | Technology Stack |
+|:-----------------:|:----------------:|
+|      Backend      |       Java       |
+|     Database      |      MySQL       |
+| Identity Provider | Auth0 (External) |
 
 ### 2.4 Secure Design Patterns
 
-| **Pattern**                     | **Adaptation in eMovieShop**                                                                                                                                                                                                                                |
-|---------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| **Secure by Default**           | Unauthorized actions (e.g., unauthorized refunds or admin actions) are blocked by default using the `RoleGuard` check on the backend. Missing or invalid JWTs deny access automatically.                                                                    |
-| **Layered Security**            | Security is applied at multiple levels: input is validated on both the frontend and backend; JWTs are verified at every request; and role-based access is enforced server-side. External services (CDN, email) are only invoked after backend verification. |
-| **Minimal Access Rights**       | Each user role (Admin, Support, Customer) has only the permissions it needs. For example, only Support can approve refunds; Admins manage catalog and roles; Customers can only view/request their own orders.                                              |
-| **Transparent Security Design** | The system does not rely on “security through obscurity.” Instead, it uses open, testable mechanisms like JWT, RBAC, and clearly defined API interfaces for enforcing access control.                                                                       |
-| **Clean & Safe Code Practices** | Code is organized into layered components (DTO, Service, Controller, etc.), centralizes security logic (e.g., Auth Middleware), and uses best practices like clear naming, error handling, and input sanitation.                                            |
-| **Session Binding and Entropy** | JWTs are signed using RS256/HS512 and generated with ≥64 bits of entropy. Tokens will no longer be stored in `localStorage`, but in secure, `HttpOnly` cookies to reduce XSS risk.                                                                          |
+| **Pattern**                     | **eMovieShop Adaptation**                                                                                                                                                                                                                                                                                                                    |
+|---------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **Secure by Default**           | Unauthorized actions (e.g., unauthorized refunds or admin actions) are blocked by default using the `RoleGuard` check on the backend. Missing or invalid JWTs deny access automatically.                                                                                                                                                     |
+| **Layered Security**            | Security is applied at multiple levels: input is validated on both the frontend and backend; JWTs are verified at every request; and role-based access is enforced server-side. External services (CDN, email) are only invoked after backend verification.                                                                                  |
+| **Minimal Access Rights**       | Each user role (Admin, Support, Customer) has only the permissions it needs. For example, only Support can approve refunds; Admins manage catalog and roles; Customers can only view/request their own orders.                                                                                                                               |
+| **Transparent Security Design** | The system does not rely on “security through obscurity.” Instead, it uses open, testable mechanisms like JWT, RBAC, and clearly defined API interfaces for enforcing access control.                                                                                                                                                        |
+| **Clean & Safe Code Practices** | Code is organized into layered components (DTO, Service, Controller, etc.), centralizes security logic (e.g., Auth Middleware), and uses best practices like clear naming, error handling, and input sanitation.                                                                                                                             |
+| **Session Binding and Entropy** | JWTs are issued and signed by Auth0 using RS256 with ≥64 bits of entropy. Tokens are not stored in `localStorage`; short-lived access tokens are passed in-memory or in secure, `HttpOnly` cookies to reduce XSS risk. Refresh token rotation is handled by Auth0.                                                                           |
+| **Third-Party Dependency Risk** | Auth0 is integrated as the sole external identity dependency. Communication with Auth0 endpoints is over HTTPS only; the Auth0 tenant domain and client credentials are stored in environment variables, never in source code. The backend caches Auth0's JWKS for a bounded TTL to reduce latency and limit exposure to Auth0 availability. |
 
 eMovieShop’s architecture integrates key secure design patterns across both backend and frontend. **Secure by Default** is 
-enforced via the `Auth Middleware`, which blocks unauthenticated users before reaching controllers. **Layered Security** 
+enforced via the `Auth Middleware`, which validates Auth0-issued JWTs and blocks unauthenticated users before reaching controllers. **Layered Security** 
 appears in both diagrams: React handles client-side form validation, while the backend enforces constraints through DTOs, 
-services, and immutable domain value objects like `Email` or`MovieTitle`. **Least Privilege** is reflected in the `RoleGuard` 
-service, restricting backend logic based on user roles, and in use cases tied to specific actors (e.g., only support can process refunds). 
-The system embraces **Open Design** — JWT, RBAC, and authorization mechanisms are explicitly modeled in diagrams and thoroughly
-documented. Lastly, **Coding Best Practices** are seen in the clear separation of concerns from API to domain in the backend 
-and DDD patterns in the domain model.
+services, and immutable domain value objects like `Email` or `MovieTitle`. The introduction of **Auth0** adds a new security 
+layer by centralizing identity management, token issuance, and session lifecycle outside the application boundary. **Least Privilege** 
+is reflected in the `RoleGuard` service, restricting backend logic based on role claims carried inside Auth0 tokens, and in use 
+cases tied to specific actors (e.g., only support can process refunds). The system embraces **Open Design** — JWT, RBAC, and 
+authorization mechanisms (including Auth0’s OIDC/OAuth 2.0 flows) are explicitly modeled in diagrams and thoroughly documented. 
+Lastly, **Coding Best Practices** are seen in the clear separation of concerns from API to domain in the backend and DDD patterns 
+in the domain model.
 
 ### 2.5 Sequence Diagrams
 
@@ -117,7 +132,7 @@ and DDD patterns in the domain model.
 
 **UC4:**
 
-![Use Case 4 Sequence Diagram](../UseCases/UC4_Login/diagrams/images/UseCase4.png)
+![Use Case 4 Sequence Diagram](../UseCases/UC4_RequestRefund/diagrams/images/UseCase4.png)
 
 **UC5:**
 ![Use Case 5 Sequence Diagram](../UseCases/UC5_ViewRequestRefunds/diagrams/images/UseCase5.png)
@@ -129,4 +144,4 @@ and DDD patterns in the domain model.
 ![Use Case 7 Sequence Diagram](../UseCases/UC7_ManageMovieCatalog/diagrams/images/UseCase7.png)
 
 **UC8:**
-![Use Case 8 Sequence Diagram](../UseCases/UC8_Login/diagrams/images/UseCase8.png)
+![Use Case 8 Sequence Diagram](../UseCases/UC8_ManageRoles/diagrams/images/UseCase8.png)
