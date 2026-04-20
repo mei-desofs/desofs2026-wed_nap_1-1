@@ -1,16 +1,20 @@
 @startuml
 actor User as "Customer/Support/Admin"
-participant "API Client" as API
-participant "AuthController" as AC
-participant "AuthService" as AS
 participant "Auth0" as AUTH0
 
-User -> API: Enter username and password
-API -> AC: POST /login {username, password}
-AC -> AS: login(username, password)
-AS -> AUTH0: POST /oauth/token(username, password)
-AUTH0 --> AS: Return {access_token, token_type, expires_in}
-AS --> AC: Return TokenDTO
-AC --> API: 200 OK {access_token, ...} or 401
-API --> User: Display login success or failure
+User -> AUTH0: GET /authorize\n{client_id, redirect_uri,\nresponse_type=code,\ncode_challenge, code_challenge_method=S256}
+AUTH0 -> AUTH0: Display login page
+User -> AUTH0: Submit credentials\n(username, password)
+AUTH0 -> AUTH0: Validate credentials\nagainst user store
+
+alt Valid credentials
+    AUTH0 --> User: Redirect with authorization_code
+    User -> AUTH0: POST /oauth/token\n{grant_type=authorization_code,\ncode, code_verifier, client_id}
+    AUTH0 -> AUTH0: Verify code_verifier\nand generate signed JWT\nwith role claims
+    AUTH0 --> User: 200 OK\n{access_token, token_type, expires_in}
+    note right: User includes this JWT in\nsubsequent API requests via\nAuthorization: Bearer <token>
+else Invalid credentials
+    AUTH0 --> User: Login error\n(invalid credentials)
+end
+
 @enduml

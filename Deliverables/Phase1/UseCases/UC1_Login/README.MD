@@ -33,7 +33,7 @@ or processes user credentials, it only validates the JWT.
 
 ### 1.3 Use/Abuse Case Diagram
 
-This diagram illustrates the legitimate authentication path, where the user authenticates directly with Auth0 and receives a signed JWT, versus potential abuse scenarios, including brute-force attacks against Auth0's login endpoint, credential interception via network sniffing, and token replay attacks targeting the issued JWT.
+This diagram illustrates the legitimate authentication path, where the user is redirected to Auth0's login page via the Authorization Code + PKCE flow and receives a signed JWT, versus potential abuse scenarios, including brute-force attacks against Auth0's login page, credential interception via network sniffing, authorization code interception, and token replay attacks targeting the issued JWT.
 
 ![UseAbuseCases1.svg](resources/UseAbuseCases1.svg)
 
@@ -50,17 +50,20 @@ This diagram illustrates the legitimate authentication path, where the user auth
 ---
 
 ## 2. Interaction Flow & Architecture
-Authentication is handled entirely outside the backend. The user authenticates directly with Auth0 (via Auth0's Universal Login or hosted login page), and the backend only validates the resulting JWT.
+Authentication is handled entirely outside the backend using the OAuth 2.0 Authorization Code flow with PKCE (Proof Key for Code Exchange). Since eMovieShop is a backend-only REST API, the Actor uses an API client (e.g., Postman) to initiate the flow. Postman opens a browser window to Auth0's login page, where the user authenticates directly with Auth0. After a successful login, Postman receives the signed JWT and uses it in subsequent requests to the backend. The backend never receives user credentials, it only validates the JWT.
 
 ### 2.1 Interaction Flow (API Level)
-1. **Authentication:** The Actor authenticates directly with Auth0 (e.g., via Auth0's Universal Login page or an OAuth 2.0 Authorization Code + PKCE flow). The backend is not involved in this step and never receives the user's credentials.
-2. **Token Issuance:** Auth0 validates the credentials against its user store and, if valid, issues a signed JWT access token containing the actor's role claims.
-3. **API Access:** The Actor (via API Client) sends requests to backend endpoints (e.g., `GET /api/movies`, `POST /api/orders`) including the JWT in the `Authorization: Bearer` header.
-4. **Token Validation:** The backend's `AuthMiddleware` validates the JWT signature against Auth0's JWKS endpoint, verifies claims (`iss`, `aud`, `exp`), and grants or denies access accordingly.
+1. **Authorization Request:** The Actor initiates login via Postman, which triggers a `GET /authorize` request to Auth0 with `response_type=code`, `client_id`, `redirect_uri`, `code_challenge` (SHA-256 hash of a random `code_verifier`), and `code_challenge_method=S256`. Postman opens a browser window for this step.
+2. **User Authentication:** Auth0 displays its login page. The Actor submits their credentials (username and password) directly on Auth0's page. The backend is not involved in this step and never receives the user's credentials.
+3. **Authorization Code:** Auth0 validates the credentials and, if valid, redirects back to Postman's callback URL with an `authorization_code`.
+4. **Token Exchange:** Postman automatically sends a `POST /oauth/token` request to Auth0 with `grant_type=authorization_code`, the `code`, and the original `code_verifier`. Auth0 verifies the `code_verifier` against the `code_challenge` to prevent authorization code interception.
+5. **Token Issuance:** Auth0 issues a signed JWT access token containing the actor's role claims.
+6. **API Access:** The Actor uses Postman to send requests to backend endpoints (e.g., `GET /api/movies`, `POST /api/orders`) including the JWT in the `Authorization: Bearer` header.
+7. **Token Validation:** The backend's `AuthMiddleware` validates the JWT signature against Auth0's JWKS endpoint, verifies claims (`iss`, `aud`, `exp`), and grants or denies access accordingly.
 
 ### 2.2 Sequence Diagram
 
-This diagram shows the authentication flow between the Actor, Auth0, and the backend, highlighting that the backend only validates the JWT and never handles credentials directly.
+This diagram shows the Authorization Code + PKCE authentication flow between the Actor and Auth0. In practice, Postman orchestrates this flow (opening the browser for login and handling the code exchange), but the diagram focuses on the logical interaction: credentials are submitted directly on Auth0's login page and the JWT is obtained via a secure code exchange, without any backend involvement.
 
 ![UseCase1.svg](resources/UseCase1.svg)
 

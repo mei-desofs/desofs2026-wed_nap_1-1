@@ -35,52 +35,48 @@ actor Attacker #red
 
 rectangle "Login Flow" {
   User --> (Login to app)
-  (Login to app) --> (Submit credentials)
-  (Submit credentials) --> (AuthController)
-  (AuthController) --> (Delegate to Auth0 via ROPC) <<External>>
-  (Delegate to Auth0 via ROPC) --> (Auth0 validates credentials) <<External>>
-  (Auth0 validates credentials) --> (Auth0 issues JWT) <<External>>
+  (Login to app) --> (Redirect to Auth0 login page)
+  (Redirect to Auth0 login page) --> (Submit credentials on Auth0) <<External>>
+  (Submit credentials on Auth0) --> (Auth0 validates credentials) <<External>>
+  (Auth0 validates credentials) --> (Auth0 returns authorization code) <<External>>
+  (Auth0 returns authorization code) --> (Exchange code + code_verifier for JWT) <<External>>
+  (Exchange code + code_verifier for JWT) --> (Auth0 issues JWT) <<External>>
   (Auth0 issues JWT) --> (Return JWT to client) <<Mitigation>>
-  (AuthController) --> (Apply Role Guard on backend) <<Mitigation>>
-  (AuthController) --> (Send login email event) <<External>>
 }
 
 ' --- VULNERABILITIES
-(Submit credentials) <<Vulnerability>>
-(Delegate to Auth0 via ROPC) <<Vulnerability>>
+(Submit credentials on Auth0) <<Vulnerability>>
 (Return JWT to client) <<Vulnerability>>
-(Apply Role Guard on backend) <<Vulnerability>>
+(Auth0 returns authorization code) <<Vulnerability>>
 
 ' --- THREATS
 (Brute-force attack) <<Threat>>
 (Network sniffing) <<Threat>>
 (Intercept credentials) <<Threat>>
-(client_secret exposure) <<Threat>>
+(Authorization code interception) <<Threat>>
 (Token replay attack) <<Threat>>
-(Malicious payload) <<Threat>>
 
 ' --- THREAT CONNECTIONS
-(Submit credentials) <-- (Brute-force attack) #red : <<Threatens>>
-(Submit credentials) <-- (Intercept credentials) #red : <<Threatens>>
+(Submit credentials on Auth0) <-- (Brute-force attack) #red : <<Threatens>>
+(Submit credentials on Auth0) <-- (Intercept credentials) #red : <<Threatens>>
 (Intercept credentials) <-- (Network sniffing) <<Threat>>
 (Network sniffing) <-- Attacker
 (Brute-force attack) <-- Attacker
-(Delegate to Auth0 via ROPC) <-- (client_secret exposure) #red : <<Threatens>>
-(client_secret exposure) <-- (Malicious payload) <<Threat>>
-(Malicious payload) <-- Attacker
+(Auth0 returns authorization code) <-- (Authorization code interception) #red : <<Threatens>>
+(Authorization code interception) <-- Attacker
 (Return JWT to client) <-- (Token replay attack) #red : <<Threatens>>
 (Token replay attack) <-- Attacker
 
 ' --- MITIGATIONS
-(Submit credentials) --> (Enforce rate limit + lockout) <<Mitigation>>
+(Submit credentials on Auth0) --> (Enforce rate limit + lockout) <<Mitigation>>
 (Intercept credentials) --> (Use TLS / HTTPS) <<Mitigation>>
-(client_secret exposure) --> (Store secret in env variables) <<Mitigation>>
+(Authorization code interception) --> (PKCE code_verifier validation) <<Mitigation>>
 (Token replay attack) --> (Short token expiry + rotation) <<Mitigation>>
 
 ' --- MITIGATES ARROWS
 (Enforce rate limit + lockout) --> (Brute-force attack) #green : <<Mitigates>>
 (Use TLS / HTTPS) --> (Intercept credentials) #green : <<Mitigates>>
-(Store secret in env variables) --> (client_secret exposure) #green : <<Mitigates>>
+(PKCE code_verifier validation) --> (Authorization code interception) #green : <<Mitigates>>
 (Short token expiry + rotation) --> (Token replay attack) #green : <<Mitigates>>
 
 @enduml

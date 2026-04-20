@@ -73,7 +73,7 @@ Given that eMovieShop exchanges only JSON metadata (no file upload in scope), re
 *This section defines the technical security features and protocols implemented to protect the system.*
 
 **Core Security Controls**
-* **Authentication:** All users (Customers, Support, Admins) must log in with valid credentials before accessing any features. Sessions are securely managed and expire after inactivity.
+* **Authentication:** All users (Customers, Support, Admins) must log in with valid credentials before accessing any features. Authentication is delegated to Auth0 using the **OAuth 2.0 Authorization Code flow with PKCE** (Proof Key for Code Exchange, RFC 7636). In this flow, the user authenticates directly on Auth0's login page; the backend never receives user credentials, it only validates the resulting JWT. PKCE was chosen over the Resource Owner Password Credentials (ROPC) grant because ROPC is **deprecated in OAuth 2.1** (RFC 9700), exposes credentials to the client application, and does not support multi-factor authentication. Sessions are securely managed and expire after inactivity.
 * **Authorization:** Role-based access control (RBAC) is enforced: Customers can browse, purchase, and request refunds; Support can only process refund requests; Admins manage the movie catalog and user roles.
 * **Use of Encryption:** Sensitive data (passwords, session tokens) is encrypted in transit (HTTPS) and at rest. Passwords are hashed using a secure algorithm (e.g., bcrypt).
 * **Input Validation:** All user input is validated and sanitized. This includes API requests for login, purchases, refund requests, and movie management, preventing injection attacks.
