@@ -1,13 +1,15 @@
 # Threat Model
 ___
 
-## 1 Threat Model Information
+## 1. Decomposing the application
 
-* **Application Name**: eMovies Shop
+## 1.1. Threat Model Information
+
+* **Application Name**: eMovieShop
 
 * **Application Version**: 1.0
 
-* **Description**: eMoviesShop is an application for browsing, purchasing (excluding payment integration), managing, and refunding physical copies of movies in a videoclub store. Customers can view available movies, place purchase orders and request refunds. Support users handle refund requests, while Admins oversee the movie catalog and manage user roles. Authentication and authorization are handled through an external identity provider (Auth0), which issues JWTs used to secure API requests and enforce role-based access control (RBAC). The backend validates these tokens to ensure proper access control across all operations. The system relies on HTTPS for secure communication and assumes a properly configured TLS-enabled server and network protections.
+* **Description**: eMovieShop is an application for browsing, purchasing (excluding payment integration), managing, and refunding physical copies of movies in a videoclub store. Customers can view available movies, place purchase orders and request refunds. Support users handle refund requests, while Admins oversee the movie catalog and manage user roles. Authentication and authorization are handled through an external identity provider (Auth0), which issues JWTs used to secure API requests and enforce role-based access control (RBAC). The backend validates these tokens to ensure proper access control across all operations. The system relies on HTTPS for secure communication and assumes a properly configured TLS-enabled server and network protections.
 
 * **Document Owner**: DESOFT-2026-wed_nap_1
 
@@ -17,7 +19,7 @@ ___
 
 ___
 
-## 2. External Dependencies
+## 1.2. External Dependencies
 
 | ID | Description                                                                                                                                                                                                                                                                                                                     |
 |----|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -30,48 +32,48 @@ ___
 
 ___
 
-## 3. Entry Points
+## 1.3. Entry Points
 
-| ID       | Name                  | Description                                                                                                         | Trust Levels                                                  |
-|----------|-----------------------|---------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------|
-| 1        | HTTPS Port            | All access to eMovie Shop is served via HTTPS (TLS) through direct API requests.                                    | (1) Guest, (2) Invalid Credentials, (3) Authenticated User    |
-| *1.1*    | Authentication        | Users authenticate via an external Identity Provider (Auth0) to access protected features.                          | (1) Guest, (2) Invalid Credentials, (3) Authenticated Users   |
-| *1.1.1*  | Login Function        | Users submit credentials to Auth0 and receive a signed JWT on success. This token must be included in API calls. Login endpoints are rate-limited to 30 requests/min per IP.    | (4) Customer, (5) Support, (6) Admin                          |
-| 2        | API Endpoints         | All the system functionalities are exposed via REST API endpoints (e.g., /movies, /library). Baseline abuse controls: 120 requests/min per authenticated user and 300 requests/min per IP.                         | (4) Customer                                                  |
-| *2.1*    | Browse Movies         | Public endpoint to view movies. API call supports filtering and pagination.                                         | (4) Customer                                                  |
-| *2.2*    | Purchase Movie        | Authenticated customers may trigger a purchase via a backend API call.                                              | (4) Customer                                                  |
-| *2.3*    | View Library          | Customers can view previously purchased movies and refund-eligible items.                                           | (4) Customer                                                  |
-| *2.4*    | Request Refund        | Triggers refund request for a specific OrderItem. Request payload is constrained by API size limits (1 MB global, 256 KB refund endpoint).                                                                  | (4) Customer                                                  |
-| 3        | Support Tools         | API endpoints intended for support-level operations.                                                                | (5) Support                                                   |
-| *3.1*    | View Refund Requests  | Support users can list and approve/reject refunds.                                                                  | (5) Support                                                   |
-| 4        | Admin Console         | API endpoints reserved for administrative operations.                                                               | (6) Admin                                                     |
-| *4.1*    | Manage Movie Catalog  | Add/edit/remove movies and update prices or stock.                                                                  | (6) Admin                                                     |
-| *4.2*    | Manage User Roles     | Assign support/admin roles to registered users.                                                                     | (6) Admin                                                     |
-
-___
-
-## 4. Exit Points
-
-| ID      | Name                         | Description                                                                                                      | Trust Levels                                                 |
-|---------|------------------------------|------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------|
-| 1       | HTTPS Responses              | All content is delivered via HTTPS, including API responses, HTML, JSON, and static assets.                      | (1) Guest, (2) Invalid Credentials, (3) Authenticated User   |
-| *1.1*   | Login Response               | Authentication is handled by Auth0, which returns a signed JWT or an error. The backend only validates tokens.   | (1) Guest, (2) Invalid Credentials, (3) Authenticated User   |
-| *1.2*   | Error Responses              | The system returns appropriate HTTP status codes and error messages(e.g., 400, 401, 403, 404, 409, 429, 500). Error payloads are sanitized and include a correlation ID for investigation.                   | All trust levels                                             |
-| 2       | Customer Responses           | Data shown to authenticated customers.                                                                           | (4) Customer                                                 |
-| *2.1*   | Movie List                   | The customer sees a list of available movies, fetched via API.                                                   | (4) Customer                                                 |
-| *2.2*   | Purchase Confirmation        | After initiating a purchase, the server returns confirmation or validation errors.                               | (4) Customer                                                 |
-| *2.3*   | Library / Owned Movies       | The customer can view a list of previously purchased movies.                                                     | (4) Customer                                                 |
-| *2.4*   | Refund Request Result        | After submitting a refund request, the response includes confirmation or rejection message.                      | (4) Customer                                                 |
-| 3       | Support Responses            | Responses sent to support users managing refund flows.                                                           | (5) Support                                                  |
-| *3.1*   | Refund List API              | A list of pending refund requests is returned to the support dashboard.                                          | (5) Support                                                  |
-| *3.2*   | Refund Decision Result       | Confirmation/error response after approving or rejecting a refund request.                                       | (5) Support                                                  |
-| 4       | Admin Responses              | Responses related to administrative operations.                                                                  | (6) Admin                                                    |
-| *4.1*   | Catalog Update Result        | Confirmation/error after adding/editing/deleting a movie in the catalog.                                         | (6) Admin                                                    |
-| *4.2*   | Role Assignment Feedback     | Confirmation or errors when assigning roles to users.                                                            | (6) Admin                                                    |
+| ID         | Name                  |  Description                                                                                                                                                                               | Trust Levels                                                  |
+|------------|-----------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------|
+| 1          | HTTPS Port            | All access to eMovie Shop is served via HTTPS (TLS) through direct API requests.                                                                                                           | (1) Guest, (2) Invalid Credentials, (3) Authenticated User    |
+| *1.1*      | Authentication        | Users authenticate via an external Identity Provider (Auth0) to access protected features.                                                                                                 | (1) Guest, (2) Invalid Credentials, (3) Authenticated Users   |
+| *1.1.1*    | Login Function        | Users submit credentials to Auth0 and receive a signed JWT on success. This token must be included in API calls. Login endpoints are rate-limited to 30 requests/min per IP.               | (4) Customer, (5) Support, (6) Admin                          |
+| 2          | API Endpoints         | All the system functionalities are exposed via REST API endpoints (e.g., /movies, /library). Baseline abuse controls: 120 requests/min per authenticated user and 300 requests/min per IP. | (4) Customer                                                  |
+| *2.1*      | Browse Movies         | Public endpoint to view movies. API call supports filtering and pagination.                                                                                                                | (4) Customer                                                  |
+| *2.2*      | Purchase Movie        | Authenticated customers may trigger a purchase via a backend API call.                                                                                                                     | (4) Customer                                                  |
+| *2.3*      | View Library          | Customers can view previously purchased movies and refund-eligible items.                                                                                                                  | (4) Customer                                                  |
+| *2.4*      | Request Refund        | Triggers refund request for a specific OrderItem. Request payload is constrained by API size limits (1 MB global, 256 KB refund endpoint).                                                 | (4) Customer                                                  |
+| 3          | Support Tools         | API endpoints intended for support-level operations.                                                                                                                                       | (5) Support                                                   |
+| *3.1*      | View Refund Requests  | Support users can list and approve/reject refunds.                                                                                                                                         | (5) Support                                                   |
+| 4          | Admin Console         | API endpoints reserved for administrative operations.                                                                                                                                      | (6) Admin                                                     |
+| *4.1*      | Manage Movie Catalog  | Add/edit/remove movies and update prices or stock.                                                                                                                                         | (6) Admin                                                     |
+| *4.2*      | Manage User Roles     | Assign support/admin roles to registered users.                                                                                                                                            | (6) Admin                                                     |
 
 ___
 
-## 5. Assets
+## 1.4. Exit Points
+
+| ID        | Name                           | Description                                                                                                                                                                                | Trust Levels                                                 |
+|-----------|--------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------|
+| 1         | HTTPS Responses                | All content is delivered via HTTPS, including API responses, HTML, JSON, and static assets.                                                                                                | (1) Guest, (2) Invalid Credentials, (3) Authenticated User   |
+| *1.1*     | Login Response                 | Authentication is handled by Auth0, which returns a signed JWT or an error. The backend only validates tokens.                                                                             | (1) Guest, (2) Invalid Credentials, (3) Authenticated User   |
+| *1.2*     | Error Responses                | The system returns appropriate HTTP status codes and error messages(e.g., 400, 401, 403, 404, 409, 429, 500). Error payloads are sanitized and include a correlation ID for investigation. | All trust levels                                             |
+| 2         | Customer Responses             | Data shown to authenticated customers.                                                                                                                                                     | (4) Customer                                                 |
+| *2.1*     | Movie List                     | The customer sees a list of available movies, fetched via API.                                                                                                                             | (4) Customer                                                 |
+| *2.2*     | Purchase Confirmation          | After initiating a purchase, the server returns confirmation or validation errors.                                                                                                         | (4) Customer                                                 |
+| *2.3*     | Library / Owned Movies         | The customer can view a list of previously purchased movies.                                                                                                                               | (4) Customer                                                 |
+| *2.4*     | Refund Request Result          | After submitting a refund request, the response includes confirmation or rejection message.                                                                                                | (4) Customer                                                 |
+| 3         | Support Responses              | Responses sent to support users managing refund flows.                                                                                                                                     | (5) Support                                                  |
+| *3.1*     | Refund List API                | A list of pending refund requests is returned to the support dashboard.                                                                                                                    | (5) Support                                                  |
+| *3.2*     | Refund Decision Result         | Confirmation/error response after approving or rejecting a refund request.                                                                                                                 | (5) Support                                                  |
+| 4         | Admin Responses                | Responses related to administrative operations.                                                                                                                                            | (6) Admin                                                    |
+| *4.1*     | Catalog Update Result          | Confirmation/error after adding/editing/deleting a movie in the catalog.                                                                                                                   | (6) Admin                                                    |
+| *4.2*     | Role Assignment Feedback       | Confirmation or errors when assigning roles to users.                                                                                                                                      | (6) Admin                                                    |
+
+___
+
+## 1.5. Assets
 
 | ID    | Name                                      | Description                                                                                                                                                                                                                         | Trust Levels                                                                        |
 |-------|-------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------|
@@ -114,26 +116,26 @@ ___
 
 ___
 
-## 6. Trust Levels
+## 1.6. Trust Levels
 
-| ID       | Name                         | Description                                                                                                              |
-|----------|------------------------------|--------------------------------------------------------------------------------------------------------------------------|
-| **1**    | Guest                        | An unauthenticated actor interacting with the eMovieShop without logging in. Limited to publicly accessible endpoints.  |
-| **2**    | Invalid Credentials          | Actor that failed authentication via Auth0 and does not possess a valid JWT.                                             |
-| **3**    | Authenticated User           | A user authenticated via Auth0 with a valid JWT. Includes all roles: Customer, Support, or Admin.                        |
-| **4**    | Customer                     | A user with the `CUSTOMER` role. Can browse movies, make purchases, and request refunds.                                 |
-| **5**    | Support                      | A user with the `SUPPORT` role. Can view, approve, or reject refund requests.                                            |
-| **6**    | Admin                        | A user with the `ADMIN` role. Manages movies, stock, discounts, and assigns user roles.                                  |
-| **7**    | System Administrator         | Person responsible for infrastructure, deployment, system monitoring, and security configuration.                        |
-| **8**    | Database Administrator       | Full access to the MySQL database. Can create/modify tables, manage credentials, and ensure data integrity.              |
-| **9**    | Database Read User           | A user or service with read-only access to the database (e.g., analytics or report generation).                          |
-| **10**   | Database Read & Write User   | A user or service with privileges to query and modify records, but not manage the database schema.                       |
+| ID       | Name                         | Description                                                                                                               |
+|----------|------------------------------|---------------------------------------------------------------------------------------------------------------------------|
+| **1**    | Guest                        | An unauthenticated actor interacting with the eMovieShop without logging in. Limited to publicly accessible endpoints.    |
+| **2**    | Invalid Credentials          | Actor that failed authentication via Auth0 and does not possess a valid JWT.                                              |
+| **3**    | Authenticated User           | A user authenticated via Auth0 with a valid JWT. Includes all roles: Customer, Support, or Admin.                         |
+| **4**    | Customer                     | A user with the `CUSTOMER` role. Can browse movies, make purchases, and request refunds.                                  |
+| **5**    | Support                      | A user with the `SUPPORT` role. Can view, approve, or reject refund requests.                                             |
+| **6**    | Admin                        | A user with the `ADMIN` role. Manages movies, stock, discounts, and assigns user roles.                                   |
+| **7**    | System Administrator         | Person responsible for infrastructure, deployment, system monitoring, and security configuration.                         |
+| **8**    | Database Administrator       | Full access to the MySQL database. Can create/modify tables, manage credentials, and ensure data integrity.               |
+| **9**    | Database Read User           | A user or service with read-only access to the database (e.g., analytics or report generation).                           |
+| **10**   | Database Read & Write User   | A user or service with privileges to query and modify records, but not manage the database schema.                        |
 
 ___
 
-## 7. Data Flow Diagrams
+## 1.7. Data Flow Diagrams
 
-### 7.1. DFD - Level 0
+### 1.7.1. DFD - Level 0
 
 ![DFD-Level0.svg](resources/DFD-Level0.svg)
 
@@ -142,7 +144,7 @@ This Level 0 Data Flow Diagram illustrates the major interactions between extern
 Each user interacts with the system through distinct data flows that correspond to specific business actions, such as browsing movies, purchasing, handling refunds, or managing roles and movie catalog entries.
 This diagram establishes the system boundary and highlights the trust relationships that will be explored further in the Level 1 DFD and threat analysis.
 
-### 7.2. DFD - Level 1
+### 1.7.2. DFD - Level 1
 
 ![DFD-Level1.svg](resources/DFD-Level1.svg)
 
@@ -280,6 +282,34 @@ The Use/Abuse Cases are shown in the individuals reports of each use case.
 ___
 
 #### 2.2.4. Other threats (Threat catalogs)
+
+To complement the STRIDE threat modeling conducted for eMovieShop, this section compares the identified threats against two well-established vulnerability catalogs: the OWASP Top 10 (2025) and the CWE Top 25 (2025). 
+These references represent the most frequently exploited classes of vulnerabilities in modern applications and provide further validation of the threat coverage achieved in this analysis.
+
+Several STRIDE threats identified in the system align closely with the risks highlighted in the OWASP Top 10:2025. 
+The risk **A01: Broken Access Control** reinforces threats B8, U6, and D3, which describe unauthorized access to administrative or support-only endpoints due to missing or misconfigured RoleGuard enforcement as well as backend operations executed without proper ownership validation. 
+**A02: Security Misconfiguration**, which moved up significantly in the 2025 edition, is reflected in threats A2 and B4, covering scenarios where Auth0 tenant misconfiguration or CORS mishandling exposes the system to unauthorized API usage.
+
+The presence of **A03: Injection** is evidenced by threat D2, where unsanitized parameters in refund or catalog endpoints may enable SQL injection through the backend data layer. 
+Threat B3, covering insufficient input sanitization in free-text fields, further reinforces this risk. 
+Authentication and identity management failures, described in **A07: Identification and Authentication Failures**, are reflected in threats U1, U2, B1, and B2, encompassing brute-force attacks against the login endpoint, forged JWT acceptance and the exposure of the Auth0 client_secret, which would allow an attacker to obtain valid tokens without going through the backend at all.
+
+The absence of reliable audit logs for critical operations such as refund approvals and role assignments is captured in threats B5 and D4, which align with **A09: Security Logging and Monitoring Failures**. 
+This category emphasizes the risk of inadequate traceability in security-critical workflows. 
+Threats B6 and U4, which describe verbose error responses and credential interception, are also representative of the **A02** risk in the sense that misconfigured production settings directly enable information leakage. 
+The new **A10: Mishandling of Exceptional Conditions**, introduced in the 2025 edition, maps to threat B6, where unhandled errors propagate internal details to the API client.
+
+In addition to OWASP, the CWE Top 25 (2025) catalog highlights further correlations. 
+* CWE-89: SQL Injection, ranked second in the 2025 list, directly maps to threat D2, reinforcing the critical importance of parameterized queries and ORM usage throughout the backend data access layer. 
+* CWE-862: Missing Authorization, which climbed to fourth place in 2025, aligns with threats B8 and U6, where backend routes lack proper RoleGuard configuration, allowing actors to invoke operations outside their permitted scope. 
+* CWE-863: Incorrect Authorization is similarly reflected in threat D3, where the backend fails to enforce ownership checks before write operations.
+* CWE-287: Improper Authentication maps to threats U2, B1, and A1, covering brute-force credential attacks, weak JWT validation, and ROPC token request interception. 
+* CWE-200: Exposure of Sensitive Information to an Unauthorized Actor reinforces threats B6, U4, and A4, which describe scenarios where credentials, tokens or internal API details are exposed through insecure channels or overly verbose responses. 
+* CWE-770: Allocation of Resources Without Limits or Throttling, a new entry in the 2025 list, directly validates threats U5, B7, and D6, where the absence of rate limiting on the login endpoint, refund submissions and unbounded database queries can lead to resource exhaustion and service disruption. 
+* CWE-639: Authorization Bypass Through User-Controlled Key, which rose six positions in 2025, aligns with threats U1 and D5, where predictable object identifiers or user-controlled parameters allow access to records belonging to other users.
+
+In conclusion, the attack scenarios identified for eMovieShop are strongly corroborated by recurring threat patterns found in both external catalogs. 
+The alignment between modeled threats and the most current vulnerabilities provides additional confidence in the comprehensiveness of this threat analysis and confirms that the documented security concerns are consistent with real-world exploitation trends observed across modern backend API architectures.
 
 ___
 
