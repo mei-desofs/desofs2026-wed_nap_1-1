@@ -18,11 +18,9 @@
 ## 1. Description
 ### 1.1 Objective
 
-This Use Case allows any registered user (Customer, Support, or Admin) to authenticate
-into the eMovie Shop system. Authentication is performed directly against Auth0 (the external
-Identity Provider). Upon successful login, Auth0 issues a signed JWT access token, which the
-user then includes in all subsequent API requests to the backend. The backend never receives
-or processes user credentials, it only validates the JWT.
+This Use Case allows any registered user (Customer, Support, or Admin) to authenticate into the eMovieShop system. 
+Authentication is performed directly against Auth0 (the external Identity Provider). Upon successful login, Auth0 issues a signed JWT access token, which the user then includes in all subsequent API requests to the backend. 
+The backend never receives or processes user credentials, it only validates the JWT.
 
 ### 1.2 Actors
 

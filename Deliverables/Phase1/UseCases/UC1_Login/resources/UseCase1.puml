@@ -3,7 +3,7 @@ actor User as "Customer/Support/Admin"
 participant "Auth0" as AUTH0
 
 User -> AUTH0: GET /authorize\n{client_id, redirect_uri,\nresponse_type=code,\ncode_challenge, code_challenge_method=S256}
-AUTH0 -> AUTH0: Display login page
+AUTH0 --> User: Display login page
 User -> AUTH0: Submit credentials\n(username, password)
 AUTH0 -> AUTH0: Validate credentials\nagainst user store
 
