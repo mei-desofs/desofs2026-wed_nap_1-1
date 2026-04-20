@@ -52,8 +52,8 @@ Validates catalog integrity and avoids pricing errors or exploits.
 Adds a business rule to minimize abuse and reduce risk of fraudulent bulk buys.
 
 **3.2 Access Control & Authentication Policies**
-* **User accounts are temporarily locked after 5 failed login attempts** 
-To prevent brute-force attacks and unauthorized access across all roles.
+* **User accounts are temporarily locked after 10 failed login attempts (enforced by Auth0 Brute Force Protection)** 
+Auth0's Attack Protection feature handles account lockout automatically after repeated failed login attempts. The backend does not implement its own lockout logic.
 * **Admins are the only users allowed to create, edit, or remove movie catalog entries** 
 Prevents unauthorized modifications to products and pricing.
 * **Role-based access control (RBAC) is enforced across all operations** 

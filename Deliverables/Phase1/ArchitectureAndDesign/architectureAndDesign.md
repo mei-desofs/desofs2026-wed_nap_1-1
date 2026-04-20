@@ -61,8 +61,7 @@ by external services.
 - Users then access the system via an HTTP client which:
     - Calls the **Backend Server API**, attaching a `Bearer <JWT>` token received from Auth0 in the `Authorization` header.
 - The **Backend Server** is responsible for:
-    - **Validating JWT tokens** via middleware by fetching Auth0's public JWKS and verifying the token signature, issuer (`iss`), and audience (`aud`).
-    - **Enforcing role-based access** using a `RoleGuard` component, reading role claims embedded in the Auth0 token.
+    - **Validating JWT tokens** and **enforcing role-based access**, detailed in sections 2.1.1 and 2.1.2.
     - Executing core business logic like purchases, refunds, and role changes.
 - The **Auth0 External Service** provides:
     - OAuth 2.0 / OpenID Connect login flows.

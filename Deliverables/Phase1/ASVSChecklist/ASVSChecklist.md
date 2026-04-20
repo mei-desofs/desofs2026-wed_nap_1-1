@@ -149,11 +149,15 @@ Almost entirely not applicable since the system does not handle file uploads or 
 
 ### V6 - Authentication (11/47 applicable, 36 N/A)
 
-Authentication is **delegated entirely to Auth0** as the external Identity Provider. The 11 applicable requirements cover the backend's responsibilities in this model: enforcing the password policy via Auth0 configuration (minimum 12 characters, bcrypt with work factor 12, no composition rules), account lockout after 5 failed attempts (Auth0 Brute Force Protection), secure handling of initial/temporary passwords, and ensuring credential transport over HTTPS only. The 36 N/A requirements relate to authentication mechanisms the backend does not implement directly (e.g., password hashing logic, MFA enrollment UI, credential recovery flows, lookup secret verifiers), these are managed by Auth0.
+Authentication is **delegated entirely to Auth0** as the external Identity Provider. The 11 applicable requirements cover the backend's responsibilities in this model: enforcing the password policy via Auth0 configuration (minimum 12 characters, bcrypt with work factor 12, no composition rules), account lockout after 10 failed attempts (Auth0 Brute Force Protection), secure handling of initial/temporary passwords, and ensuring credential transport over HTTPS only. The 36 N/A requirements relate to authentication mechanisms the backend does not implement directly (e.g., password hashing logic, credential recovery flows, lookup secret verifiers), these are managed by Auth0.
+
+> **Auth0 handles internally:** password hashing (bcrypt, work factor 12, 128-bit salt), account lockout (Brute Force Protection after 10 attempts), breached password detection, credential transport (HTTPS-only hosted login page), and password policy enforcement (configured in Auth0 Dashboard).
 
 ### V7 - Session Management (12/19 applicable)
 
 Session management is handled via JWT tokens issued by Auth0. The applicable requirements address role-based session expiration (Admin: 1h, Support: 2h, Customer: 6h), token verification on every request, session invalidation on logout (token revocation), federated session consistency with Auth0, and re-authentication for sensitive operations (verified via the `iat` claim). The 7 N/A requirements relate to cookie-based session management, UI-specific logout visibility, and user session management interfaces, not applicable in a backend-only API where tokens are sent via the `Authorization` header.
+
+> **Auth0 handles internally:** SSO session management, refresh token issuance and rotation, and token revocation via `/oauth/revoke`. Session lifetime and inactivity timeout settings are configured to match the role-based expiration values.
 
 > **Note:** If a frontend client were introduced, session cookies with `HttpOnly`, `Secure`, `SameSite=Lax`, and the `__Host-` prefix would be enforced, and several N/A requirements in this chapter would become applicable.
 
@@ -169,9 +173,13 @@ Full applicability, all 7 requirements are directly relevant to the JWT-based ar
 
 A critical chapter for the Auth0 integration. The 14 Compliant and 6 In Progress requirements address the backend's role as an OAuth 2.0 Resource Server: validating access tokens from Auth0, enforcing scopes and audience claims, secure redirect URI handling, PKCE enforcement for authorization code flows, and proper token endpoint security. The 16 N/A requirements relate to features managed entirely by Auth0 (authorization server UI, consent screens, device authorization flows) or to OAuth grant types not used in the architecture.
 
+> **Auth0 handles internally:** Authorization Code flow with PKCE, exact redirect URI matching, token issuance for configured API audiences, and refresh token rotation with automatic family revocation on reuse.
+
 ### V11 - Cryptography (13/24 applicable)
 
-The backend does not implement custom cryptographic primitives, all cryptographic operations (JWT signing, password hashing, key management) are delegated to Auth0 and industry-validated libraries. The 13 applicable requirements cover key management documentation, cryptographic inventory, approved algorithm enforcement, secure failure handling, and data minimization. The 11 N/A requirements relate to custom block cipher modes, nonce management, constant-time operations, and post-quantum migration , none of which apply because the application code never directly touches low-level cryptographic primitives.
+The backend does not implement custom cryptographic primitives, all cryptographic operations (JWT signing, password hashing, key management) are delegated to Auth0 and industry-validated libraries. The 13 applicable requirements cover key management documentation, cryptographic inventory, approved algorithm enforcement, secure failure handling, and data minimization. The 11 N/A requirements relate to custom block cipher modes, nonce management, constant-time operations, and post-quantum migration, none of which apply because the application code never directly touches low-level cryptographic primitives.
+
+> **Auth0 handles internally:** JWT signing key management (RS256, automatic key rotation), public key publication via JWKS, and password hashing (bcrypt). The backend only verifies JWT signatures using the public keys from the JWKS endpoint.
 
 ### V12 - Secure Communication (7/12 applicable)
 
