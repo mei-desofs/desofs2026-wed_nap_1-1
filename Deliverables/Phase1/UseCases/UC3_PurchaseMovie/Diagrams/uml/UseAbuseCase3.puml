@@ -1,0 +1,104 @@
+@startuml UseAbuseCase3
+left to right direction
+skinparam linetype ortho
+skinparam shadowing false
+skinparam backgroundColor #F9F9F9
+
+skinparam usecase {
+  BackgroundColor White
+  BorderColor Black
+  FontColor Black
+}
+skinparam usecase {
+  BackgroundColor<<Threat>> Black
+  FontColor<<Threat>> White
+  BorderColor<<Threat>> Black
+}
+skinparam usecase {
+  BackgroundColor<<Mitigation>> #34C759
+  FontColor<<Mitigation>> White
+  BorderColor<<Mitigation>> #248A3D
+}
+skinparam usecase {
+  BackgroundColor<<External>> #5AC8FA
+  FontColor<<External>> White
+  BorderColor<<External>> #3A99D9
+}
+skinparam usecase {
+  BackgroundColor<<Vulnerability>> #B0B0B0
+  FontColor<<Vulnerability>> Black
+  BorderColor<<Vulnerability>> #808080
+}
+
+actor Customer
+actor "Attacker" as Attacker
+
+rectangle "Purchase Flow" {
+  Customer --> (Purchase movies)
+  (Purchase movies) --> (Send purchase request)
+  (Send purchase request) --> (Application/Server)
+  (Application/Server) --> (Validate JWT and Customer role) <<Mitigation>>
+  (Application/Server) --> (Validate order payload) <<Mitigation>>
+  (Application/Server) --> (Sanitize receiptName) <<Mitigation>>
+  (Application/Server) --> (Create receipt file on filesystem) <<Mitigation>>
+  (Application/Server) --> (Log purchase events) <<Mitigation>>
+}
+
+' --- VULNERABILITIES
+(Send purchase request) <<Vulnerability>>
+(Validate JWT and Customer role) <<Vulnerability>>
+(Validate order payload) <<Vulnerability>>
+(Sanitize receiptName) <<Vulnerability>>
+(Create receipt file on filesystem) <<Vulnerability>>
+(Log purchase events) <<Vulnerability>>
+
+' --- THREATS
+(Unauthenticated request or forged token) <<Threat>>
+(Tamper movie IDs or quantities) <<Threat>>
+(Path traversal via receiptName) <<Threat>>
+(OS command injection via receiptName) <<Threat>>
+(Overwrite existing receipt file) <<Threat>>
+(Flood filesystem with receipt files) <<Threat>>
+(Escalate privilege to place order) <<Threat>>
+(Deny having placed an order) <<Threat>>
+
+' --- THREAT CONNECTIONS
+(Validate JWT and Customer role) <-- (Unauthenticated request or forged token) #red : <<Threatens>>
+(Validate order payload) <-- (Tamper movie IDs or quantities) #red : <<Threatens>>
+(Sanitize receiptName) <-- (Path traversal via receiptName) #red : <<Threatens>>
+(Sanitize receiptName) <-- (OS command injection via receiptName) #red : <<Threatens>>
+(Create receipt file on filesystem) <-- (Overwrite existing receipt file) #red : <<Threatens>>
+(Create receipt file on filesystem) <-- (Flood filesystem with receipt files) #red : <<Threatens>>
+(Validate JWT and Customer role) <-- (Escalate privilege to place order) #red : <<Threatens>>
+(Log purchase events) <-- (Deny having placed an order) #red : <<Threatens>>
+
+(Unauthenticated request or forged token) <-- Attacker
+(Tamper movie IDs or quantities) <-- Attacker
+(Path traversal via receiptName) <-- Attacker
+(OS command injection via receiptName) <-- Attacker
+(Overwrite existing receipt file) <-- Attacker
+(Flood filesystem with receipt files) <-- Attacker
+(Escalate privilege to place order) <-- Attacker
+(Deny having placed an order) <-- Attacker
+
+' --- MITIGATIONS
+(Validate JWT and Customer role) --> (AuthMiddleware JWT validation) <<Mitigation>>
+(Validate JWT and Customer role) --> (RoleGuard enforcement) <<Mitigation>>
+(Validate order payload) --> (Server-side validation; prices resolved from DB) <<Mitigation>>
+(Sanitize receiptName) --> (Allow-list chars, strip separators, max 100 chars) <<Mitigation>>
+(Sanitize receiptName) --> (Direct I/O APIs only; no shell invocation) <<Mitigation>>
+(Create receipt file on filesystem) --> (Unique orderId suffix + create-new-only flag) <<Mitigation>>
+(Create receipt file on filesystem) --> (Rate limiter + sandboxed receipts directory) <<Mitigation>>
+(Log purchase events) --> (Immutable audit logging with actor context) <<Mitigation>>
+
+' --- MITIGATES ARROWS
+(AuthMiddleware JWT validation) --> (Unauthenticated request or forged token) #green : <<Mitigates>>
+(RoleGuard enforcement) --> (Escalate privilege to place order) #green : <<Mitigates>>
+(Server-side validation; prices resolved from DB) --> (Tamper movie IDs or quantities) #green : <<Mitigates>>
+(Allow-list chars, strip separators, max 100 chars) --> (Path traversal via receiptName) #green : <<Mitigates>>
+(Direct I/O APIs only; no shell invocation) --> (OS command injection via receiptName) #green : <<Mitigates>>
+(Unique orderId suffix + create-new-only flag) --> (Overwrite existing receipt file) #green : <<Mitigates>>
+(Rate limiter + sandboxed receipts directory) --> (Flood filesystem with receipt files) #green : <<Mitigates>>
+(Immutable audit logging with actor context) --> (Deny having placed an order) #green : <<Mitigates>>
+
+@enduml

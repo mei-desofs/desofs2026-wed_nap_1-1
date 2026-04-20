@@ -4,11 +4,13 @@ title "Sequence Diagram: As a Customer, I want to purchase movies"
 
 actor Customer
 participant "API Client" as API
-participant RoleGuard as RG
 participant OrderController as OC
+participant RoleGuard as RG
 participant OrderService as OS
 participant OrderRepository as OR
 participant MovieRepository as MR
+participant ReceiptFileService as RFS
+entity "Filesystem\n(Receipts Dir)" as FS
 
 activate Customer
 Customer -> API: Submit purchase request
@@ -24,7 +26,7 @@ OC -> OS: Process order creation
 activate OS
 OS -> OS: Validate payload and business limits
 OS -> OS: Validate order size <= 10 movies
-OS -> OS: Validate receiptName
+OS -> OS: Validate and sanitize receiptName\n(allow-list, strip path separators, max 100 chars)
 OS -> MR: Check movie existence and stock
 activate MR
 MR --> OS: Return validation data
@@ -33,13 +35,24 @@ OS -> OS: Validate sufficient stock for requested movies
 
 OS -> OR: Create order (transaction)
 activate OR
-OR --> OS: Return created order data
+OR --> OS: Return created order data (orderId)
 deactivate OR
 
 OS -> MR: Update movie stock (transaction)
 activate MR
 MR --> OS: Confirm stock updates
 deactivate MR
+
+OS -> RFS: createReceipt(sanitizedReceiptName, orderId, orderSummary)
+activate RFS
+RFS -> RFS: Build filename: <sanitizedName>_<orderId>.txt
+RFS -> RFS: Resolve path & verify inside sandboxed directory
+RFS -> FS: Write .txt file (create-new-only)
+activate FS
+FS --> RFS: File created successfully
+deactivate FS
+RFS --> OS: Receipt file path
+deactivate RFS
 
 OS --> OC: Return operation result
 deactivate OS
