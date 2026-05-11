@@ -100,10 +100,6 @@ Given that eMovieShop exchanges only JSON metadata (no file upload in scope), re
     * No composition rules (e.g., requiring uppercase or symbols) to allow flexibility and compatibility with password managers.
 
 > **Note:** If a frontend client were introduced, a password strength meter would be provided to assist users in creating secure credentials. Password managers, browser autofill, and paste functionality would be fully supported. These features are available through Auth0's hosted login page.
-* **Initial Temporary Passwords:**
-    * Securely generated using a cryptographically strong random number generator.
-    * At least 8 alphanumeric characters in length.
-    * Automatically expire within 24 hours if unused and enforced to be changed on first login.
 * **Credential Storage (Auth0-managed):**
     * Password hashing is delegated to Auth0 as the external IdP. The following policy requirements are enforced via Auth0 configuration:
     * Securely stored using the bcrypt algorithm with a work factor of 12.
