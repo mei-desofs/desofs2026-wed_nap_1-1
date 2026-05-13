@@ -30,7 +30,6 @@ public class UserController {
         roleGuard.requireRole(jwt, Role.ADMIN);
         return ResponseEntity.ok(userService.getAllUsers());
     }
-    
 
     @PostMapping("/{id}/roles")
     public ResponseEntity<Void> assignRole(
@@ -41,7 +40,6 @@ public class UserController {
         userService.assignRole(jwt.getSubject(), id, dto.role());
         return ResponseEntity.noContent().build();
     }
-
 
     @DeleteMapping("/{id}/roles")
     public ResponseEntity<Void> removeRole(
