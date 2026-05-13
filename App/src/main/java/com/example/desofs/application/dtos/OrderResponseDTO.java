@@ -1,4 +1,4 @@
-package com.emovieshop.dto;
+package com.example.desofs.application.dtos;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;

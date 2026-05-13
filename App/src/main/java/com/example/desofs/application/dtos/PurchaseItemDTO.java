@@ -1,4 +1,4 @@
-package com.emovieshop.dto;
+package com.example.desofs.application.dtos;
 
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
