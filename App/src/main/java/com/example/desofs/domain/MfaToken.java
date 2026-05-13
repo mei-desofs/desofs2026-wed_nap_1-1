@@ -1,8 +1,8 @@
 package com.example.desofs.domain;
 
+/*
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
-
 @Entity
 @Table(name = "mfa_tokens")
 public class MfaToken {
@@ -47,3 +47,4 @@ public class MfaToken {
     public LocalDateTime getCreatedAt() { return createdAt; }
     public LocalDateTime getUpdatedAt() { return updatedAt; }
 }
+*/

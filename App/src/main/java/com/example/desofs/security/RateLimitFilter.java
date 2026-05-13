@@ -21,12 +21,16 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 /**
- * Rate-limiting filter using the token-bucket algorithm (Bucket4j).
- * Applies two layers:
- *   1. Per-IP: 300 requests/minute (protects against anonymous flooding)
- *   2. Per-User (auth0Id from JWT): 120 requests/minute (protects against authenticated abuse)
+ * Servlet filter that enforces request rate limits using the token-bucket
+ * algorithm provided by Bucket4j.
  *
- * Returns HTTP 429 Too Many Requests when limits are exceeded.
+ * <p>The filter applies two independent limits:</p>
+ * <ul>
+ *   <li>Per IP address, to reduce anonymous flooding.</li>
+ *   <li>Per authenticated user, to reduce abuse from valid sessions.</li>
+ * </ul>
+ *
+ * <p>When a limit is exceeded, the filter returns HTTP 429 Too Many Requests.</p>
  */
 @Component
 public class RateLimitFilter extends OncePerRequestFilter {
@@ -42,6 +46,15 @@ public class RateLimitFilter extends OncePerRequestFilter {
     @Value("${emovieshop.rate-limit.user.requests-per-minute:120}")
     private int userRequestsPerMinute;
 
+    /**
+     * Applies the per-IP and per-user rate limits before continuing the filter chain.
+     *
+     * @param request current HTTP request
+     * @param response current HTTP response
+     * @param filterChain next filter in the chain
+     * @throws ServletException if the filter chain fails
+     * @throws IOException if response writing fails
+     */
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
@@ -71,18 +84,34 @@ public class RateLimitFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
+    /**
+     * Creates a token bucket for IP-based rate limiting.
+     *
+     * @return bucket configured with the current IP request limit
+     */
     private Bucket createIpBucket() {
         return Bucket.builder()
                 .addLimit(Bandwidth.simple(ipRequestsPerMinute, Duration.ofMinutes(1)))
                 .build();
     }
 
+    /**
+     * Creates a token bucket for authenticated-user rate limiting.
+     *
+     * @return bucket configured with the current user request limit
+     */
     private Bucket createUserBucket() {
         return Bucket.builder()
                 .addLimit(Bandwidth.simple(userRequestsPerMinute, Duration.ofMinutes(1)))
                 .build();
     }
 
+    /**
+     * Resolves the client IP address, preferring the first value in X-Forwarded-For.
+     *
+     * @param request current HTTP request
+     * @return client IP address
+     */
     private String resolveClientIp(HttpServletRequest request) {
         String xForwardedFor = request.getHeader("X-Forwarded-For");
         if (xForwardedFor != null && !xForwardedFor.isBlank()) {
@@ -92,6 +121,12 @@ public class RateLimitFilter extends OncePerRequestFilter {
         return request.getRemoteAddr();
     }
 
+    /**
+     * Extracts the authenticated user identifier from the security context.
+     *
+     * @param request current HTTP request
+     * @return authenticated user identifier, or {@code null} if unauthenticated
+     */
     private String extractUserId(HttpServletRequest request) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication != null && authentication.isAuthenticated()) {
@@ -100,6 +135,13 @@ public class RateLimitFilter extends OncePerRequestFilter {
         return null;
     }
 
+    /**
+     * Writes a standard HTTP 429 response body.
+     *
+     * @param response current HTTP response
+     * @param message user-facing throttling message
+     * @throws IOException if the response cannot be written
+     */
     private void sendTooManyRequests(HttpServletResponse response, String message) throws IOException {
         response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
         response.setContentType("application/json");

@@ -1,6 +1,7 @@
-package com.example.desofs.infrastructure.utils;
+package com.example.desofs.utils;
 
 import org.junit.jupiter.api.Test;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 class PublicIdHandlerTest {

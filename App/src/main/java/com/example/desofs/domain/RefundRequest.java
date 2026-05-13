@@ -3,7 +3,6 @@ package com.example.desofs.domain;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 /**
  * Entity that represents a refund request made for an order.
@@ -25,8 +24,8 @@ public class RefundRequest {
     @JoinColumn(name = "order_id")
     private Order order;
 
-    @Column(name = "user_id")
-    private UUID userId;
+    @Column(name = "auth0_id", nullable = false)
+    private String auth0Id;
 
     private BigDecimal amount;
 
@@ -42,6 +41,16 @@ public class RefundRequest {
      * Creates a new refund request with the initial timestamps and a REQUESTED status.
      */
     public RefundRequest() {
+        this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
+        this.status = RefundStatus.REQUESTED;
+    }
+
+    public RefundRequest(Order order, String auth0Id, BigDecimal amount, String reason) {
+        this.order = order;
+        this.auth0Id = auth0Id;
+        this.amount = amount;
+        this.reason = reason;
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
         this.status = RefundStatus.REQUESTED;
@@ -73,14 +82,14 @@ public class RefundRequest {
      *
      * @return the requesting user
      */
-    public UUID getUserId() { return userId; }
+    public String getAuth0Id() { return auth0Id; }
 
     /**
      * Sets the user who created the refund request.
      *
-     * @param userId the requesting user ID
+     * @param auth0Id the requesting user ID
      */
-    public void setUserId(UUID userId) { this.userId = userId; }
+    public void setAuth0Id(String auth0Id) { this.auth0Id = auth0Id; }
 
     /**
      * Returns the amount requested for refund.
