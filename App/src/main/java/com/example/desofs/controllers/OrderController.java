@@ -16,21 +16,41 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/orders")
+/**
+ * REST controller for order creation endpoints.
+ * <p>
+ * Exposes purchase order creation and enforces customer access through JWT
+ * role checks.
+ */
 public class OrderController {
 
+    /** Logger for request tracing and diagnostics. */
     private static final Logger logger = LoggerFactory.getLogger(OrderController.class);
 
+    /** Service responsible for order processing and persistence. */
     private final OrderService orderService;
+
+    /** Guard that enforces role-based access checks. */
     private final RoleGuard roleGuard;
 
+    /**
+     * Constructs the controller with required dependencies.
+     *
+     * @param orderService service to handle order business logic
+     * @param roleGuard component used to enforce role checks
+     */
     public OrderController(OrderService orderService, RoleGuard roleGuard) {
         this.orderService = orderService;
         this.roleGuard = roleGuard;
     }
 
     /**
-     * POST /api/orders
-     * Creates a new purchase order. Only accessible by users with the CUSTOMER role.
+     * Creates a new purchase order.
+     * <p>
+     * Only users with the {@link Role#CUSTOMER} role can call this endpoint.
+     * @param jwt authenticated JWT principal
+     * @param request purchase request payload
+     * @return HTTP 201 with the created order response
      */
     @PostMapping
     public ResponseEntity<OrderResponseDTO> createOrder(

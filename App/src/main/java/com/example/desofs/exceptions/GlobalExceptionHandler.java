@@ -14,14 +14,22 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
- * Global exception handler for REST API
- * To be implemented with @RestControllerAdvice for centralized error handling
+ * Global exception handler for the REST API.
+ *
+ * <p>Centralizes validation, authorization, business-rule, security, and
+ * unexpected error responses into a consistent JSON structure.</p>
  */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
     private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
+    /**
+     * Handles bean validation failures raised while binding request payloads.
+     *
+     * @param ex validation exception describing the invalid fields
+     * @return HTTP 400 response with a correlation id and validation message
+     */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, Object>> handleValidation(MethodArgumentNotValidException ex) {
         String correlationId = UUID.randomUUID().toString();
@@ -36,6 +44,12 @@ public class GlobalExceptionHandler {
                 .body(errorBody(correlationId, HttpStatus.BAD_REQUEST.value(), message));
     }
 
+    /**
+     * Handles invalid request data and application-level bad input.
+     *
+     * @param ex exception describing the invalid request
+     * @return HTTP 400 response with a correlation id and error message
+     */
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<Map<String, Object>> handleBadRequest(IllegalArgumentException ex) {
         String correlationId = UUID.randomUUID().toString();
@@ -45,6 +59,12 @@ public class GlobalExceptionHandler {
                 .body(errorBody(correlationId, HttpStatus.BAD_REQUEST.value(), ex.getMessage()));
     }
 
+    /**
+     * Handles business-rule conflicts such as invalid state transitions.
+     *
+     * @param ex exception describing the conflict
+     * @return HTTP 409 response with a correlation id and conflict message
+     */
     @ExceptionHandler(IllegalStateException.class)
     public ResponseEntity<Map<String, Object>> handleConflict(IllegalStateException ex) {
         String correlationId = UUID.randomUUID().toString();
@@ -54,6 +74,12 @@ public class GlobalExceptionHandler {
                 .body(errorBody(correlationId, HttpStatus.CONFLICT.value(), ex.getMessage()));
     }
 
+    /**
+     * Handles authorization failures detected by the security layer.
+     *
+     * @param ex access-denied exception
+     * @return HTTP 403 response with a sanitized error body
+     */
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<Map<String, Object>> handleAccessDenied(AccessDeniedException ex) {
         String correlationId = UUID.randomUUID().toString();
@@ -63,6 +89,12 @@ public class GlobalExceptionHandler {
                 .body(errorBody(correlationId, HttpStatus.FORBIDDEN.value(), "Access denied"));
     }
 
+    /**
+     * Handles security-related exceptions that should not expose internals.
+     *
+     * @param ex security exception
+     * @return HTTP 400 response with a generic invalid-request message
+     */
     @ExceptionHandler(SecurityException.class)
     public ResponseEntity<Map<String, Object>> handleSecurityException(SecurityException ex) {
         String correlationId = UUID.randomUUID().toString();
@@ -72,6 +104,12 @@ public class GlobalExceptionHandler {
                 .body(errorBody(correlationId, HttpStatus.BAD_REQUEST.value(), "Invalid request"));
     }
 
+    /**
+     * Handles any uncaught exception as a fallback.
+     *
+     * @param ex unexpected exception
+     * @return HTTP 500 response with a generic message and correlation id
+     */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, Object>> handleGeneric(Exception ex) {
         String correlationId = UUID.randomUUID().toString();
@@ -81,6 +119,14 @@ public class GlobalExceptionHandler {
                 .body(errorBody(correlationId, HttpStatus.INTERNAL_SERVER_ERROR.value(), "An unexpected error occurred"));
     }
 
+    /**
+     * Builds the standard error response payload.
+     *
+     * @param correlationId generated request correlation id
+     * @param status HTTP status code
+     * @param message human-readable error message
+     * @return map representation of the error response body
+     */
     private Map<String, Object> errorBody(String correlationId, int status, String message) {
         return Map.of(
                 "correlationId", correlationId,
