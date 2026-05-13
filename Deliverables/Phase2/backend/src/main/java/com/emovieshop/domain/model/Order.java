@@ -1,6 +1,5 @@
 package com.emovieshop.domain.model;
 
-import com.emovieshop.domain.refundRequest.RefundRequest;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -35,9 +34,6 @@ public class Order {
 
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
-
-    @OneToOne(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    private RefundRequest refundRequest;
 
     protected Order() {
     }
@@ -81,14 +77,6 @@ public class Order {
 
     public LocalDateTime getCreatedAt() {
         return createdAt;
-    }
-
-    public RefundRequest getRefundRequest() {
-        return refundRequest;
-    }
-
-    public void setRefundRequest(RefundRequest refundRequest) {
-        this.refundRequest = refundRequest;
     }
 
     public void setStatus(OrderStatus status) {
