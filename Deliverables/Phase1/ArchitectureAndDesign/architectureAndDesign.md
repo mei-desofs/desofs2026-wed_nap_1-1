@@ -1,8 +1,8 @@
-## 2 Architecture/Design
+# Architecture/Design
 
-### 2.1 Components
+### Components
 
-#### 2.1.1 High-Level
+#### High-Level
 
 ![High-Level Component Diagram](diagrams/images/HighLevelView.png)
 
@@ -31,7 +31,7 @@ Auth0 also exposes user profile and role metadata consumed by the backend's auth
     - Users, Movies, Orders, Refund Requests, and Roles.
 - It supports queries from both the backend services and audit logging components.
 
-#### 2.1.2 Backend
+#### Backend
 
 ![Backend Logical View](diagrams/images/BackendLogicalView.png)
 
@@ -50,7 +50,7 @@ This diagram illustrates the internal architecture of the eMovieShop backend, de
 The backend enforces security at multiple layers (middleware, services) and clearly separates concerns between API handling, 
 domain logic, and data persistence. In particular, the **JWT Middleware** is responsible for verifying that self-contained tokens issued by **Auth0** are authentic and unmodified before downstream components trust claims such as user identity or role.
 
-### 2.2 Deployment
+### Deployment
 
 ![Deployment View](diagrams/images/DeploymentView.png)
 
@@ -84,7 +84,7 @@ surface of a potential compromise:
 
 This operating model can be enforced via Docker container users or systemd service accounts.
 
-### 2.3 Technology Stack
+### Technology Stack
 
 |     Component     | Technology Stack |
 |:-----------------:|:----------------:|
@@ -92,7 +92,7 @@ This operating model can be enforced via Docker container users or systemd servi
 |     Database      |      MySQL       |
 | Identity Provider | Auth0 (External) |
 
-### 2.4 Secure Design Patterns
+### Secure Design Patterns
 
 | **Pattern**                     | **eMovieShop Adaptation**                                                                                                                                                                                                                                                                                                                    |
 |---------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -126,7 +126,7 @@ Additionally, the architecture defines concrete security controls for implementa
 
 These values are intentionally aligned with the operational baselines defined in Domain Analysis/Requirements to keep architecture and requirements documentation consistent.
 
-### 2.5 Sequence Diagrams
+### Sequence Diagrams
 
 **UC1:**
 
