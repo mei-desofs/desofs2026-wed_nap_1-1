@@ -1,10 +1,10 @@
 package com.example.desofs.controllers;
 
-import com.emovieshop.domain.model.Role;
-import com.emovieshop.dto.OrderResponseDTO;
-import com.emovieshop.dto.PurchaseRequestDTO;
-import com.emovieshop.security.RoleGuard;
-import com.emovieshop.service.OrderService;
+import com.example.desofs.domain.Role;
+import com.example.desofs.shared.dtos.OrderResponseDTO;
+import com.example.desofs.shared.dtos.PurchaseRequestDTO;
+import com.example.desofs.security.RoleGuard;
+import com.example.desofs.services.OrderService;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

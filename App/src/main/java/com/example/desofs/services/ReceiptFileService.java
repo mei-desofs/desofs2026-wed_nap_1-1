@@ -1,7 +1,7 @@
-package com.emovieshop.service;
+package com.example.desofs.services;
 
-import com.emovieshop.domain.model.Order;
-import com.emovieshop.domain.model.OrderItem;
+import com.example.desofs.domain.Order;
+import com.example.desofs.domain.OrderItem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -11,21 +11,41 @@ import java.io.IOException;
 import java.nio.file.*;
 import java.time.format.DateTimeFormatter;
 
+/**
+ * Service for managing receipt file creation and sanitization.
+ * <p>
+ * Provides secure receipt name validation using an allow-list approach, safe file
+ * creation within a sandboxed directory with path traversal protection, and
+ * formatted receipt content generation.
+ */
 @Service
 public class ReceiptFileService {
 
+    /** Logger for file operations and errors. */
     private static final Logger logger = LoggerFactory.getLogger(ReceiptFileService.class);
+
+    /** Date/time format for receipt timestamps. */
     private static final DateTimeFormatter TIMESTAMP_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     /**
-     * Allow-list: only alphanumeric, spaces, hyphens, and underscores.
-     * Everything else is stripped.
+     * Allow-list pattern for receipt name sanitization:
+     * only alphanumeric, spaces, hyphens, and underscores are kept.
+     * All other characters are stripped.
      */
     private static final String ALLOWED_CHARS_PATTERN = "[^a-zA-Z0-9 _-]";
 
+    /** Absolute normalized path to the sandboxed receipts directory. */
     private final Path receiptsDirectory;
+
+    /** Maximum allowed length for sanitized receipt names. */
     private final int maxNameLength;
 
+    /**
+     * Constructs the service with configured receipt directory and name constraints.
+     *
+     * @param receiptsDir directory path for storing receipts (defaults to ./receipts)
+     * @param maxNameLength maximum characters allowed in sanitized receipt names (defaults to 100)
+     */
     public ReceiptFileService(
             @Value("${emovieshop.receipts.directory:./receipts}") String receiptsDir,
             @Value("${emovieshop.receipts.max-name-length:100}") int maxNameLength) {
@@ -33,6 +53,11 @@ public class ReceiptFileService {
         this.maxNameLength = maxNameLength;
     }
 
+    /**
+     * Ensures the receipts directory exists, creating it if necessary.
+     *
+     * @throws IOException if directory creation fails
+     */
     public void ensureReceiptsDirectoryExists() throws IOException {
         if (!Files.exists(receiptsDirectory)) {
             Files.createDirectories(receiptsDirectory);
@@ -42,8 +67,13 @@ public class ReceiptFileService {
 
     /**
      * Sanitizes the receipt name using an allow-list approach.
-     * Strips path separators, null bytes, and any character outside [a-zA-Z0-9 _-].
-     * Truncates to the configured max length.
+     * <p>
+     * Removes null bytes, path separators, and any character outside
+     * [a-zA-Z0-9 _-]. Truncates to the configured maximum length.
+     *
+     * @param rawName unsanitized receipt name
+     * @return sanitized receipt name
+     * @throws IllegalArgumentException if name is blank or becomes blank after sanitization
      */
     public String sanitizeReceiptName(String rawName) {
         if (rawName == null || rawName.isBlank()) {
@@ -73,8 +103,15 @@ public class ReceiptFileService {
 
     /**
      * Creates a receipt .txt file inside the sandboxed receipts directory.
+     * <p>
      * Uses CREATE_NEW to fail if the file already exists (prevents overwrites).
-     * Verifies the resolved path stays within the receipts directory (path traversal protection).
+     * Verifies the resolved path stays within the receipts directory to prevent
+     * path traversal attacks.
+     *
+     * @param order the order for which to create a receipt
+     * @return the absolute path to the created receipt file
+     * @throws IOException if file creation fails
+     * @throws SecurityException if path traversal is detected
      */
     public Path createReceiptFile(Order order) throws IOException {
         ensureReceiptsDirectoryExists();
@@ -99,6 +136,15 @@ public class ReceiptFileService {
         return filePath;
     }
 
+    /**
+     * Builds the formatted receipt content as a plain text string.
+     * <p>
+     * Includes order details, itemized list with quantities and prices,
+     * and order total.
+     *
+     * @param order the order to build receipt content for
+     * @return formatted receipt content
+     */
     private String buildReceiptContent(Order order) {
         StringBuilder sb = new StringBuilder();
         sb.append("========================================\n");
@@ -124,6 +170,13 @@ public class ReceiptFileService {
         return sb.toString();
     }
 
+    /**
+     * Truncates text to the specified maximum length, appending "..." if truncated.
+     *
+     * @param text the text to truncate
+     * @param maxLen maximum allowed length
+     * @return truncated text, or original if it fits within maxLen
+     */
     private String truncate(String text, int maxLen) {
         if (text.length() <= maxLen) {
             return text;
