@@ -1,7 +1,7 @@
 package com.example.desofs.controllers;
 
-import com.example.desofs.application.services.MovieService;
-import com.example.desofs.domain.entities.Movie;
+import com.example.desofs.services.MovieService;
+import com.example.desofs.domain.Movie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 

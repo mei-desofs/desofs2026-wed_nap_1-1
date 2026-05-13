@@ -1,7 +1,7 @@
 package com.example.desofs.services;
 
-import com.example.desofs.domain.entities.Movie;
-import com.example.desofs.domain.repositories.MovieRepository;
+import com.example.desofs.domain.Movie;
+import com.example.desofs.repositories.MovieRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;

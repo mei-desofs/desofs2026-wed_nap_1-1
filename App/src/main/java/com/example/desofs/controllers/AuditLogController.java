@@ -1,7 +1,7 @@
 package com.example.desofs.controllers;
 
-import com.example.desofs.application.services.AuditLogService;
-import com.example.desofs.domain.entities.AuditLog;
+import com.example.desofs.services.AuditLogService;
+import com.example.desofs.domain.AuditLog;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 

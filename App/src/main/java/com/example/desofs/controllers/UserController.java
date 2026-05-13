@@ -1,8 +1,7 @@
 package com.example.desofs.controllers;
 
-import com.example.desofs.application.dtos.UserDTO;
-import com.example.desofs.application.services.UserService;
-import com.example.desofs.domain.entities.User;
+import com.example.desofs.shared.dtos.UserDTO;
+import com.example.desofs.services.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 

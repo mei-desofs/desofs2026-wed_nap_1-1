@@ -1,8 +1,8 @@
 package com.example.desofs.controllers;
 
-import com.example.desofs.application.dtos.CreateOrderRequest;
-import com.example.desofs.application.dtos.OrderDTO;
-import com.example.desofs.application.services.OrderService;
+import com.example.desofs.shared.dtos.CreateOrderRequest;
+import com.example.desofs.shared.dtos.OrderDTO;
+import com.example.desofs.services.OrderService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
