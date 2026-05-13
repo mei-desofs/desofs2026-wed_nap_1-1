@@ -2,11 +2,12 @@ package com.example.desofs.shared.dtos;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 public class RefundRequestDTO {
     private Long id;
     private Long orderId;
-    private Long userId;
+    private UUID userId;
     private BigDecimal amount;
     private String status;
     private String reason;
@@ -15,7 +16,7 @@ public class RefundRequestDTO {
 
     public RefundRequestDTO() {}
 
-    public RefundRequestDTO(Long id, Long orderId, Long userId, BigDecimal amount, String status, 
+    public RefundRequestDTO(Long id, Long orderId, UUID userId, BigDecimal amount, String status, 
                             String reason, LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
         this.orderId = orderId;
@@ -31,8 +32,8 @@ public class RefundRequestDTO {
     public void setId(Long id) { this.id = id; }
     public Long getOrderId() { return orderId; }
     public void setOrderId(Long orderId) { this.orderId = orderId; }
-    public Long getUserId() { return userId; }
-    public void setUserId(Long userId) { this.userId = userId; }
+    public UUID getUserId() { return userId; }
+    public void setUserId(UUID userId) { this.userId = userId; }
     public BigDecimal getAmount() { return amount; }
     public void setAmount(BigDecimal amount) { this.amount = amount; }
     public String getStatus() { return status; }
