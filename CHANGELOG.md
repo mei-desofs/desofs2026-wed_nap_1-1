@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.1.0](https://github.com/mei-desofs/desofs2026-wed_nap_1-1/compare/v1.0.0...v1.1.0) (2026-05-13)
+
+
+### Features
+
+* RateLimitFilter feature implementation ([#8](https://github.com/mei-desofs/desofs2026-wed_nap_1-1/issues/8)) ([f672851](https://github.com/mei-desofs/desofs2026-wed_nap_1-1/commit/f672851ed5b0b05d9edd23a45579514996261866))
+* UserController.java small changes ([#6](https://github.com/mei-desofs/desofs2026-wed_nap_1-1/issues/6)) ([1c5b6b1](https://github.com/mei-desofs/desofs2026-wed_nap_1-1/commit/1c5b6b10df01bd14011ceea07767a52a99f2bd38))
+
 ## 1.0.0 (2026-05-13)
 
 
