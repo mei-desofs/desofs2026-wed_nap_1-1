@@ -14,8 +14,14 @@ public class Movie {
     @Column(nullable = false)
     private String title;
 
+    @Column(columnDefinition = "TEXT")
+    private String description;
+
     @Column(nullable = false)
     private String genre;
+
+    @Column
+    private String platform;
 
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal price;
@@ -26,9 +32,11 @@ public class Movie {
     protected Movie() {
     }
 
-    public Movie(String title, String genre, BigDecimal price, Integer stockQuantity) {
+    public Movie(String title, String description, String genre, String platform, BigDecimal price, Integer stockQuantity) {
         this.title = title;
+        this.description = description;
         this.genre = genre;
+        this.platform = platform;
         this.price = price;
         this.stockQuantity = stockQuantity;
     }
@@ -41,8 +49,16 @@ public class Movie {
         return title;
     }
 
+    public String getDescription() {
+        return description;
+    }
+
     public String getGenre() {
         return genre;
+    }
+
+    public String getPlatform() {
+        return platform;
     }
 
     public BigDecimal getPrice() {

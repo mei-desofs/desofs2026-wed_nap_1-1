@@ -26,7 +26,7 @@ class OrderTest {
     @DisplayName("addItem adds item and updates total price")
     void addItem_updatesTotal() {
         Order order = new Order("auth0|user1", "John Doe");
-        Movie movie = new Movie("Inception", "Sci-Fi", new BigDecimal("14.99"), 10);
+        Movie movie = new Movie("Inception", "A mind-bending thriller", "Sci-Fi", "Blu-ray", new BigDecimal("14.99"), 10);
         OrderItem item = new OrderItem(movie, 2, new BigDecimal("14.99"));
 
         order.addItem(item);
@@ -39,8 +39,8 @@ class OrderTest {
     @DisplayName("addItem accumulates total across multiple items")
     void addItem_multipleItems_accumulatesTotal() {
         Order order = new Order("auth0|user1", "John Doe");
-        Movie movie1 = new Movie("Inception", "Sci-Fi", new BigDecimal("14.99"), 10);
-        Movie movie2 = new Movie("The Matrix", "Sci-Fi", new BigDecimal("12.99"), 5);
+        Movie movie1 = new Movie("Inception", "A mind-bending thriller", "Sci-Fi", "Blu-ray", new BigDecimal("14.99"), 10);
+        Movie movie2 = new Movie("The Matrix", "A computer hacker learns about the true nature of reality", "Sci-Fi", "DVD", new BigDecimal("12.99"), 5);
 
         order.addItem(new OrderItem(movie1, 1, new BigDecimal("14.99")));
         order.addItem(new OrderItem(movie2, 1, new BigDecimal("12.99")));
@@ -53,7 +53,7 @@ class OrderTest {
     @DisplayName("getItems returns unmodifiable list")
     void getItems_returnsUnmodifiableList() {
         Order order = new Order("auth0|user1", "John Doe");
-        Movie movie = new Movie("Inception", "Sci-Fi", new BigDecimal("14.99"), 10);
+        Movie movie = new Movie("Inception", "A mind-bending thriller", "Sci-Fi", "Blu-ray", new BigDecimal("14.99"), 10);
         order.addItem(new OrderItem(movie, 1, new BigDecimal("14.99")));
 
         assertThat(order.getItems()).isUnmodifiable();
