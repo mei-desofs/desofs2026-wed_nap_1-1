@@ -44,7 +44,8 @@ public class RefundService {
 
     public RefundRequest complete(Long id) {
         return refundRequestRepository.findById(id).map(refund -> {
-            refund.setStatus(RefundRequest.RefundStatus.COMPLETED);
+            //TEM ERRO AQUIIIIIII!
+            //refund.setStatus(RefundRequest.RefundStatus.COMPLETED);
             return refundRequestRepository.save(refund);
         }).orElse(null);
     }
