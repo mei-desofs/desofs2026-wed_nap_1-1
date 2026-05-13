@@ -1,7 +1,7 @@
 package com.example.desofs.services;
 
 import com.example.desofs.domain.AuditLog;
-import com.example.desofs.domain.User;
+import com.example.desofs.domain.Role;
 import com.example.desofs.repositories.AuditLogRepository;
 import org.springframework.stereotype.Service;
 
@@ -19,29 +19,16 @@ public class AuditLogService {
         return auditLogRepository.findAll();
     }
 
-    public AuditLog log(String action, String entityType, Long entityId, User user, 
-                        AuditLog.UserRole userRole, String ipAddress, String userAgent, 
-                        String details, Boolean success) {
-        AuditLog log = new AuditLog();
-        log.setAction(action);
-        log.setEntityType(entityType);
-        log.setEntityId(entityId);
-        log.setUser(user);
-        log.setUserRole(userRole);
-        log.setIpAddress(ipAddress);
-        log.setUserAgent(userAgent);
-        log.setDetails(details);
-        log.setSuccess(success);
-        return auditLogRepository.save(log);
+    public AuditLog log(String actorId, String targetUserId, Role role, String operation) {
+        AuditLog auditLog = AuditLog.of(actorId, targetUserId, role, operation);
+        return auditLogRepository.save(auditLog);
     }
 
-    public AuditLog logSuccess(String action, String entityType, Long entityId, User user, 
-                               AuditLog.UserRole userRole, String ipAddress, String userAgent) {
-        return log(action, entityType, entityId, user, userRole, ipAddress, userAgent, null, true);
+    public AuditLog logRoleAssignment(String actorId, String targetUserId, Role role) {
+        return log(actorId, targetUserId, role, "ASSIGN");
     }
 
-    public AuditLog logFailure(String action, String entityType, Long entityId, User user, 
-                               AuditLog.UserRole userRole, String ipAddress, String userAgent, String reason) {
-        return log(action, entityType, entityId, user, userRole, ipAddress, userAgent, reason, false);
+    public AuditLog logRoleRemoval(String actorId, String targetUserId, Role role) {
+        return log(actorId, targetUserId, role, "REMOVE");
     }
 }

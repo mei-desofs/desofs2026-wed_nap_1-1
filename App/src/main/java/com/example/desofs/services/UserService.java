@@ -1,41 +1,34 @@
 package com.example.desofs.services;
 
-import com.example.desofs.domain.User;
-import com.example.desofs.repositories.UserRepository;
+import com.example.desofs.domain.AuditLog;
+import com.example.desofs.domain.Role;
+import com.example.desofs.repositories.AuditLogRepository;
+import com.example.desofs.shared.dtos.UserDTO;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
+
 
 @Service
 public class UserService {
-    private final UserRepository userRepository;
+    // private final Auth0ManagementClient auth0Client;
+    private final AuditLogRepository auditLogRepository;
 
-    public UserService(UserRepository userRepository) {
-        this.userRepository = userRepository;
+    public UserService(AuditLogRepository auditLogRepository) {
+        this.auditLogRepository = auditLogRepository;
     }
 
-    public List<User> listAll() {
-        return userRepository.findAll();
-    }
-
-    public Optional<User> get(Long id) {
-        return userRepository.findById(id);
-    }
-
-    public User getByEmail(String email) {
-        return userRepository.findByEmail(email);
-    }
-
-    public User create(User u) {
-        return userRepository.save(u);
-    }
-
-    public User update(Long id, User u) {
-        return userRepository.findById(id).map(existing -> {
-            if (u.getEmail() != null) existing.setEmail(u.getEmail());
-            if (u.getName() != null) existing.setName(u.getName());
-            return userRepository.save(existing);
-        }).orElse(null);
-    }
+//    public List<UserDTO> getAllUsers() {
+//        return auth0Client.getUsers();
+//    }
+//
+//    public void assignRole(String actorId, String targetUserId, Role role) {
+//        auth0Client.assignRoleToUser(targetUserId, role);
+//        auditLogRepository.save(AuditLog.of(actorId, targetUserId, role, "ASSIGN"));
+//    }
+//
+//    public void removeRole(String actorId, String targetUserId, Role role) {
+//        auth0Client.removeRoleFromUser(targetUserId, role);
+//        auditLogRepository.save(AuditLog.of(actorId, targetUserId, role, "REMOVE"));
+//    }
 }

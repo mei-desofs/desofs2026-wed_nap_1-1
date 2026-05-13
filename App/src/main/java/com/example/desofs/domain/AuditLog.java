@@ -1,59 +1,73 @@
 package com.example.desofs.domain;
 
 import jakarta.persistence.*;
-import java.time.LocalDateTime;
+
+import java.time.Instant;
 
 @Entity
 @Table(name = "audit_logs")
 public class AuditLog {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private String id;
 
-    private String action; // REFUND_APPROVED, ORDER_COMPLETED, USER_CREATED, etc.
-    private String entityType; // Order, RefundRequest, User, etc.
-    private Long entityId;
+    private String actorId;       // jwt.getSubject() do Admin
+    private String targetUserId;  // id do utilizador afetado
+    private String role;
+    private String operation;     // ASSIGN ou REMOVE
+    private Instant timestamp;
 
-    @ManyToOne
-    @JoinColumn(name = "user_id")
-    private User user; // User who performed the action
-
-    @Enumerated(EnumType.STRING)
-    private UserRole userRole; // CUSTOMER, SUPPORT, ADMIN
-
-    private String ipAddress; // IPv4 or IPv6
-    private String userAgent;
-    private String details; // JSON with additional details
-    private Boolean success;
-    private LocalDateTime timestamp;
-
-    public AuditLog() {
-        this.timestamp = LocalDateTime.now();
-        this.success = true;
+    public static AuditLog of(String actorId, String targetUserId, Role role, String operation) {
+        AuditLog log = new AuditLog();
+        log.actorId = actorId;
+        log.targetUserId = targetUserId;
+        log.role = role.name();
+        log.operation = operation;
+        log.timestamp = Instant.now();
+        return log;
     }
 
-    public Long getId() { return id; }
-    public String getAction() { return action; }
-    public void setAction(String action) { this.action = action; }
-    public String getEntityType() { return entityType; }
-    public void setEntityType(String entityType) { this.entityType = entityType; }
-    public Long getEntityId() { return entityId; }
-    public void setEntityId(Long entityId) { this.entityId = entityId; }
-    public User getUser() { return user; }
-    public void setUser(User user) { this.user = user; }
-    public UserRole getUserRole() { return userRole; }
-    public void setUserRole(UserRole userRole) { this.userRole = userRole; }
-    public String getIpAddress() { return ipAddress; }
-    public void setIpAddress(String ipAddress) { this.ipAddress = ipAddress; }
-    public String getUserAgent() { return userAgent; }
-    public void setUserAgent(String userAgent) { this.userAgent = userAgent; }
-    public String getDetails() { return details; }
-    public void setDetails(String details) { this.details = details; }
-    public Boolean getSuccess() { return success; }
-    public void setSuccess(Boolean success) { this.success = success; }
-    public LocalDateTime getTimestamp() { return timestamp; }
+    public String getId() {
+        return id;
+    }
 
-    public enum UserRole {
-        CUSTOMER, SUPPORT, ADMIN
+    public String getActorId() {
+        return actorId;
+    }
+
+    public String getTargetUserId() {
+        return targetUserId;
+    }
+
+    public String getRole() {
+        return role;
+    }
+
+    public String getOperation() {
+        return operation;
+    }
+
+    public Instant getTimestamp() {
+        return timestamp;
+    }
+
+    public void setActorId(String actorId) {
+        this.actorId = actorId;
+    }
+
+    public void setTargetUserId(String targetUserId) {
+        this.targetUserId = targetUserId;
+    }
+
+    public void setRole(String role) {
+        this.role = role;
+    }
+
+    public void setOperation(String operation) {
+        this.operation = operation;
+    }
+
+    public void setTimestamp(Instant timestamp) {
+        this.timestamp = timestamp;
     }
 }
