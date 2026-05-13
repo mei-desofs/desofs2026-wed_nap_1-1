@@ -3,6 +3,7 @@ package com.example.desofs.domain;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 /**
  * Entity that represents a refund request made for an order.
@@ -24,14 +25,13 @@ public class RefundRequest {
     @JoinColumn(name = "order_id")
     private Order order;
 
-    @ManyToOne
-    @JoinColumn(name = "user_id")
-    private User user;
+    @Column(name = "user_id")
+    private UUID userId;
 
     private BigDecimal amount;
 
     @Enumerated(EnumType.STRING)
-    private RefundStatus status; // REQUESTED, APPROVED, REJECTED
+    private RefundStatus status;
 
     @Column(length = REASON_MAX_LENGTH)
     private String reason;
@@ -73,14 +73,14 @@ public class RefundRequest {
      *
      * @return the requesting user
      */
-    public User getUser() { return user; }
+    public UUID getUserId() { return userId; }
 
     /**
      * Sets the user who created the refund request.
      *
-     * @param user the requesting user
+     * @param userId the requesting user ID
      */
-    public void setUser(User user) { this.user = user; }
+    public void setUserId(UUID userId) { this.userId = userId; }
 
     /**
      * Returns the amount requested for refund.
