@@ -37,13 +37,6 @@ public class RefundController {
      * @param refundService service for refund operations
      */
     public RefundController(RefundService refundService) {
-
-    /**
-     * Constructs the controller with the required service.
-     *
-     * @param refundService service for refund operations
-     */
-    public RefundController(RefundService refundService) {
         this.refundService = refundService;
     }
 
@@ -184,7 +177,6 @@ public class RefundController {
         return new RefundRequestDTO(
             refund.getId(),
             refund.getOrder().getId(),
-            refund.getUserId(),
             refund.getUserId(),
             refund.getAmount(),
             refund.getStatus().toString(),
