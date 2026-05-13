@@ -3,45 +3,83 @@ package com.example.desofs.domain.entities;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 @Entity
 @Table(name = "orders")
 public class Order {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "user_id")
-    private User user;
+    @Column(name = "auth0_id", nullable = false)
+    private String auth0Id;
 
-    @OneToMany(cascade = CascadeType.ALL)
-    @JoinColumn(name = "order_id")
-    private List<OrderItem> items;
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @JoinColumn(name = "order_id", nullable = false)
+    private List<OrderItem> items = new ArrayList<>();
 
-    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL)
-    private List<RefundRequest> refundRequests;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private OrderStatus status;
 
-    private BigDecimal total;
+    @Column(nullable = false)
+    private String receiptName;
+
+    @Column(nullable = false, precision = 10, scale = 2)
+    private BigDecimal totalPrice;
+
+    @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
 
-    public Order() {
-        this.createdAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
+    protected Order() {
     }
 
-    public Long getId() { return id; }
-    public User getUser() { return user; }
-    public void setUser(User user) { this.user = user; }
-    public List<OrderItem> getItems() { return items; }
-    public void setItems(List<OrderItem> items) { this.items = items; }
-    public List<RefundRequest> getRefundRequests() { return refundRequests; }
-    public void setRefundRequests(List<RefundRequest> refundRequests) { this.refundRequests = refundRequests; }
-    public BigDecimal getTotal() { return total; }
-    public void setTotal(BigDecimal total) { this.total = total; }
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public LocalDateTime getUpdatedAt() { return updatedAt; }
-    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+    public Order(String auth0Id, String receiptName) {
+        this.auth0Id = auth0Id;
+        this.receiptName = receiptName;
+        this.status = OrderStatus.COMPLETED;
+        this.totalPrice = BigDecimal.ZERO;
+        this.createdAt = LocalDateTime.now();
+    }
+
+    public void addItem(OrderItem item) {
+        this.items.add(item);
+        this.totalPrice = this.totalPrice.add(item.getSubtotal());
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public String getAuth0Id() {
+        return auth0Id;
+    }
+
+    public List<OrderItem> getItems() {
+        return Collections.unmodifiableList(items);
+    }
+
+    public OrderStatus getStatus() {
+        return status;
+    }
+
+    public String getReceiptName() {
+        return receiptName;
+    }
+
+    public BigDecimal getTotalPrice() {
+        return totalPrice;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setStatus(OrderStatus status) {
+        this.status = status;
+    }
 }

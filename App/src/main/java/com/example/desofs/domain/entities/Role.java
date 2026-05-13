@@ -1,4 +1,4 @@
-package com.emovieshop.domain.model;
+package com.example.desofs.domain.entities;
 
 public enum Role {
     CUSTOMER,
