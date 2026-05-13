@@ -13,7 +13,7 @@ Authentication is delegated to the external service **Auth0**, with users authen
 | Resource | Link                                                   |
 |----------|--------------------------------------------------------|
 | Phase 1  | [Phase 1 Documentation](Deliverables/Phase1/README.md) |
-| Phase 2  | TODO                                                   |
+| Phase 2  | [Phase 2 Sprint 1 Documentation](Deliverables/Phase2/Sprint1/README.md) |
 
 ## Team Composition
 
