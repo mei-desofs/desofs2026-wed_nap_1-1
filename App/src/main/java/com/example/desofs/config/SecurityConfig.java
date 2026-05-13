@@ -23,6 +23,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/movies").permitAll()
                 .requestMatchers("/api/movies/**").permitAll()
                 .requestMatchers("/actuator/health").permitAll()
+                .requestMatchers("/api/users/**").hasRole("ADMIN")
                 .anyRequest().authenticated()
             );
 

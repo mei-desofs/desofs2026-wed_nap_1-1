@@ -1,8 +1,8 @@
 package com.example.desofs.services;
 
-import com.example.desofs.dtos.CreateOrderRequest;
-import com.example.desofs.dtos.OrderDTO;
-import com.example.desofs.dtos.OrderItemDTO;
+import com.example.desofs.shared.dtos.CreateOrderRequest;
+import com.example.desofs.shared.dtos.OrderDTO;
+import com.example.desofs.shared.dtos.OrderItemDTO;
 import com.example.desofs.domain.Movie;
 import com.example.desofs.domain.Order;
 import com.example.desofs.domain.OrderItem;

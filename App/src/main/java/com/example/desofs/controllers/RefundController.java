@@ -1,13 +1,12 @@
 package com.example.desofs.controllers;
 
-import com.example.desofs.application.dtos.CreateRefundRequest;
-import com.example.desofs.application.dtos.RefundRequestDTO;
-import com.example.desofs.application.services.RefundService;
-import com.example.desofs.domain.entities.Order;
-import com.example.desofs.domain.entities.RefundRequest;
-import com.example.desofs.domain.entities.User;
-import com.example.desofs.domain.repositories.OrderRepository;
-import com.example.desofs.domain.repositories.UserRepository;
+import com.example.desofs.shared.dtos.CreateRefundRequest;
+import com.example.desofs.shared.dtos.RefundRequestDTO;
+import com.example.desofs.services.RefundService;
+import com.example.desofs.domain.Order;
+import com.example.desofs.domain.RefundRequest;
+import com.example.desofs.repositories.OrderRepository;
+import com.example.desofs.repositories.UserRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 

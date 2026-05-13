@@ -1,6 +1,6 @@
 package com.example.desofs.security;
 
-import com.example.desofs.domain.entities.Role;
+import com.example.desofs.domain.Role;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.oauth2.jwt.Jwt;

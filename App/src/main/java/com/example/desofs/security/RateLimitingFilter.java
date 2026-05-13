@@ -1,4 +1,4 @@
-package com.example.desofs.filters;
+package com.example.desofs.security;
 
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.stereotype.Component;

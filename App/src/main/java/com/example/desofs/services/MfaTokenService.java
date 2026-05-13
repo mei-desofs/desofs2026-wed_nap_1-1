@@ -1,8 +1,8 @@
 package com.example.desofs.services;
 
-import com.example.desofs.domain.entities.MfaToken;
-import com.example.desofs.domain.entities.User;
-import com.example.desofs.domain.repositories.MfaTokenRepository;
+import com.example.desofs.domain.MfaToken;
+import com.example.desofs.domain.User;
+import com.example.desofs.repositories.MfaTokenRepository;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
