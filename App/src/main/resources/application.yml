@@ -1,0 +1,53 @@
+server:
+  port: 8081
+
+spring:
+  datasource:
+    url: jdbc:h2:mem:desofs;DB_CLOSE_DELAY=-1;MODE=MySQL
+    driverClassName: org.h2.Driver
+    username: sa
+    password:
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: false
+
+  flyway:
+    enabled: true
+
+logging:
+  level:
+    org.springframework: INFO
+
+spring.security:
+  oauth2:
+    resourceserver:
+      jwt:
+        issuer-uri: ${AUTH0_ISSUER_URI:}
+        jwk-set-uri: ${AUTH0_JWK_SET_URI:}
+
+  # Email configuration
+  mail:
+    host: ${MAIL_HOST:smtp.example.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+
+# Auth0 configuration
+auth0:
+  domain: ${AUTH0_DOMAIN:}
+  audience: ${AUTH0_AUDIENCE:}
+  jwk-set-uri: ${AUTH0_JWK_SET_URI:}
+
+# Email configuration
+app:
+  mail:
+    from: ${MAIL_FROM:noreply@example.com}
+    from-name: ${MAIL_FROM_NAME:DESOFS Movies Store}
