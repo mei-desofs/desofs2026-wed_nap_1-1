@@ -31,7 +31,7 @@ public class RefundRequest {
     private BigDecimal amount;
 
     @Enumerated(EnumType.STRING)
-    private RefundStatus status; // PENDING, APPROVED, REJECTED, COMPLETED
+    private RefundStatus status; // REQUESTED, APPROVED, REJECTED
 
     @Column(length = REASON_MAX_LENGTH)
     private String reason;
@@ -39,12 +39,12 @@ public class RefundRequest {
     private LocalDateTime updatedAt;
 
     /**
-     * Creates a new refund request with the initial timestamps and a pending status.
+     * Creates a new refund request with the initial timestamps and a REQUESTED status.
      */
     public RefundRequest() {
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
-        this.status = RefundStatus.PENDING;
+        this.status = RefundStatus.REQUESTED;
     }
 
     /**
@@ -142,6 +142,6 @@ public class RefundRequest {
      * Represents the lifecycle states for a refund request.
      */
     public enum RefundStatus {
-        PENDING, APPROVED, REJECTED, COMPLETED
+        REQUESTED, APPROVED, REJECTED
     }
 }

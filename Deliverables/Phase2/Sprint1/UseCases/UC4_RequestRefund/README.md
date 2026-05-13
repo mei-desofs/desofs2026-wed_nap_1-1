@@ -111,8 +111,8 @@ Based on the ASVS checklist, the following requirements are strictly enforced fo
 
 This section documents the domain objects and invariants implemented for the refund workflow.
 
-- **`RefundRequest` (entity):** Entity representing a refund request linked to an `Order`. Multiple refund requests can exist for the same order. Initial status: `PENDING`. The `setStatus()` method updates the modification timestamp automatically.
-- **`RefundStatus` (enum):** `PENDING`, `APPROVED`, `REJECTED`, `COMPLETED` — persisted as `STRING`.
+- **`RefundRequest` (entity):** Entity representing a refund request linked to an `Order`. Multiple refund requests can exist for the same order. Initial status: `REQUESTED`. The `setStatus()` method updates the modification timestamp automatically.
+- **`RefundStatus` (enum):** `REQUESTED`, `APPROVED`, `REJECTED` — persisted as `STRING`.
 
 Invariants (enforced by the entity and service layer):
 - A single `Order` can have multiple `RefundRequest` entries over time.
