@@ -1,96 +1,117 @@
 package com.example.desofs.services;
 
-import com.example.desofs.dtos.CreateOrderRequest;
-import com.example.desofs.dtos.OrderDTO;
-import com.example.desofs.dtos.OrderItemDTO;
-import com.example.desofs.domain.Movie;
-import com.example.desofs.domain.Order;
-import com.example.desofs.domain.OrderItem;
-import com.example.desofs.domain.User;
-import com.example.desofs.repositories.MovieRepository;
-import com.example.desofs.repositories.OrderRepository;
-import com.example.desofs.repositories.UserRepository;
+import com.emovieshop.domain.model.*;
+import com.emovieshop.repositories.MovieRepository;
+import com.emovieshop.repositories.OrderRepository;
+import com.emovieshop.dto.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
-import java.util.ArrayList;
+import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Optional;
+import java.util.Map;
 
 @Service
 public class OrderService {
+
+    private static final Logger logger = LoggerFactory.getLogger(OrderService.class);
+    private static final int MAX_ITEMS_PER_ORDER = 10;
+
     private final OrderRepository orderRepository;
-    private final UserRepository userRepository;
     private final MovieRepository movieRepository;
+    private final ReceiptFileService receiptFileService;
 
-    public OrderService(OrderRepository orderRepository, UserRepository userRepository, MovieRepository movieRepository) {
+    public OrderService(OrderRepository orderRepository,
+                        MovieRepository movieRepository,
+                        ReceiptFileService receiptFileService) {
         this.orderRepository = orderRepository;
-        this.userRepository = userRepository;
         this.movieRepository = movieRepository;
+        this.receiptFileService = receiptFileService;
     }
 
-    public OrderDTO createOrder(CreateOrderRequest request) {
-        User user = userRepository.findById(request.getUserId()).orElse(null);
-        if (user == null) {
-            throw new RuntimeException("User not found: " + request.getUserId());
+    @Transactional
+    public OrderResponseDTO createOrder(String auth0Id, PurchaseRequestDTO request) {
+        logger.info("Processing purchase request for user: {}", auth0Id);
+
+        // Validate item count (defense-in-depth, DTO validation also checks this)
+        if (request.items().size() > MAX_ITEMS_PER_ORDER) {
+            throw new IllegalArgumentException("Cannot purchase more than " + MAX_ITEMS_PER_ORDER + " movies in a single order");
         }
 
-        List<OrderItem> items = new ArrayList<>();
-        BigDecimal total = BigDecimal.ZERO;
+        // Validate no duplicate movie IDs in request
+        validateNoDuplicateMovies(request.items());
 
-        for (CreateOrderRequest.OrderItemRequest itemReq : request.getItems()) {
-            Movie movie = movieRepository.findById(itemReq.getMovieId()).orElse(null);
-            if (movie == null) {
-                throw new RuntimeException("Movie not found: " + itemReq.getMovieId());
-            }
+        // Sanitize receipt name early to fail fast
+        String sanitizedReceiptName = receiptFileService.sanitizeReceiptName(request.receiptName());
 
-            OrderItem item = new OrderItem();
-            item.setMovie(movie);
-            item.setQuantity(itemReq.getQuantity());
-            item.setUnitPrice(movie.getPrice());
-            items.add(item);
+        // Create order with auth0Id directly
+        Order order = new Order(auth0Id, sanitizedReceiptName);
 
-            BigDecimal itemSubtotal = movie.getPrice().multiply(new BigDecimal(itemReq.getQuantity()));
-            total = total.add(itemSubtotal);
+        // Process each item: validate movie exists, check stock, resolve price from DB
+        for (PurchaseItemDTO itemDTO : request.items()) {
+            Movie movie = movieRepository.findById(itemDTO.movieId())
+                    .orElseThrow(() -> {
+                        logger.warn("Purchase references non-existent movie ID: {}", itemDTO.movieId());
+                        return new IllegalArgumentException("Movie not found: " + itemDTO.movieId());
+                    });
+
+            // Decrease stock (throws if insufficient)
+            movie.decreaseStock(itemDTO.quantity());
+
+            // Price is always resolved from the database, never from the client
+            OrderItem orderItem = new OrderItem(movie, itemDTO.quantity(), movie.getPrice());
+            order.addItem(orderItem);
         }
 
-        Order order = new Order();
-        order.setUser(user);
-        order.setItems(items);
-        order.setTotal(total);
+        // Persist order (atomic transaction includes stock update)
+        Order savedOrder = orderRepository.save(order);
 
-        Order saved = orderRepository.save(order);
-        return toOrderDTO(saved);
-    }
-
-    public OrderDTO getOrder(Long id) {
-        Optional<Order> opt = orderRepository.findById(id);
-        return opt.map(this::toOrderDTO).orElse(null);
-    }
-
-    public List<OrderDTO> listAll() {
-        return orderRepository.findAll().stream().map(this::toOrderDTO).toList();
-    }
-
-    private OrderDTO toOrderDTO(Order order) {
-        List<OrderItemDTO> itemDTOs = new ArrayList<>();
-        for (OrderItem item : order.getItems()) {
-            OrderItemDTO dto = new OrderItemDTO(
-                item.getId(),
-                item.getMovie().getId(),
-                item.getMovie().getTitle(),
-                item.getQuantity(),
-                item.getUnitPrice()
-            );
-            itemDTOs.add(dto);
+        // Create receipt file (OS operation)
+        try {
+            receiptFileService.createReceiptFile(savedOrder);
+        } catch (IOException e) {
+            logger.error("Failed to create receipt file for order {}: {}", savedOrder.getId(), e.getMessage());
+            // Receipt file creation failure should not rollback the order
+            // The order is still valid, the receipt can be regenerated
+        } catch (SecurityException e) {
+            logger.error("Security violation during receipt creation for order {}: {}", savedOrder.getId(), e.getMessage());
         }
 
-        return new OrderDTO(
-            order.getId(),
-            order.getUser().getId(),
-            order.getUser().getEmail(),
-            itemDTOs,
-            order.getTotal()
-        );
+        logger.info("Order {} created successfully for user {}", savedOrder.getId(), auth0Id);
+
+        return toResponseDTO(savedOrder);
+    }
+
+    private void validateNoDuplicateMovies(List<PurchaseItemDTO> items) {
+        Map<Long, Integer> movieIdCounts = new HashMap<>();
+        for (PurchaseItemDTO item : items) {
+            movieIdCounts.merge(item.movieId(), 1, Integer::sum);
+        }
+        boolean hasDuplicates = movieIdCounts.values().stream().anyMatch(count -> count > 1);
+        if (hasDuplicates) {
+            throw new IllegalArgumentException("Duplicate movie IDs are not allowed in a single order");
+        }
+    }
+
+    private OrderResponseDTO toResponseDTO(Order order) {
+        List<OrderItemResponseDTO> itemDTOs = order.getItems().stream()
+                .map(item -> new OrderItemResponseDTO(
+                        item.getMovie().getId(),
+                        item.getMovie().getTitle(),
+                        item.getQuantity(),
+                        item.getUnitPrice(),
+                        item.getSubtotal()))
+                .toList();
+
+        return new OrderResponseDTO(
+                order.getId(),
+                order.getStatus().name(),
+                order.getReceiptName(),
+                order.getTotalPrice(),
+                order.getCreatedAt(),
+                itemDTOs);
     }
 }
