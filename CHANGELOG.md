@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.1](https://github.com/mei-desofs/desofs2026-wed_nap_1-1/compare/v1.1.0...v1.1.1) (2026-05-13)
+
+
+### Bug Fixes
+
+* update release token in workflow configuration ([6406222](https://github.com/mei-desofs/desofs2026-wed_nap_1-1/commit/64062225489421765b95e5c45989015a4a48825c))
+
 ## [1.1.0](https://github.com/mei-desofs/desofs2026-wed_nap_1-1/compare/v1.0.0...v1.1.0) (2026-05-13)
 
 
