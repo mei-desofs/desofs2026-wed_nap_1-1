@@ -21,9 +21,11 @@ jobs:
           cache: 'maven'
 
       - name: Build with Maven
+        working-directory: App
         run: mvn -B clean package -DskipTests
 
       - name: Run Tests
+        working-directory: App
         run: mvn -B test
 
       - name: Upload Test Results
@@ -31,14 +33,14 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: test-results
-          path: target/surefire-reports/
+          path: App/target/surefire-reports/
           if-no-files-found: ignore
 
       - name: Upload JAR artifact
         uses: actions/upload-artifact@v4
         with:
           name: app-jar
-          path: target/*.jar
+          path: App/target/*.jar
           if-no-files-found: error
 
   security:

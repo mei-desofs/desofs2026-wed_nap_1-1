@@ -45,6 +45,7 @@ jobs:
           languages: java
 
       - name: Build Project
+        working-directory: App
         run: mvn -B clean package -DskipTests
 
       - name: Perform CodeQL Analysis
@@ -68,6 +69,7 @@ jobs:
           cache: 'maven'
 
       - name: Run OWASP Dependency-Check
+        working-directory: App
         run: |
           mvn -B org.owasp:dependency-check-maven:check \
             -DnvdApiKey=${{ secrets.NVD_API_KEY }} \
@@ -79,7 +81,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: dependency-check-report
-          path: target/dependency-check-report.*
+          path: App/target/dependency-check-report.*
 
       - name: Generate SBOM
         uses: anchore/sbom-action@v0
@@ -120,6 +122,7 @@ jobs:
           cache: 'maven'
 
       - name: Build Application
+        working-directory: App
         run: mvn -B clean package -DskipTests
 
       - name: Start Application
@@ -130,7 +133,7 @@ jobs:
           SPRING_JPA_HIBERNATE_DDL_AUTO: create-drop
           SERVER_PORT: 8080
         run: |
-          java -jar target/*.jar &
+          java -jar App/target/*.jar &
           for i in {1..20}; do
             curl -sf http://localhost:8080/actuator/health && break
             echo "Waiting... Attempt $i"
