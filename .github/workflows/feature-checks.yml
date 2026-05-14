@@ -25,6 +25,10 @@ jobs:
         working-directory: App
         run: mvn -B clean package -DskipTests
 
+      - name: SAST - SpotBugs + FindSecBugs
+        working-directory: App
+        run: mvn -B spotbugs:check
+
       - name: Run Tests
         working-directory: App
         run: mvn -B test
