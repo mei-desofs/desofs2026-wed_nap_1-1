@@ -48,6 +48,14 @@
       <scope>runtime</scope>
     </dependency>
 
+    <!-- SpotBugs Annotations -->
+    <dependency>
+      <groupId>com.github.spotbugs</groupId>
+      <artifactId>spotbugs-annotations</artifactId>
+      <version>4.8.6</version>
+      <optional>true</optional>
+    </dependency>
+
     <!-- Rate Limiting (Bucket4j) -->
     <dependency>
       <groupId>com.bucket4j</groupId>

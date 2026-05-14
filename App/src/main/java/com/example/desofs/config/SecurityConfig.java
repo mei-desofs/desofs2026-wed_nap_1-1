@@ -1,18 +1,16 @@
 package com.example.desofs.config;
 
 import com.example.desofs.security.RateLimitFilter;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
-import org.springframework.core.convert.converter.Converter;
-import org.springframework.http.HttpMethod;
+
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator;
 import org.springframework.security.oauth2.core.OAuth2TokenValidator;
 import org.springframework.security.oauth2.jwt.*;
@@ -32,6 +30,7 @@ public class SecurityConfig {
 
     private final RateLimitFilter rateLimitFilter;
 
+    @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "RateLimitFilter is a Spring-managed singleton bean")
     public SecurityConfig(RateLimitFilter rateLimitFilter) {
         this.rateLimitFilter = rateLimitFilter;
     }
@@ -39,7 +38,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(csrf -> csrf.disable()) // Stateless API, JWT-based
+                .csrf(csrf -> csrf.ignoringRequestMatchers("/**")) // Stateless JWT API — no cookie-based auth, CSRF not applicable
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .headers(headers -> headers
                         .contentTypeOptions(opt -> {}) // X-Content-Type-Options: nosniff (default)

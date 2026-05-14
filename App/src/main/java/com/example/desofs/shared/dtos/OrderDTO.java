@@ -1,6 +1,7 @@
 package com.example.desofs.shared.dtos;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -43,7 +44,7 @@ public class OrderDTO {
         this.id = id;
         this.userId = userId;
         this.userEmail = userEmail;
-        this.items = items;
+        this.items = items == null ? null : new ArrayList<>(items);
         this.total = total;
     }
 
@@ -94,14 +95,14 @@ public class OrderDTO {
      *
      * @return list of order item DTOs
      */
-    public List<OrderItemDTO> getItems() { return items; }
+    public List<OrderItemDTO> getItems() { return items == null ? null : new ArrayList<>(items); }
 
     /**
      * Sets the order items.
      *
      * @param items list of order item DTOs
      */
-    public void setItems(List<OrderItemDTO> items) { this.items = items; }
+    public void setItems(List<OrderItemDTO> items) { this.items = items == null ? null : new ArrayList<>(items); }
 
     /**
      * Returns the total order amount.

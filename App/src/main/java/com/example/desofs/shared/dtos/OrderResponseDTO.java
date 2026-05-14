@@ -25,4 +25,7 @@ public record OrderResponseDTO(
         LocalDateTime createdAt,
         List<OrderItemResponseDTO> items
 ) {
+    public OrderResponseDTO {
+        items = items == null ? List.of() : List.copyOf(items);
+    }
 }
