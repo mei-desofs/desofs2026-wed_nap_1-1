@@ -73,6 +73,10 @@ public class Movie {
      * @return the movie id, or {@code null} if the entity is not yet persisted
      */
 
+    public void setId(Long id) {
+        this.id = id;
+    }
+
     public String getTitle() {
         return title;
     }
