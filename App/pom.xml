@@ -148,7 +148,7 @@
           <version>0.8.12</version>
           <configuration>
             <excludes>
-              <exclude>com/emovieshop/dto/**</exclude>
+              <exclude>com/example/desofs/shared/**</exclude>
             </excludes>
           </configuration>
           <executions>

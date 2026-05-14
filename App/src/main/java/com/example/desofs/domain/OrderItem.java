@@ -1,5 +1,6 @@
 package com.example.desofs.domain;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 
@@ -37,6 +38,7 @@ public class OrderItem {
      * <p>For framework use only.</p>
      */
 
+    @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "Movie is a JPA entity; defensive copy would break ORM identity and lazy loading")
     public OrderItem(Movie movie, Integer quantity, BigDecimal unitPrice) {
         this.movie = movie;
         this.quantity = quantity;
@@ -61,6 +63,7 @@ public class OrderItem {
      * @return the id, or {@code null} if not yet persisted
      */
 
+    @SuppressFBWarnings(value = "EI_EXPOSE_REP", justification = "Movie is a JPA entity; defensive copy would break ORM identity and lazy loading")
     public Movie getMovie() {
         return movie;
     }
