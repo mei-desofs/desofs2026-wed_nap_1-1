@@ -15,7 +15,7 @@ jobs:
           fetch-depth: 0
 
       - name: Run GitLeaks
-        uses: gitleaks/gitleaks-action@v2
+        uses: gitleaks/gitleaks-action@v1.6.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -93,6 +93,9 @@ jobs:
   dast:
     name: DAST - OWASP ZAP
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
 
     services:
       db:
@@ -132,18 +135,24 @@ jobs:
           SPRING_DATASOURCE_PASSWORD: testpass
           SPRING_JPA_HIBERNATE_DDL_AUTO: create-drop
           SERVER_PORT: 8080
+          SPRINGDOC_API_DOCS_ENABLED: "true"
+          SPRINGDOC_SWAGGER_UI_ENABLED: "true"
         run: |
           java -jar App/target/*.jar &
-          for i in {1..20}; do
+          for i in {1..30}; do
             curl -sf http://localhost:8080/actuator/health && break
-            echo "Waiting... Attempt $i"
+            echo "Waiting... Attempt $i/30"
             sleep 3
+            if [ $i -eq 30 ]; then
+              echo "Application failed to start in time"
+              exit 1
+            fi
           done
 
       - name: Run OWASP ZAP API Scan
         uses: zaproxy/action-api-scan@v0.7.0
         with:
-          # springdoc-openapi, use http://localhost:8080/v3/api-docs
-          target: 'http://localhost:8080'
+          target: 'http://localhost:8080/v3/api-docs'
+          format: openapi
           fail_action: true
           artifact_name: zap-report
