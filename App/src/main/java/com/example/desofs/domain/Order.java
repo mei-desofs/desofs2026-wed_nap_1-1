@@ -87,6 +87,10 @@ public class Order {
      * @return the order id, or {@code null} if not yet persisted
      */
 
+    public void setId(Long id) {
+        this.id = id;
+    }
+
     public String getAuth0Id() {
         return auth0Id;
     }
