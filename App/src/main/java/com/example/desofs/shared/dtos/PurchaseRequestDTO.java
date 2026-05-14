@@ -26,4 +26,7 @@ public record PurchaseRequestDTO(
         @Valid
         List<PurchaseItemDTO> items
 ) {
+    public PurchaseRequestDTO {
+        items = items == null ? List.of() : List.copyOf(items);
+    }
 }

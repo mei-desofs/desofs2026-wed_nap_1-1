@@ -1,10 +1,7 @@
-package com.example.desofs.domain.entities;
+package com.example.desofs.domain;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-
-import com.example.desofs.domain.Movie;
-import com.example.desofs.domain.OrderItem;
 
 import java.math.BigDecimal;
 

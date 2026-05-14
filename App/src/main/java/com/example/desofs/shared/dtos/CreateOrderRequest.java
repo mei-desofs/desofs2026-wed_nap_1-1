@@ -1,5 +1,6 @@
 package com.example.desofs.shared.dtos;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -39,14 +40,14 @@ public class CreateOrderRequest {
      *
      * @return list of order item requests
      */
-    public List<OrderItemRequest> getItems() { return items; }
+    public List<OrderItemRequest> getItems() { return items == null ? null : new ArrayList<>(items); }
 
     /**
      * Sets the requested order items.
      *
      * @param items list of order item requests
      */
-    public void setItems(List<OrderItemRequest> items) { this.items = items; }
+    public void setItems(List<OrderItemRequest> items) { this.items = items == null ? null : new ArrayList<>(items); }
 
     /**
      * Request payload for a single movie item in an order.

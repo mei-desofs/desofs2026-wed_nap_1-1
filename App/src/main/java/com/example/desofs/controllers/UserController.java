@@ -5,6 +5,7 @@ import com.example.desofs.security.RoleGuard;
 import com.example.desofs.shared.dtos.RoleRequestDTO;
 import com.example.desofs.shared.dtos.UserDTO;
 import com.example.desofs.services.UserService;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -34,6 +35,7 @@ public class UserController {
      * @param userService service used for user operations
      * @param roleGuard guard used to validate the caller's role
      */
+    @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "Spring-managed singleton beans injected via constructor")
     public UserController(UserService userService, RoleGuard roleGuard) {
         this.userService = userService;
         this.roleGuard = roleGuard;

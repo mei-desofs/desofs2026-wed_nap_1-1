@@ -4,7 +4,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.web.HttpMediaTypeNotSupportedException;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -102,6 +105,33 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(errorBody(correlationId, HttpStatus.BAD_REQUEST.value(), "Invalid request"));
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<Map<String, Object>> handleMessageNotReadable(HttpMessageNotReadableException ex) {
+        String correlationId = UUID.randomUUID().toString();
+        logger.warn("Malformed request body [{}]: {}", correlationId, ex.getMessage());
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(errorBody(correlationId, HttpStatus.BAD_REQUEST.value(), "Malformed request body"));
+    }
+
+    @ExceptionHandler(HttpMediaTypeNotSupportedException.class)
+    public ResponseEntity<Map<String, Object>> handleMediaTypeNotSupported(HttpMediaTypeNotSupportedException ex) {
+        String correlationId = UUID.randomUUID().toString();
+        logger.warn("Unsupported media type [{}]: {}", correlationId, ex.getMessage());
+
+        return ResponseEntity.status(HttpStatus.UNSUPPORTED_MEDIA_TYPE)
+                .body(errorBody(correlationId, HttpStatus.UNSUPPORTED_MEDIA_TYPE.value(), "Unsupported media type"));
+    }
+
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    public ResponseEntity<Map<String, Object>> handleMethodNotSupported(HttpRequestMethodNotSupportedException ex) {
+        String correlationId = UUID.randomUUID().toString();
+        logger.warn("Method not allowed [{}]: {}", correlationId, ex.getMessage());
+
+        return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED)
+                .body(errorBody(correlationId, HttpStatus.METHOD_NOT_ALLOWED.value(), "Method not allowed"));
     }
 
     /**

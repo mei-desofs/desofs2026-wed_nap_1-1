@@ -8,7 +8,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
-import java.nio.file.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.time.format.DateTimeFormatter;
 
 /**
@@ -19,7 +21,7 @@ import java.time.format.DateTimeFormatter;
  * formatted receipt content generation.
  */
 @Service
-public class ReceiptFileService {
+public final class ReceiptFileService {
 
     /** Logger for file operations and errors. */
     private static final Logger logger = LoggerFactory.getLogger(ReceiptFileService.class);
@@ -49,7 +51,11 @@ public class ReceiptFileService {
     public ReceiptFileService(
             @Value("${emovieshop.receipts.directory:./receipts}") String receiptsDir,
             @Value("${emovieshop.receipts.max-name-length:100}") int maxNameLength) {
-        this.receiptsDirectory = Paths.get(receiptsDir).toAbsolutePath().normalize();
+        Path path = Path.of(receiptsDir).toAbsolutePath().normalize();
+        if (path.toString().contains("..")) {
+            throw new IllegalArgumentException("Receipts directory contains invalid path components");
+        }
+        this.receiptsDirectory = path;
         this.maxNameLength = maxNameLength;
     }
 
