@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.2.0](https://github.com/mei-desofs/desofs2026-wed_nap_1-1/compare/v1.1.1...v1.2.0) (2026-05-14)
+
+
+### Features
+
+* implement some integration tests + unit tests ([786a333](https://github.com/mei-desofs/desofs2026-wed_nap_1-1/commit/786a33337825568dbce8d27fb76edd2f92431b7b))
+* try to implement pipeline that do SAST analyze ([123da4d](https://github.com/mei-desofs/desofs2026-wed_nap_1-1/commit/123da4de69861d1bdc0a17c585edd25ab3d54dee))
+
+
+### Bug Fixes
+
+* fix SecurityConfig bug ([58d44d4](https://github.com/mei-desofs/desofs2026-wed_nap_1-1/commit/58d44d438c74e6909f96c469f25c5b8e2891a9c1))
+* fix some bugs that spotbugs:checker found ([4326e0d](https://github.com/mei-desofs/desofs2026-wed_nap_1-1/commit/4326e0dc8e69806a6fd039f3e9d6696195c071d1))
+
 ## [1.1.1](https://github.com/mei-desofs/desofs2026-wed_nap_1-1/compare/v1.1.0...v1.1.1) (2026-05-13)
 
 
