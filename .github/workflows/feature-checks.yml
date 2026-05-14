@@ -27,9 +27,4 @@ jobs:
 
       - name: Run Tests
         working-directory: App
-        env:
-          SPRING_DATASOURCE_URL: jdbc:mysql://127.0.0.1:3306/desofs_test
-          SPRING_DATASOURCE_USERNAME: testuser
-          SPRING_DATASOURCE_PASSWORD: testpass
-          SPRING_JPA_HIBERNATE_DDL_AUTO: create-drop
         run: mvn -B test
