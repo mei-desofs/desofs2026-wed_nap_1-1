@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node *)",
+      "WebFetch(domain:auth0.com)",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\MiguelCardoso\\\\IdeaProjects\\\\desofs2026-wed_nap_1-1\" -Recurse -Depth 2)",
+      "Bash(Select-Object -Property FullName, PSIsContainer)",
+      "Bash(Sort-Object FullName)",
+      "Bash(Select-Object -First 100)",
+      "WebSearch"
+    ]
+  }
+}
