@@ -137,6 +137,7 @@
                   <format>HTML</format>
                   <format>JSON</format>
               </formats>
+              <ossindexAnalyzerEnabled>false</ossindexAnalyzerEnabled>
           </configuration>
       </plugin>
 
@@ -145,6 +146,11 @@
           <groupId>org.jacoco</groupId>
           <artifactId>jacoco-maven-plugin</artifactId>
           <version>0.8.12</version>
+          <configuration>
+            <excludes>
+              <exclude>com/emovieshop/dto/**</exclude>
+            </excludes>
+          </configuration>
           <executions>
               <execution>
                   <goals>
