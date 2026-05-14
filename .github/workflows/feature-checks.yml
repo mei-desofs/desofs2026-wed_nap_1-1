@@ -22,9 +22,11 @@ jobs:
           cache: 'maven'
 
       - name: Build with Maven
+        working-directory: App
         run: mvn -B clean package -DskipTests
 
       - name: Run Tests
+        working-directory: App
         env:
           SPRING_DATASOURCE_URL: jdbc:mysql://127.0.0.1:3306/desofs_test
           SPRING_DATASOURCE_USERNAME: testuser
