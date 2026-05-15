@@ -2,8 +2,8 @@ package com.example.desofs.controller;
 
 import com.example.desofs.config.SecurityConfig;
 import com.example.desofs.controllers.MovieController;
-import com.example.desofs.domain.Movie;
-import com.example.desofs.services.MovieService;
+import com.example.desofs.services.IMovieService;
+import com.example.desofs.shared.dtos.MovieDTO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -38,20 +38,18 @@ class MovieControllerIntegrationTests {
     private MockMvc mockMvc;
 
     @MockitoBean
-    private MovieService movieService;
+        private IMovieService movieService;
 
-    private Movie testMovie1;
-    private Movie testMovie2;
+        private MovieDTO testMovie1;
+        private MovieDTO testMovie2;
 
     @BeforeEach
     void setUp() {
-        testMovie1 = new Movie("Inception", "A mind-bending thriller", "Sci-Fi", "Blu-ray",
+        testMovie1 = new MovieDTO(1L, "Inception", "A mind-bending thriller", "Sci-Fi", "Blu-ray",
                 new BigDecimal("14.99"), 10);
-        testMovie1.setId(1L);
 
-        testMovie2 = new Movie("Matrix", "Reality is a construct", "Sci-Fi", "DVD",
+        testMovie2 = new MovieDTO(2L, "Matrix", "Reality is a construct", "Sci-Fi", "DVD",
                 new BigDecimal("12.99"), 5);
-        testMovie2.setId(2L);
     }
 
     // ============ GET /api/movies (List All) ============
@@ -160,11 +158,10 @@ class MovieControllerIntegrationTests {
     @Test
     @DisplayName("POST /api/movies should create movie and return 201 CREATED")
     void testCreateMovie_Returns201() throws Exception {
-        Movie savedMovie = new Movie("Avatar", "Blue aliens", "Action", "4K",
+        MovieDTO savedMovie = new MovieDTO(3L, "Avatar", "Blue aliens", "Action", "4K",
                 new BigDecimal("19.99"), 15);
-        savedMovie.setId(3L);
 
-        when(movieService.create(any(Movie.class))).thenReturn(savedMovie);
+        when(movieService.create(any(MovieDTO.class))).thenReturn(savedMovie);
 
         String requestBody = "{"
                 + "\"title\":\"Avatar\","
@@ -186,7 +183,7 @@ class MovieControllerIntegrationTests {
                 .andExpect(jsonPath("$.id").value(3L))
                 .andExpect(jsonPath("$.title").value("Avatar"));
 
-        verify(movieService, times(1)).create(any(Movie.class));
+        verify(movieService, times(1)).create(any(MovieDTO.class));
     }
 
     // ============ SECURITY & HEADERS ============

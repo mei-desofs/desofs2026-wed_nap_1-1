@@ -3,9 +3,9 @@ package com.example.desofs.controllers;
 import com.example.desofs.shared.dtos.CreateRefundRequest;
 import com.example.desofs.shared.dtos.RejectRefundRequest;
 import com.example.desofs.shared.dtos.RefundRequestDTO;
-import com.example.desofs.services.RefundService;
+import com.example.desofs.services.IRefundService;
 import com.example.desofs.domain.Role;
-import com.example.desofs.security.RoleGuard;
+import com.example.desofs.security.IRoleGuard;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,25 +17,25 @@ import org.springframework.web.bind.annotation.*;
 import java.net.URI;
 import java.util.List;
 
-@RestController
-@RequestMapping("/api/refunds")
 /**
  * REST controller for managing refund requests.
  * <p>
  * Exposes endpoints to list refund requests, create a new refund request,
  * and transition a request through approval, rejection and completion.
- * Delegates all business logic and data access to {@link RefundService}.
+ * Delegates all business logic and data access to {@link IRefundService}.
  */
+@RestController
+@RequestMapping("/api/refunds")
 public class RefundController {
 
     /** Logger for request tracing. */
     private static final Logger logger = LoggerFactory.getLogger(RefundController.class);
 
     /** Service handling refund business logic and data access. */
-    private final RefundService refundService;
+    private final IRefundService refundService;
 
     /** Guard that enforces role-based access checks. */
-    private final RoleGuard roleGuard;
+    private final IRoleGuard roleGuard;
 
     /**
      * Constructs the controller with the required service and role guard.
@@ -43,7 +43,7 @@ public class RefundController {
      * @param refundService service for refund operations
      * @param roleGuard component to enforce role checks
      */
-    public RefundController(RefundService refundService, RoleGuard roleGuard) {
+    public RefundController(IRefundService refundService, IRoleGuard roleGuard) {
         this.refundService = refundService;
         this.roleGuard = roleGuard;
     }

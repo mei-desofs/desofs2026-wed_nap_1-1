@@ -3,8 +3,6 @@ package com.example.desofs.domain;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 
-@Entity
-@Table(name = "movies")
 /**
  * Entity representing a movie available for purchase or rental.
  *
@@ -12,6 +10,8 @@ import java.math.BigDecimal;
  * title, description, genre, supported platform, price and current stock
  * quantity. Instances are managed by JPA/Hibernate.</p>
  */
+@Entity
+@Table(name = "movies")
 public class Movie {
 
     @Id

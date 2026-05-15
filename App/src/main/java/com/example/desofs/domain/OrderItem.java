@@ -1,10 +1,9 @@
 package com.example.desofs.domain;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 
-@Entity
-@Table(name = "order_items")
 /**
  * Entity representing a single item within an {@link Order}.
  *
@@ -12,6 +11,8 @@ import java.math.BigDecimal;
  * ordered and the unit price. It provides a subtotal calculation used when
  * computing the parent order's total price. Instances are persisted by JPA.</p>
  */
+@Entity
+@Table(name = "order_items")
 public class OrderItem {
 
     @Id
@@ -28,19 +29,13 @@ public class OrderItem {
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal unitPrice;
 
-    protected OrderItem() {
-    }
-
     /**
      * Protected no-arg constructor required by JPA.
      *
      * <p>For framework use only.</p>
      */
-
-    public OrderItem(Movie movie, Integer quantity, BigDecimal unitPrice) {
-        this.movie = movie;
-        this.quantity = quantity;
-        this.unitPrice = unitPrice;
+    protected OrderItem() {
+        
     }
 
     /**
@@ -50,19 +45,11 @@ public class OrderItem {
      * @param quantity the quantity ordered (required, positive)
      * @param unitPrice the price per unit (required)
      */
-
-    public Long getId() {
-        return id;
-    }
-
-    /**
-     * Returns the database identifier for this order item.
-     *
-     * @return the id, or {@code null} if not yet persisted
-     */
-
-    public Movie getMovie() {
-        return movie;
+    @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "Movie is a JPA entity; defensive copy would break ORM identity and lazy loading")
+    public OrderItem(Movie movie, Integer quantity, BigDecimal unitPrice) {
+        this.movie = movie;
+        this.quantity = quantity;
+        this.unitPrice = unitPrice;
     }
 
     /**
@@ -71,8 +58,9 @@ public class OrderItem {
      * @return the {@link Movie}
      */
 
-    public Integer getQuantity() {
-        return quantity;
+    @SuppressFBWarnings(value = "EI_EXPOSE_REP", justification = "Movie is a JPA entity; defensive copy would break ORM identity and lazy loading")
+    public Movie getMovie() {
+        return movie;
     }
 
     /**
@@ -80,19 +68,16 @@ public class OrderItem {
      *
      * @return the quantity (non-negative)
      */
-
-    public BigDecimal getUnitPrice() {
-        return unitPrice;
+    public Integer getQuantity() {
+        return quantity;
     }
 
     /**
      * Returns the unit price for this order item.
-     *
      * @return the unit price as a {@link BigDecimal}
      */
-
-    public BigDecimal getSubtotal() {
-        return unitPrice.multiply(BigDecimal.valueOf(quantity));
+    public BigDecimal getUnitPrice() {
+        return unitPrice;
     }
 
     /**
@@ -100,4 +85,7 @@ public class OrderItem {
      *
      * @return the subtotal as a {@link BigDecimal}
      */
+    public BigDecimal getSubtotal() {
+        return unitPrice.multiply(BigDecimal.valueOf(quantity));
+    }
 }

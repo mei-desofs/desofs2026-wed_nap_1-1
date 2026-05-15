@@ -7,8 +7,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-@Entity
-@Table(name = "orders")
 /**
  * Entity representing a customer's order.
  *
@@ -16,6 +14,8 @@ import java.util.List;
  * total price, status and metadata such as the creating user's identifier and
  * creation timestamp. Instances are persisted via JPA.</p>
  */
+@Entity
+@Table(name = "orders")
 public class Order {
 
     @Id
@@ -42,15 +42,20 @@ public class Order {
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    protected Order() {
-    }
-
     /**
      * Protected no-arg constructor required by JPA.
      *
      * <p>For framework use only.</p>
      */
+    protected Order() {
+    }
 
+    /**
+     * Create a new Order for the given user with the provided receipt name.
+     *
+     * @param auth0Id the identifier of the user who placed the order (required)
+     * @param receiptName the name to appear on the order receipt (required)
+     */
     public Order(String auth0Id, String receiptName) {
         this.auth0Id = auth0Id;
         this.receiptName = receiptName;
@@ -60,25 +65,13 @@ public class Order {
     }
 
     /**
-     * Create a new Order for the given user with the provided receipt name.
-     *
-     * @param auth0Id the identifier of the user who placed the order (required)
-     * @param receiptName the name to appear on the order receipt (required)
-     */
-
-    public void addItem(OrderItem item) {
-        this.items.add(item);
-        this.totalPrice = this.totalPrice.add(item.getSubtotal());
-    }
-
-    /**
      * Add an item to this order and update the total price accordingly.
      *
      * @param item the {@link OrderItem} to add; must not be {@code null}
      */
-
-    public Long getId() {
-        return id;
+    public void addItem(OrderItem item) {
+        this.items.add(item);
+        this.totalPrice = this.totalPrice.add(item.getSubtotal());
     }
 
     /**
@@ -86,13 +79,12 @@ public class Order {
      *
      * @return the order id, or {@code null} if not yet persisted
      */
+    public Long getId() {
+        return id;
+    }
 
     public void setId(Long id) {
         this.id = id;
-    }
-
-    public String getAuth0Id() {
-        return auth0Id;
     }
 
     /**
@@ -100,9 +92,8 @@ public class Order {
      *
      * @return the user's Auth0 id
      */
-
-    public List<OrderItem> getItems() {
-        return Collections.unmodifiableList(items);
+    public String getAuth0Id() {
+        return auth0Id;
     }
 
     /**
@@ -111,8 +102,8 @@ public class Order {
      * @return the order items
      */
 
-    public OrderStatus getStatus() {
-        return status;
+    public List<OrderItem> getItems() {
+        return Collections.unmodifiableList(items);
     }
 
     /**
@@ -120,9 +111,8 @@ public class Order {
      *
      * @return the {@link OrderStatus}
      */
-
-    public String getReceiptName() {
-        return receiptName;
+    public OrderStatus getStatus() {
+        return status;
     }
 
     /**
@@ -130,9 +120,8 @@ public class Order {
      *
      * @return the receipt name
      */
-
-    public BigDecimal getTotalPrice() {
-        return totalPrice;
+    public String getReceiptName() {
+        return receiptName;
     }
 
     /**
@@ -140,9 +129,8 @@ public class Order {
      *
      * @return the total price as a {@link BigDecimal}
      */
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
+    public BigDecimal getTotalPrice() {
+        return totalPrice;
     }
 
     /**
@@ -150,9 +138,8 @@ public class Order {
      *
      * @return creation time (not {@code null})
      */
-
-    public void setStatus(OrderStatus status) {
-        this.status = status;
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
     }
 
     /**
@@ -160,4 +147,7 @@ public class Order {
      *
      * @param status the new {@link OrderStatus} to apply
      */
+    public void setStatus(OrderStatus status) {
+        this.status = status;
+    }
 }

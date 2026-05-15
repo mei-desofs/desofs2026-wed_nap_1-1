@@ -1,58 +1,68 @@
 package com.example.desofs.controllers;
 
-import com.example.desofs.services.AuditLogService;
 import com.example.desofs.domain.AuditLog;
+import com.example.desofs.domain.Role;
+import com.example.desofs.security.IRoleGuard;
+import com.example.desofs.services.IAuditLogService;
+import com.example.desofs.shared.dtos.AuditLogDTO;
+
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@RestController
-@RequestMapping("/api/audit-logs")
 /**
  * REST controller exposing endpoints to access audit log entries.
  * <p>
- * Provides listing of audit logs and a placeholder for retrieving a single
- * audit log by id. The {@code get} endpoint currently returns 404 until the
- * corresponding service method is implemented.
+ * All endpoints are restricted to users with the {@link Role#ADMIN} role.
  */
+@RestController
+@RequestMapping("/api/audit-logs")
 public class AuditLogController {
-    
+
     /** Service responsible for managing audit log entries. */
-    private final AuditLogService auditLogService;
+    private final IAuditLogService auditLogService;
+
+    /** Guard that enforces role-based access checks. */
+    private final IRoleGuard roleGuard;
 
     /**
-     * Creates a new controller backed by the provided {@link AuditLogService}.
+     * Creates a new controller backed by the provided service and role guard.
      *
      * @param auditLogService service used to retrieve audit log data
+     * @param roleGuard guard used to enforce admin-only access
      */
-    public AuditLogController(AuditLogService auditLogService) {
+    public AuditLogController(IAuditLogService auditLogService, IRoleGuard roleGuard) {
         this.auditLogService = auditLogService;
+        this.roleGuard = roleGuard;
     }
 
     /**
-     * Returns all audit log entries.
+     * Returns all audit log entries. Requires {@link Role#ADMIN}.
      *
+     * @param jwt authenticated JWT principal
      * @return list of all {@link AuditLog} records
      */
     @GetMapping
-    public List<AuditLog> list() {
+    public List<AuditLogDTO> list(@AuthenticationPrincipal Jwt jwt) {
+        roleGuard.requireRole(jwt, Role.ADMIN);
         return auditLogService.listAll();
     }
 
     /**
-     * Retrieves a single audit log by id.
-     * <p>
-     * Note: this endpoint currently returns 404 until the service exposes a
-     * retrieval method for a single record.
+     * Retrieves a single audit log by id. Requires {@link Role#ADMIN}.
      *
+     * @param jwt authenticated JWT principal
      * @param id identifier of the audit log entry
-     * @return {@link ResponseEntity} containing the audit log when implemented,
-     *         otherwise a 404 Not Found response
+     * @return {@link ResponseEntity} containing the audit log, or 404 if not found
      */
     @GetMapping("/{id}")
-    public ResponseEntity<AuditLog> get(@PathVariable Long id) {
-        // Implementation would require adding a method in the service
-        return ResponseEntity.notFound().build();
+    public ResponseEntity<AuditLogDTO> get(@AuthenticationPrincipal Jwt jwt, @PathVariable Long id) {
+        roleGuard.requireRole(jwt, Role.ADMIN);
+        return auditLogService.get(id)
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 }

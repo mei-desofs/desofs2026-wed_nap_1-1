@@ -11,12 +11,11 @@ import java.util.List;
 /**
  * RoleGuard enforces role-based access control by verifying
  * that the JWT token contains the required role in its custom claims.
- *
  * Auth0 must be configured with an Action/Rule that adds roles
- * to the token under the configured namespace (e.g. "https://emovieshop.com/roles").
+ * to the token under the configured namespace (e.g. "<a href="https://emovieshop.com/roles">...</a>").
  */
 @Component
-public class RoleGuard {
+public class RoleGuard implements IRoleGuard {
 
     private final String rolesClaimNamespace;
 
