@@ -1,12 +1,12 @@
 package com.example.desofs.controllers;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.boot.web.servlet.error.ErrorController;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDateTime;
@@ -22,11 +22,13 @@ import java.util.UUID;
 @RestController
 public class CustomErrorController implements ErrorController {
 
-    @RequestMapping(value = "/error", method = {RequestMethod.GET, RequestMethod.HEAD})
+    @SuppressFBWarnings(value = "SPRING_CSRF_UNRESTRICTED_REQUEST_MAPPING",
+            justification = "Error controller must handle forwards from all HTTP methods; CSRF is disabled for this stateless JWT API")
+    @RequestMapping(value = "/error")
     public ResponseEntity<Map<String, Object>> handleError(HttpServletRequest request) {
         Integer statusCode = (Integer) request.getAttribute("jakarta.servlet.error.status_code");
         if (statusCode == null) {
-            statusCode = HttpStatus.INTERNAL_SERVER_ERROR.value();
+            statusCode = HttpStatus.NOT_FOUND.value();
         }
 
         String message;

@@ -8,12 +8,15 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.transaction.TransactionSystemException;
 import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
+
+import jakarta.validation.ConstraintViolationException;
 
 import java.time.LocalDateTime;
 import java.util.Map;
@@ -163,6 +166,40 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(errorBody(correlationId, HttpStatus.BAD_REQUEST.value(), "Invalid data: a required field is missing or violates constraints"));
+    }
+
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<Map<String, Object>> handleConstraintViolation(ConstraintViolationException ex) {
+        String correlationId = UUID.randomUUID().toString();
+        String message = ex.getConstraintViolations().stream()
+                .map(v -> v.getPropertyPath() + ": " + v.getMessage())
+                .reduce((a, b) -> a + "; " + b)
+                .orElse("Validation failed");
+        logger.warn("Constraint violation [{}]: {}", correlationId, message);
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(errorBody(correlationId, HttpStatus.BAD_REQUEST.value(), message));
+    }
+
+    @ExceptionHandler(TransactionSystemException.class)
+    public ResponseEntity<Map<String, Object>> handleTransactionSystem(TransactionSystemException ex) {
+        String correlationId = UUID.randomUUID().toString();
+        Throwable cause = ex.getRootCause();
+        if (cause instanceof ConstraintViolationException cve) {
+            String message = cve.getConstraintViolations().stream()
+                    .map(v -> v.getPropertyPath() + ": " + v.getMessage())
+                    .reduce((a, b) -> a + "; " + b)
+                    .orElse("Validation failed");
+            logger.warn("Transaction constraint violation [{}]: {}", correlationId, message);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(errorBody(correlationId, HttpStatus.BAD_REQUEST.value(), message));
+        }
+        logger.error("Transaction error [{}]: {}", correlationId, ex.getMessage(), ex);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(errorBody(correlationId, HttpStatus.INTERNAL_SERVER_ERROR.value(), "An unexpected error occurred"));
     }
 
     /**
