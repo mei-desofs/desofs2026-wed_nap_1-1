@@ -202,7 +202,6 @@ jobs:
           10038	IGNORE	(Content Security Policy Header Not Set)
           10021	IGNORE	(X-Content-Type-Options Header Missing)
           40018	IGNORE	(SQL Injection - False Positive: JPA prepared statements)
-          100001	IGNORE	(Unexpected Content-Type on Tomcat error pages for malformed URLs)
           EOF
 
       - name: Run OWASP ZAP API Scan

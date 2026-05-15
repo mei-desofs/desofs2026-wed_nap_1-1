@@ -108,7 +108,6 @@ The DAST job performs dynamic application security testing against the live API:
 | 10038 | CSP header set by filter but not on error pages |
 | 10021 | X-Content-Type-Options set by filter |
 | 40018 | SQL Injection false positive, JPA uses prepared statements; behavioural difference caused by input sanitizer, not injection |
-| 100001 | Unexpected Content-Type on Tomcat error pages for malformed URLs that bypass Spring MVC; informational only |
 
 ---
 

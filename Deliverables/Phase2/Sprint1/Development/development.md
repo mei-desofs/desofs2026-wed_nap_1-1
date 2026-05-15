@@ -188,9 +188,46 @@ Input security uses two complementary layers:
 
 ### 6.1 Input Validation (Bean Validation / Jakarta)
 
-**Location:** all controller methods and DTOs in `App/src/main/java/com/example/desofs/shared/dtos/`
+**Location:** controller methods, DTOs in `App/src/main/java/com/example/desofs/shared/dtos/`, and domain entities in `App/src/main/java/com/example/desofs/domain/`
 
-`@Valid` annotations on controller parameters trigger declarative constraint checking before business logic runs. Malformed requests are rejected with `400 Bad Request` before reaching the service layer.
+All user-facing input is validated **declaratively** using Jakarta Bean Validation annotations (`jakarta.validation.constraints.*`). This approach ensures that invalid data is rejected at the API boundary, before it reaches services or the database - producing a consistent `400 Bad Request` response with field-level error details.
+
+#### Why Jakarta Bean Validation
+
+- **Fail-fast at the boundary** - constraints are evaluated by the framework as soon as the request body is deserialized, so no business logic or database call is executed with invalid data.
+- **Declarative and co-located** - validation rules live next to the fields they protect, making them easy to read and audit.
+- **Consistent error format** - all constraint violations are caught by the `GlobalExceptionHandler` (`MethodArgumentNotValidException`) and returned in the standard JSON error structure with field-level messages.
+
+#### How it is applied
+
+Controllers annotate `@RequestBody` parameters with `@Valid`. This triggers the validation cascade on the incoming payload:
+
+```java
+// MovieController
+public ResponseEntity<Movie> create(@AuthenticationPrincipal Jwt jwt,
+                                     @Valid @RequestBody Movie m) { ... }
+
+// OrderController
+public ResponseEntity<OrderResponseDTO> createOrder(@AuthenticationPrincipal Jwt jwt,
+                                                     @Valid @RequestBody PurchaseRequestDTO request) { ... }
+
+// RefundController
+public ResponseEntity<RefundRequestDTO> createRefundRequest(@AuthenticationPrincipal Jwt jwt,
+                                                             @Valid @RequestBody CreateRefundRequest request) { ... }
+```
+
+#### Constraints used across the codebase
+
+The following annotations are applied on DTOs and domain entities:
+
+| Annotation | Purpose | Example |
+|---|---|---|
+| `@NotNull` | Field must be present | `price` (Movie), `movieId` (PurchaseItemDTO), `orderId` (CreateRefundRequest) |
+| `@NotBlank` | String must be non-null and non-empty | `title` (Movie), `receiptName` (PurchaseRequestDTO), `reason` (CreateRefundRequest) |
+| `@Size(max=N)` | Bounds string/collection length | `description` max 5000, `genre` max 100, `items` max 10 (PurchaseRequestDTO) |
+| `@Min(N)` | Numeric minimum | `stockQuantity >= 0` (Movie), `quantity >= 1` (PurchaseItemDTO) |
+| `@DecimalMin` | Decimal minimum (exclusive) | `price > 0.0` (Movie) |
+| `@Valid` (nested) | Cascades validation into child objects | `items` list in PurchaseRequestDTO validates each PurchaseItemDTO |
 
 ### 6.2 Input Sanitization (Receipt File Service & Path Traversal Protection)
 
@@ -393,10 +430,19 @@ The `correlationId` allows operators to trace an error in server logs without ex
 | `HttpMediaTypeNotSupportedException` | 415 | "Unsupported media type" |
 | `Exception` (catch-all) | 500 | "An unexpected error occurred" |
 
+### Custom Error Controller
+
+**Location:** `App/src/main/java/com/example/desofs/controllers/CustomErrorController.java`
+
+Spring Boot's default `BasicErrorController` returns `text/html` error pages for requests that fall outside the DispatcherServlet scope (e.g., requests to the root path or unknown paths without a matching controller). Since eMovieShop is a pure REST API, a custom `ErrorController` implementation replaces this default behaviour, ensuring **all error responses are returned as `application/json`**, regardless of the request path or the client's `Accept` header.
+
+The controller maps `GET` and `HEAD` on `/error` (Spring internally forwards to this path) and returns the same JSON structure used by the `GlobalExceptionHandler`.
+
 ### Security properties
 
 - **No stack traces** - `server.error.include-stacktrace=never` in `application.properties`
 - **No internal messages** - `server.error.include-message=never`
 - **Generic catch-all** - unexpected exceptions always return a safe generic message; the real error is logged server-side with the correlation ID
+- **Consistent JSON Content-Type** - all error responses from both `GlobalExceptionHandler` and `CustomErrorController` explicitly set `Content-Type: application/json`, preventing content-type mismatch issues
 - **404 for unknown paths** - requests to undefined endpoints return 404 (not 500), preventing path enumeration from triggering noisy error responses
 - **Database constraint errors** - `DataIntegrityViolationException` is caught and returns 400 with a safe message, preventing SQL/schema details from leaking
