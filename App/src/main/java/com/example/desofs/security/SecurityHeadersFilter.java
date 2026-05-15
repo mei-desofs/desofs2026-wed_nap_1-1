@@ -75,6 +75,7 @@ public class SecurityHeadersFilter extends OncePerRequestFilter {
         addCorsHeaders(request, response);
         addContentSecurityPolicy(response);
         addClickjackingProtection(response);
+        response.setHeader("Cross-Origin-Resource-Policy", "same-origin");
         response.setHeader("X-Content-Type-Options", "nosniff");
         response.setHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
         response.setHeader("X-XSS-Protection", "1; mode=block");

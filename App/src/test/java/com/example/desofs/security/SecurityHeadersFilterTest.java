@@ -38,6 +38,7 @@ class SecurityHeadersFilterTest {
 		assertThat(response.getHeader("X-Frame-Options")).isEqualTo("DENY");
 
 		// Other headers
+		assertThat(response.getHeader("Cross-Origin-Resource-Policy")).isEqualTo("same-origin");
 		assertThat(response.getHeader("X-Content-Type-Options")).isEqualTo("nosniff");
 		assertThat(response.getHeader("Strict-Transport-Security")).contains("max-age=31536000");
 		assertThat(response.getHeader("X-XSS-Protection")).isEqualTo("1; mode=block");
