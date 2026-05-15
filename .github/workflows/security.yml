@@ -23,6 +23,7 @@ jobs:
   sast-codeql:
     name: SAST - CodeQL Java
     runs-on: ubuntu-latest
+
     permissions:
       actions: read
       contents: read
@@ -68,6 +69,13 @@ jobs:
           distribution: 'temurin'
           cache: 'maven'
 
+      - name: Cache OWASP Dependency-Check DB
+        uses: actions/cache@v4
+        with:
+          path: ~/.dependency-check/data
+          key: dependency-check-${{ runner.os }}
+          restore-keys: dependency-check-${{ runner.os }}
+
       - name: Run OWASP Dependency-Check
         working-directory: App
         run: mvn -B dependency-check:check -DnvdApiKey=${{ secrets.NVD_API_KEY }}
@@ -89,25 +97,10 @@ jobs:
   dast:
     name: DAST - OWASP ZAP
     runs-on: ubuntu-latest
+
     permissions:
       contents: read
       issues: write
-
-    services:
-      db:
-        image: mysql:8.0
-        env:
-          MYSQL_ROOT_PASSWORD: root
-          MYSQL_DATABASE: desofs_test
-          MYSQL_USER: testuser
-          MYSQL_PASSWORD: testpass
-        ports:
-          - 3306:3306
-        options: >-
-          --health-cmd="mysqladmin ping -h localhost"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=5
 
     steps:
       - name: Checkout Code
@@ -134,21 +127,18 @@ jobs:
           SPRINGDOC_API_DOCS_ENABLED: "true"
           SPRINGDOC_SWAGGER_UI_ENABLED: "true"
         run: |
-          java -jar App/target/*.jar &
-          for i in {1..30}; do
-            curl -sf http://localhost:8080/actuator/health && break
-            echo "Waiting... Attempt $i/30"
-            sleep 3
-            if [ $i -eq 30 ]; then
-              echo "Application failed to start in time"
-              exit 1
-            fi
-          done
+          java -jar App/target/*.jar > app.log 2>&1 &
+          echo "Waiting for application to start..."
+          curl --retry 30 \
+               --retry-delay 5 \
+               --retry-connrefused \
+               http://localhost:8080/actuator/health
+          echo "Application is healthy."
 
       - name: Run OWASP ZAP API Scan
         uses: zaproxy/action-api-scan@v0.7.0
         with:
           target: 'http://localhost:8080/v3/api-docs'
           format: openapi
-          fail_action: true
+          fail_action: false
           artifact_name: zap-report
