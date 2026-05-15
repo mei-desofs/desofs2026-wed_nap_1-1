@@ -26,13 +26,13 @@ A criação ou atualização de um PR para a `main` serve como *trigger* para o 
 * O revisor tem acesso imediato aos resultados das verificações de segurança e testes automatizados. Se a pipeline falhar (indicadores a vermelho), o revisor sabe de antemão que o código precisa de correções, poupando tempo na revisão manual.
 * Se os testes passarem e a qualidade do código for validada, o revisor aprova o Pull Request e o código é integrado na `main`.
 
+## 5. Promoção para Produção (`main` -> `prod`)
+Após o código estar estabilizado na branch `main`, é necessário realizar a promoção para o ambiente de produção.
+* Para enviar as alterações para a branch `prod`, deve ser criado um Pull Request específico da `main` para `prod`.
+* Este Pull Request de promoção é sujeito a uma nova revisão formal pela equipa para garantir que o conjunto de funcionalidades está pronto para ser distribuído.
 
-## 5. Automação de Release (`release-please`)
-A integração de código na `main` não gera imediatamente uma nova versão em produção. Em vez disso, utilizamos a action **Release Please**, que ajuda a gerir as alterações e lançamentos no repositório.
-* Quando o PR é fundido na `main`, o *Release Please* analisa o histórico do Git em busca de mensagens de Conventional Commits.
-* Com base nesses *commits*, a ferramenta cria e/ou atualiza um Pull Request por ele criado para fazer o lançamento da nova versão.
-* Esta ferramenta automatiza a geração do *changelog*, o incremento da versão do projeto (seguindo a lógica de *Semantic Versioning*: MAJOR.MINOR.PATCH) e atualiza o ficheiro `CHANGELOG.md`.
-
-## 6. Lançamento Oficial (Release)
-* Quando a equipa decide que o conjunto de funcionalidades atuais está pronto para ser lançado, basta aprovar e fazer o *merge* do Pull Request gerado pelo *Release Please*.
-* Ao fazê-lo, o GitHub cria automaticamente a *Tag* da versão (ex: `v1.1.0`) e a página oficial de *Release*, documentando de forma clara o que foi introduzido na nova versão do software.
+## 6. Lançamento Oficial e Automação (`release-please`)
+O lançamento oficial acontece no momento em que o código é fundido (merge) na branch `prod`.
+* A integração na branch `prod` serve como gatilho para a action **Release Please**.
+* O *Release Please* analisa o histórico de Conventional Commits integrados e cria/atualiza um Pull Request de release automático.
+* O papel fundamental do *Release Please* neste fluxo é a gestão do versionamento semântico, atualização do `CHANGELOG.md` e, principalmente, a disponibilização do artefacto `.jar` da nova versão através da página de Releases do GitHub, facilitando a distribuição da versão estável.
