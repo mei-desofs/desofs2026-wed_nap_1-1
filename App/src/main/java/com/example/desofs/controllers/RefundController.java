@@ -1,12 +1,16 @@
 package com.example.desofs.controllers;
 
 import com.example.desofs.shared.dtos.CreateRefundRequest;
+import com.example.desofs.shared.dtos.RejectRefundRequest;
 import com.example.desofs.shared.dtos.RefundRequestDTO;
 import com.example.desofs.services.RefundService;
-import com.example.desofs.domain.Order;
-import com.example.desofs.domain.RefundRequest;
-import com.example.desofs.repositories.OrderRepository;
-import com.example.desofs.repositories.UserRepository;
+import com.example.desofs.domain.Role;
+import com.example.desofs.security.RoleGuard;
+import jakarta.validation.Valid;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,87 +19,107 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/refunds")
+/**
+ * REST controller for managing refund requests.
+ * <p>
+ * Exposes endpoints to list refund requests, create a new refund request,
+ * and transition a request through approval, rejection and completion.
+ * Delegates all business logic and data access to {@link RefundService}.
+ */
 public class RefundController {
-    private final RefundService refundService;
-    private final OrderRepository orderRepository;
-    private final UserRepository userRepository;
 
-    public RefundController(RefundService refundService, OrderRepository orderRepository, UserRepository userRepository) {
+    /** Logger for request tracing. */
+    private static final Logger logger = LoggerFactory.getLogger(RefundController.class);
+
+    /** Service handling refund business logic and data access. */
+    private final RefundService refundService;
+
+    /** Guard that enforces role-based access checks. */
+    private final RoleGuard roleGuard;
+
+    /**
+     * Constructs the controller with the required service and role guard.
+     *
+     * @param refundService service for refund operations
+     * @param roleGuard component to enforce role checks
+     */
+    public RefundController(RefundService refundService, RoleGuard roleGuard) {
         this.refundService = refundService;
-        this.orderRepository = orderRepository;
-        this.userRepository = userRepository;
+        this.roleGuard = roleGuard;
     }
 
+    /**
+     * Lists all refund requests.
+     *
+     * @return list of {@link RefundRequestDTO}
+     */
     @GetMapping
     public List<RefundRequestDTO> list() {
-        return refundService.listAll().stream()
-            .map(this::toDTO)
-            .toList();
+        return refundService.listAll();
     }
 
+    /**
+     * Retrieves a specific refund request by id.
+     *
+     * @param id refund request identifier
+     * @return 200 OK with the request DTO when found, otherwise 404 Not Found
+     */
     @GetMapping("/{id}")
     public ResponseEntity<RefundRequestDTO> get(@PathVariable Long id) {
-        RefundRequest refund = refundService.get(id).orElse(null);
+        RefundRequestDTO refund = refundService.get(id).orElse(null);
         if (refund == null) return ResponseEntity.notFound().build();
-        return ResponseEntity.ok(toDTO(refund));
+        return ResponseEntity.ok(refund);
     }
 
+    /**
+     * Creates a new refund request for a given order and user.
+     * <p>
+     * Only users with the {@link Role#CUSTOMER} role can call this endpoint.
+     * @param jwt authenticated JWT principal
+     * @param request purchase request payload
+     * @return HTTP 201 with the created refund request response
+     */
     @PostMapping
-    public ResponseEntity<RefundRequestDTO> create(@RequestBody CreateRefundRequest request) {
-        Order order = orderRepository.findById(request.getOrderId()).orElse(null);
-        User user = userRepository.findById(request.getUserId()).orElse(null);
+    public ResponseEntity<RefundRequestDTO> createRefundRequest(
+            @AuthenticationPrincipal Jwt jwt,
+            @Valid @RequestBody CreateRefundRequest request) {
 
-        if (order == null || user == null) {
-            return ResponseEntity.badRequest().build();
-        }
+        String auth0Id = jwt.getSubject();
+        logger.info("Refund request received from user: {}", auth0Id);
 
-        RefundRequest refund = new RefundRequest();
-        refund.setOrder(order);
-        refund.setUser(user);
-        refund.setAmount(request.getAmount());
-        refund.setReason(request.getReason());
+        // Enforce CUSTOMER role via RoleGuard (reads role from JWT claims)
+        roleGuard.requireRole(jwt, Role.CUSTOMER);
 
-        RefundRequest created = refundService.create(refund);
-        return ResponseEntity.created(URI.create("/api/refunds/" + created.getId())).body(toDTO(created));
+        RefundRequestDTO created = refundService.createRefundRequest(auth0Id, request);
+
+        logger.info("Refund request created. Refund ID: {}", created.getId());
+        return ResponseEntity.created(URI.create("/api/refunds/" + created.getId())).body(created);
     }
 
+    /**
+     * Approves the refund request identified by {@code id}.
+     *
+     * @param id refund request identifier
+     * @return 200 OK with updated DTO when successful, otherwise 404 Not Found
+     */
     @PutMapping("/{id}/approve")
     public ResponseEntity<RefundRequestDTO> approve(@PathVariable Long id) {
-        RefundRequest refund = refundService.approve(id);
+        RefundRequestDTO refund = refundService.approve(id);
         if (refund == null) return ResponseEntity.notFound().build();
-        return ResponseEntity.ok(toDTO(refund));
+        return ResponseEntity.ok(refund);
     }
 
+    /**
+     * Rejects a refund request with an optional reason.
+     *
+     * @param id refund request identifier
+     * @param rejectReq payload containing the rejection reason
+     * @return 200 OK with updated DTO when successful, otherwise 404 Not Found
+     */
     @PutMapping("/{id}/reject")
-    public ResponseEntity<RefundRequestDTO> reject(@PathVariable Long id, @RequestBody RejectRequest rejectReq) {
-        RefundRequest refund = refundService.reject(id, rejectReq.getReason());
+    public ResponseEntity<RefundRequestDTO> reject(@PathVariable Long id, @RequestBody RejectRefundRequest rejectReq) {
+        RefundRequestDTO refund = refundService.reject(id, rejectReq.getReason());
         if (refund == null) return ResponseEntity.notFound().build();
-        return ResponseEntity.ok(toDTO(refund));
-    }
-
-    @PutMapping("/{id}/complete")
-    public ResponseEntity<RefundRequestDTO> complete(@PathVariable Long id) {
-        RefundRequest refund = refundService.complete(id);
-        if (refund == null) return ResponseEntity.notFound().build();
-        return ResponseEntity.ok(toDTO(refund));
-    }
-
-    private RefundRequestDTO toDTO(RefundRequest refund) {
-        return new RefundRequestDTO(
-            refund.getId(),
-            refund.getOrder().getId(),
-            refund.getUser().getId(),
-            refund.getAmount(),
-            refund.getStatus().toString(),
-            refund.getReason(),
-            refund.getCreatedAt(),
-            refund.getUpdatedAt()
-        );
-    }
-
-    public static class RejectRequest {
-        private String reason;
-        public String getReason() { return reason; }
-        public void setReason(String reason) { this.reason = reason; }
+        return ResponseEntity.ok(refund);
     }
 }

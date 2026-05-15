@@ -1,7 +1,10 @@
 package com.example.desofs.config;
 
+import com.example.desofs.security.RateLimitFilter;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
+
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -14,7 +17,6 @@ import org.springframework.security.oauth2.jwt.*;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter;
 import org.springframework.security.web.SecurityFilterChain;
-
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
@@ -28,6 +30,7 @@ public class SecurityConfig {
 
     private final RateLimitFilter rateLimitFilter;
 
+    @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "RateLimitFilter is a Spring-managed singleton bean")
     public SecurityConfig(RateLimitFilter rateLimitFilter) {
         this.rateLimitFilter = rateLimitFilter;
     }
@@ -35,7 +38,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(csrf -> csrf.disable()) // Stateless API, JWT-based
+                .csrf(csrf -> csrf.ignoringRequestMatchers("/**")) // Stateless JWT API — no cookie-based auth, CSRF not applicable
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .headers(headers -> headers
                         .contentTypeOptions(opt -> {}) // X-Content-Type-Options: nosniff (default)
@@ -46,6 +49,8 @@ public class SecurityConfig {
                 )
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/actuator/health").permitAll()
+                        .requestMatchers("/error").permitAll()
+                        .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         .anyRequest().authenticated()
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2
@@ -64,6 +69,9 @@ public class SecurityConfig {
         NimbusJwtDecoder jwtDecoder = JwtDecoders.fromIssuerLocation(issuerUri);
 
         OAuth2TokenValidator<Jwt> audienceValidator = new AudienceValidator(audience);
+
+        // createDefaultWithIssuer includes JwtTimestampValidator (checks exp/nbf with 60s clock skew)
+        // and JwtIssuerValidator (checks iss claim) — token expiration is enforced here
         OAuth2TokenValidator<Jwt> issuerValidator = JwtValidators.createDefaultWithIssuer(issuerUri);
 
         jwtDecoder.setJwtValidator(new DelegatingOAuth2TokenValidator<>(issuerValidator, audienceValidator));

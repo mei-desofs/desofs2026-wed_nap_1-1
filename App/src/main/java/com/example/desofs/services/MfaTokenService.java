@@ -1,5 +1,6 @@
 package com.example.desofs.services;
 
+/*
 import com.example.desofs.domain.MfaToken;
 import com.example.desofs.domain.User;
 import com.example.desofs.repositories.MfaTokenRepository;
@@ -62,3 +63,4 @@ public class MfaTokenService {
         });
     }
 }
+*/

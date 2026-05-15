@@ -10,12 +10,16 @@
   <parent>
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-starter-parent</artifactId>
-    <version>3.4.5</version>
+    <version>3.5.14</version>
     <relativePath/> <!-- lookup parent from repository -->
   </parent>
 
   <properties>
     <java.version>21</java.version>
+    <!-- Override managed versions to fix CVEs -->
+    <log4j2.version>2.26.0</log4j2.version>
+    <commons-lang3.version>3.20.0</commons-lang3.version>
+    <tomcat.version>10.1.55</tomcat.version>
   </properties>
 
   <dependencies>
@@ -41,11 +45,32 @@
       <artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
     </dependency>
 
+    <!-- Spring Actuator: Health Check -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-actuator</artifactId>
+    </dependency>
+
     <!-- MySQL -->
     <dependency>
       <groupId>com.mysql</groupId>
       <artifactId>mysql-connector-j</artifactId>
       <scope>runtime</scope>
+    </dependency>
+
+    <!-- SpotBugs Annotations -->
+    <dependency>
+      <groupId>com.github.spotbugs</groupId>
+      <artifactId>spotbugs-annotations</artifactId>
+      <version>4.8.6</version>
+      <optional>true</optional>
+    </dependency>
+
+    <!-- OpenAPI / Swagger (used by DAST scan to enumerate endpoints) -->
+    <dependency>
+      <groupId>org.springdoc</groupId>
+      <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+      <version>2.8.17</version>
     </dependency>
 
     <!-- Rate Limiting (Bucket4j) -->
@@ -80,6 +105,83 @@
       <plugin>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-maven-plugin</artifactId>
+      </plugin>
+      
+      <!-- SAST: SpotBugs (includes FindSecBugs for security analysis) -->
+      <plugin>
+          <groupId>com.github.spotbugs</groupId>
+          <artifactId>spotbugs-maven-plugin</artifactId>
+          <version>4.8.6.6</version>
+          <configuration>
+              <effort>Max</effort>
+              <threshold>Medium</threshold>
+              <xmlOutput>true</xmlOutput>
+              <plugins>
+                  <plugin>
+                      <groupId>com.h3xstream.findsecbugs</groupId>
+                      <artifactId>findsecbugs-plugin</artifactId>
+                      <version>1.13.0</version>
+                  </plugin>
+              </plugins>
+          </configuration>
+      </plugin>
+
+      <!-- SAST: PMD (static code analysis) -->
+      <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-pmd-plugin</artifactId>
+          <version>3.26.0</version>
+          <configuration>
+              <targetJdk>21</targetJdk>
+              <rulesets>
+                  <ruleset>/category/java/security.xml</ruleset>
+                  <ruleset>/category/java/errorprone.xml</ruleset>
+                  <ruleset>/category/java/bestpractices.xml</ruleset>
+              </rulesets>
+              <failOnViolation>false</failOnViolation>
+              <printFailingErrors>true</printFailingErrors>
+          </configuration>
+      </plugin>
+
+      <!-- SCA: OWASP Dependency-Check (CVE scanning) -->
+      <plugin>
+          <groupId>org.owasp</groupId>
+          <artifactId>dependency-check-maven</artifactId>
+          <version>11.1.1</version>
+          <configuration>
+              <failBuildOnCVSS>9</failBuildOnCVSS>
+              <formats>
+                  <format>HTML</format>
+                  <format>JSON</format>
+              </formats>
+              <ossindexAnalyzerEnabled>false</ossindexAnalyzerEnabled>
+          </configuration>
+      </plugin>
+
+      <!-- JaCoCo: Code coverage -->
+      <plugin>
+          <groupId>org.jacoco</groupId>
+          <artifactId>jacoco-maven-plugin</artifactId>
+          <version>0.8.12</version>
+          <configuration>
+            <excludes>
+              <exclude>com/example/desofs/shared/**</exclude>
+            </excludes>
+          </configuration>
+          <executions>
+              <execution>
+                  <goals>
+                      <goal>prepare-agent</goal>
+                  </goals>
+              </execution>
+              <execution>
+                  <id>report</id>
+                  <phase>test</phase>
+                  <goals>
+                      <goal>report</goal>
+                  </goals>
+              </execution>
+          </executions>
       </plugin>
     </plugins>
   </build>

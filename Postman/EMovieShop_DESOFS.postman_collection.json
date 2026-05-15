@@ -1,0 +1,66 @@
+{
+  "info": {
+    "_postman_id": "677555da-26fc-4730-bc97-7515f704b86e",
+    "name": "EMovieShop_DESOFS",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "18711353"
+  },
+  "item": [
+    {
+      "name": "Login",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "if (pm.response.code === 200) {\r",
+              "    const response = pm.response.json();\r",
+              "    pm.environment.set(\"ACCESS_TOKEN\", response.access_token);\r",
+              "    console.log(\"Token saved successfully\");\r",
+              "} else {\r",
+              "    console.error(\"Login failed:\", pm.response.text());\r",
+              "}"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"grant_type\": \"password\",\r\n  \"client_id\": \"QyWDKszhWdIghbyReetTG1cZJSTxrBbW\",\r\n  \"audience\": \"https://emovieshop-api\",\r\n  \"username\": \"{{USERNAME}}\",\r\n  \"password\": \"{{PASSWORD}}\",\r\n  \"scope\": \"openid profile email\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "https://dev-kiwnc36rxn8zsw24.us.auth0.com/oauth/token",
+          "protocol": "https",
+          "host": [
+            "dev-kiwnc36rxn8zsw24",
+            "us",
+            "auth0",
+            "com"
+          ],
+          "path": [
+            "oauth",
+            "token"
+          ]
+        }
+      },
+      "response": []
+    }
+  ],
+  "variable": [
+    {
+      "key": "ACCESS_TOKEN",
+      "value": ""
+    }
+  ]
+}

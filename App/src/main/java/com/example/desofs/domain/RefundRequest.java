@@ -1,5 +1,6 @@
 package com.example.desofs.domain;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -24,14 +25,13 @@ public class RefundRequest {
     @JoinColumn(name = "order_id")
     private Order order;
 
-    @ManyToOne
-    @JoinColumn(name = "user_id")
-    private User user;
+    @Column(name = "auth0_id", nullable = false)
+    private String auth0Id;
 
     private BigDecimal amount;
 
     @Enumerated(EnumType.STRING)
-    private RefundStatus status; // REQUESTED, APPROVED, REJECTED
+    private RefundStatus status;
 
     @Column(length = REASON_MAX_LENGTH)
     private String reason;
@@ -42,6 +42,17 @@ public class RefundRequest {
      * Creates a new refund request with the initial timestamps and a REQUESTED status.
      */
     public RefundRequest() {
+        this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
+        this.status = RefundStatus.REQUESTED;
+    }
+
+    @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "JPA-managed entity relationship")
+    public RefundRequest(Order order, String auth0Id, BigDecimal amount, String reason) {
+        this.order = order;
+        this.auth0Id = auth0Id;
+        this.amount = amount;
+        this.reason = reason;
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
         this.status = RefundStatus.REQUESTED;
@@ -59,6 +70,7 @@ public class RefundRequest {
      *
      * @return the linked order
      */
+    @SuppressFBWarnings(value = "EI_EXPOSE_REP", justification = "JPA-managed entity relationship")
     public Order getOrder() { return order; }
 
     /**
@@ -66,6 +78,7 @@ public class RefundRequest {
      *
      * @param order the order to associate
      */
+    @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "JPA-managed entity relationship")
     public void setOrder(Order order) { this.order = order; }
 
     /**
@@ -73,14 +86,14 @@ public class RefundRequest {
      *
      * @return the requesting user
      */
-    public User getUser() { return user; }
+    public String getAuth0Id() { return auth0Id; }
 
     /**
      * Sets the user who created the refund request.
      *
-     * @param user the requesting user
+     * @param auth0Id the requesting user ID
      */
-    public void setUser(User user) { this.user = user; }
+    public void setAuth0Id(String auth0Id) { this.auth0Id = auth0Id; }
 
     /**
      * Returns the amount requested for refund.

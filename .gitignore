@@ -1,3 +1,6 @@
 /.idea
+/.vscode
+/.claude
 
 App/target
+App/.env
