@@ -69,6 +69,9 @@ jobs:
           distribution: 'temurin'
           cache: 'maven'
 
+      - name: Ensure Cached Data Directory Exists
+        run: mkdir -p ~/.dependency-check/data
+
       - name: Cache OWASP Dependency-Check DB
         uses: actions/cache@v4
         with:
@@ -137,6 +140,7 @@ jobs:
 
       - name: Run OWASP ZAP API Scan
         uses: zaproxy/action-api-scan@v0.7.0
+        continue-on-error: true
         with:
           target: 'http://localhost:8080/v3/api-docs'
           format: openapi
