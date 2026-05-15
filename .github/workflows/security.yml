@@ -177,7 +177,6 @@ jobs:
           target: 'http://localhost:8080/v3/api-docs'
           format: openapi
           fail_action: true
-          artifact_name: zap-report
           rules_file_name: '.zap/rules.tsv'
           cmd_options: >-
             -z "-config replacer.full_list(0).description=auth
@@ -190,7 +189,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: zap_report
+          name: zapReport
           path: |
             report_html.html
             report_json.json
