@@ -2,7 +2,9 @@ package com.example.desofs.exceptions;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
@@ -141,7 +143,18 @@ public class GlobalExceptionHandler {
         logger.debug("Resource not found [{}]: {}", correlationId, ex.getMessage());
 
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .contentType(MediaType.APPLICATION_JSON)
                 .body(errorBody(correlationId, HttpStatus.NOT_FOUND.value(), "Resource not found"));
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<Map<String, Object>> handleDataIntegrity(DataIntegrityViolationException ex) {
+        String correlationId = UUID.randomUUID().toString();
+        logger.warn("Data integrity violation [{}]: {}", correlationId, ex.getMessage());
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(errorBody(correlationId, HttpStatus.BAD_REQUEST.value(), "Invalid data: a required field is missing or violates constraints"));
     }
 
     /**

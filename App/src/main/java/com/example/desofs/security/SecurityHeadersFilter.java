@@ -34,6 +34,7 @@ public class SecurityHeadersFilter extends OncePerRequestFilter {
         response.setHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
         response.setHeader("X-XSS-Protection", "1; mode=block");
         response.setHeader("Referrer-Policy", "no-referrer");
+        response.setHeader("Cross-Origin-Resource-Policy", "same-origin");
         filterChain.doFilter(request, response);
     }
 

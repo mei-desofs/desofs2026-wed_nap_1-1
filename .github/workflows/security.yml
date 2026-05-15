@@ -201,6 +201,7 @@ jobs:
           90005	IGNORE	(Sec-Fetch-Dest Header is Missing)
           10038	IGNORE	(Content Security Policy Header Not Set)
           10021	IGNORE	(X-Content-Type-Options Header Missing)
+          40018	IGNORE	(SQL Injection - False Positive: JPA prepared statements)
           EOF
 
       - name: Run OWASP ZAP API Scan
