@@ -141,4 +141,13 @@ jobs:
           target: 'http://localhost:8080/v3/api-docs'
           format: openapi
           fail_action: false
-          artifact_name: zap-report
+
+      - name: Upload ZAP Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: zap-report
+          path: |
+            report_html.html
+            report_json.json
+            report_md.md
