@@ -148,7 +148,28 @@ TBD
 
 | Metric | Status |
 |--------|--------|
-|          |           |
+| Total dependencies scanned | ~50+ transitive |
+| Vulnerabilities remaining | 5 CVEs (accepted risk) |
+| Build-breaking threshold | CVSS ≥ 9 |
+| Build status | Pass |
+
+#### Accepted Risk - Unfixable CVEs
+
+The following CVEs have no available fix at the time of this sprint. They are documented as **accepted risk** with justification:
+
+| Dependency | CVE | CVSS | Risk Justification |
+|---|---|---|---|
+| angus-activation 2.0.3 | CVE-2025-7962 | Low-Medium | No newer version available; managed by Spring Boot 3.5.14. Email activation library with minimal attack surface in our REST API context. |
+| hibernate-validator 8.0.3 | CVE-2025-15104 | Medium | Latest 8.x release; version 9.x is incompatible with Spring Boot 3.5. Requires specific usage patterns not present in our codebase. |
+| swagger-ui 5.32.2 (DOMPurify 3.3.2) | CVE-2026-41240 | Medium | Swagger UI is **disabled in production** (`springdoc.swagger-ui.enabled=false`). Only enabled in dev profile. The CVE requires using `ADD_TAGS` function + `FORBID_TAGS` simultaneously, a pattern Swagger UI does not use. |
+| swagger-ui 5.32.2 (DOMPurify 3.3.2) | CVE-2026-41238 | Medium | Same as above, Swagger UI disabled in production; attack surface eliminated. |
+| swagger-ui 5.32.2 (DOMPurify 3.3.2) | CVE-2026-41239 | Medium | Same as above, Swagger UI disabled in production; attack surface eliminated. |
+
+**Mitigation controls in place:**
+- Swagger UI and OpenAPI docs endpoints are disabled by default (`application.properties`)
+- Only enabled via `application-dev.properties` in development profile
+- Production deployments never expose the vulnerable Swagger UI frontend
+- Dependencies will be re-scanned in future sprints as patches become available
 
 
 ### DAST Results (OWASP ZAP)
