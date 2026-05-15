@@ -125,6 +125,8 @@ jobs:
           SPRING_DATASOURCE_URL: ${{ secrets.SPRING_DATASOURCE_URL }}
           SPRING_DATASOURCE_USERNAME: ${{ secrets.SPRING_DATASOURCE_USERNAME }}
           SPRING_DATASOURCE_PASSWORD: ${{ secrets.SPRING_DATASOURCE_PASSWORD }}
+          AUTH0_DOMAIN: ${{ secrets.AUTH0_DOMAIN }}
+          AUTH0_AUDIENCE: ${{ vars.AUTH0_AUDIENCE }}
           SERVER_PORT: 8080
           SPRING_JPA_HIBERNATE_DDL_AUTO: create-drop
           SPRINGDOC_API_DOCS_ENABLED: "true"
@@ -138,20 +140,48 @@ jobs:
                http://localhost:8080/actuator/health
           echo "Application is healthy."
 
+      - name: Get Auth0 M2M Token
+        id: get_token
+        run: |
+          RESPONSE=$(curl -s --request POST \
+          --url "${{ secrets.AUTH0_DOMAIN }}/oauth/token" \
+          --header 'content-type: application/json' \
+          --data '{
+           "client_id": "${{ secrets.AUTH0_CLIENT_ID }}",
+           "client_secret": "${{ secrets.AUTH0_CLIENT_SECRET }}",
+           "audience": "${{ vars.AUTH0_AUDIENCE }}",
+           "grant_type": "client_credentials"
+          }')
+          TOKEN=$(echo $RESPONSE | jq -r '.access_token')
+          if [ "$TOKEN" = "null" ] || [ -z "$TOKEN" ]; then
+          echo "Failed to obtain Auth0 token"
+          exit 1
+          fi
+          echo "TOKEN=$TOKEN" >> $GITHUB_OUTPUT
+
+      - name: Create ZAP Rules File
+        run: |
+          mkdir -p .zap
+          cat <<EOF > .zap/rules.tsv
+          10015	IGNORE	(Incomplete or No Cache-control Header Set)
+          10096	IGNORE	(Timestamp Disclosure)
+          10036	IGNORE	(Server Leaks Version Information)
+          90005	IGNORE	(Sec-Fetch-Dest Header is Missing)
+          10038	IGNORE	(Content Security Policy Header Not Set)
+          10021	IGNORE	(X-Content-Type-Options Header Missing)
+          EOF
+
       - name: Run OWASP ZAP API Scan
         uses: zaproxy/action-api-scan@v0.7.0
-        continue-on-error: true
         with:
           target: 'http://localhost:8080/v3/api-docs'
           format: openapi
-          fail_action: false
-
-      - name: Upload ZAP Report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: zap-report
-          path: |
-            report_html.html
-            report_json.json
-            report_md.md
+          fail_action: true
+          artifact_name: zap-report
+          rules_file_name: '.zap/rules.tsv'
+          cmd_options: >-
+            -z "-config replacer.full_list(0).description=auth
+                -config replacer.full_list(0).enabled=true
+                -config replacer.full_list(0).matchtype=REQ_HEADER
+                -config replacer.full_list(0).matchstr=Authorization
+                -config replacer.full_list(0).replacement=Bearer ${{ steps.get_token.outputs.TOKEN }}"
