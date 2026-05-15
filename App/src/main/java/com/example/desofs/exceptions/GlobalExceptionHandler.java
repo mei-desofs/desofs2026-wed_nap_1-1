@@ -2,15 +2,21 @@ package com.example.desofs.exceptions;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.transaction.TransactionSystemException;
 import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
+
+import jakarta.validation.ConstraintViolationException;
 
 import java.time.LocalDateTime;
 import java.util.Map;
@@ -44,6 +50,7 @@ public class GlobalExceptionHandler {
         logger.warn("Validation error [{}]: {}", correlationId, message);
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .contentType(MediaType.APPLICATION_JSON)
                 .body(errorBody(correlationId, HttpStatus.BAD_REQUEST.value(), message));
     }
 
@@ -59,6 +66,7 @@ public class GlobalExceptionHandler {
         logger.warn("Bad request [{}]: {}", correlationId, ex.getMessage());
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .contentType(MediaType.APPLICATION_JSON)
                 .body(errorBody(correlationId, HttpStatus.BAD_REQUEST.value(), ex.getMessage()));
     }
 
@@ -74,6 +82,7 @@ public class GlobalExceptionHandler {
         logger.warn("Conflict [{}]: {}", correlationId, ex.getMessage());
 
         return ResponseEntity.status(HttpStatus.CONFLICT)
+                .contentType(MediaType.APPLICATION_JSON)
                 .body(errorBody(correlationId, HttpStatus.CONFLICT.value(), ex.getMessage()));
     }
 
@@ -89,6 +98,7 @@ public class GlobalExceptionHandler {
         logger.warn("Access denied [{}]: {}", correlationId, ex.getMessage());
 
         return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .contentType(MediaType.APPLICATION_JSON)
                 .body(errorBody(correlationId, HttpStatus.FORBIDDEN.value(), "Access denied"));
     }
 
@@ -104,6 +114,7 @@ public class GlobalExceptionHandler {
         logger.error("Security violation [{}]: {}", correlationId, ex.getMessage());
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .contentType(MediaType.APPLICATION_JSON)
                 .body(errorBody(correlationId, HttpStatus.BAD_REQUEST.value(), "Invalid request"));
     }
 
@@ -113,6 +124,7 @@ public class GlobalExceptionHandler {
         logger.warn("Malformed request body [{}]: {}", correlationId, ex.getMessage());
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .contentType(MediaType.APPLICATION_JSON)
                 .body(errorBody(correlationId, HttpStatus.BAD_REQUEST.value(), "Malformed request body"));
     }
 
@@ -122,6 +134,7 @@ public class GlobalExceptionHandler {
         logger.warn("Unsupported media type [{}]: {}", correlationId, ex.getMessage());
 
         return ResponseEntity.status(HttpStatus.UNSUPPORTED_MEDIA_TYPE)
+                .contentType(MediaType.APPLICATION_JSON)
                 .body(errorBody(correlationId, HttpStatus.UNSUPPORTED_MEDIA_TYPE.value(), "Unsupported media type"));
     }
 
@@ -131,7 +144,62 @@ public class GlobalExceptionHandler {
         logger.warn("Method not allowed [{}]: {}", correlationId, ex.getMessage());
 
         return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED)
+                .contentType(MediaType.APPLICATION_JSON)
                 .body(errorBody(correlationId, HttpStatus.METHOD_NOT_ALLOWED.value(), "Method not allowed"));
+    }
+
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleNoResourceFound(NoResourceFoundException ex) {
+        String correlationId = UUID.randomUUID().toString();
+        logger.debug("Resource not found [{}]: {}", correlationId, ex.getMessage());
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(errorBody(correlationId, HttpStatus.NOT_FOUND.value(), "Resource not found"));
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<Map<String, Object>> handleDataIntegrity(DataIntegrityViolationException ex) {
+        String correlationId = UUID.randomUUID().toString();
+        logger.warn("Data integrity violation [{}]: {}", correlationId, ex.getMessage());
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(errorBody(correlationId, HttpStatus.BAD_REQUEST.value(), "Invalid data: a required field is missing or violates constraints"));
+    }
+
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<Map<String, Object>> handleConstraintViolation(ConstraintViolationException ex) {
+        String correlationId = UUID.randomUUID().toString();
+        String message = ex.getConstraintViolations().stream()
+                .map(v -> v.getPropertyPath() + ": " + v.getMessage())
+                .reduce((a, b) -> a + "; " + b)
+                .orElse("Validation failed");
+        logger.warn("Constraint violation [{}]: {}", correlationId, message);
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(errorBody(correlationId, HttpStatus.BAD_REQUEST.value(), message));
+    }
+
+    @ExceptionHandler(TransactionSystemException.class)
+    public ResponseEntity<Map<String, Object>> handleTransactionSystem(TransactionSystemException ex) {
+        String correlationId = UUID.randomUUID().toString();
+        Throwable cause = ex.getRootCause();
+        if (cause instanceof ConstraintViolationException cve) {
+            String message = cve.getConstraintViolations().stream()
+                    .map(v -> v.getPropertyPath() + ": " + v.getMessage())
+                    .reduce((a, b) -> a + "; " + b)
+                    .orElse("Validation failed");
+            logger.warn("Transaction constraint violation [{}]: {}", correlationId, message);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(errorBody(correlationId, HttpStatus.BAD_REQUEST.value(), message));
+        }
+        logger.error("Transaction error [{}]: {}", correlationId, ex.getMessage(), ex);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(errorBody(correlationId, HttpStatus.INTERNAL_SERVER_ERROR.value(), "An unexpected error occurred"));
     }
 
     /**
@@ -146,6 +214,7 @@ public class GlobalExceptionHandler {
         logger.error("Unexpected error [{}]: {}", correlationId, ex.getMessage(), ex);
 
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .contentType(MediaType.APPLICATION_JSON)
                 .body(errorBody(correlationId, HttpStatus.INTERNAL_SERVER_ERROR.value(), "An unexpected error occurred"));
     }
 

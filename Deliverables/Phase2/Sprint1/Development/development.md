@@ -11,6 +11,7 @@
 7. [Rate Limiting & DoS Protection](#7-rate-limiting--dos-protection)
 8. [Security HTTP Headers](#8-security-http-headers)
 9. [Audit Logging](#9-audit-logging)
+10. [Error Handling & Information Disclosure Prevention](#10-error-handling--information-disclosure-prevention)
 
 ---
 
@@ -27,8 +28,8 @@
 | Build | Maven |
 | SAST | CodeQL (GitHub), SpotBugs + FindSecBugs, PMD |
 | SCA | OWASP Dependency-Check 11.1.1 |
-| DAST | TODO |
-| IAST | TODO |
+| DAST | OWASP ZAP (GitHub Actions) |
+| IAST | Not implemented (planned) |
 | Coverage | JaCoCo 0.8.12 |
 | Testing | JUnit 5, Mockito, AssertJ, Spring Security Test |
 
@@ -148,7 +149,7 @@ Roles are carried in a **custom Auth0 claim** namespaced as `https://emovieshop.
 |---|---|---|
 | `MovieController` | `GET /api/movies` | Any authenticated user |
 | `MovieController` | `GET /api/movies/{id}` | Any authenticated user |
-| `MovieController` | `POST /api/movies` | Any authenticated user |
+| `MovieController` | `POST /api/movies` | `ADMIN` |
 | `OrderController` | `POST /api/orders` | `CUSTOMER` |
 | `RefundController` | `POST /api/refunds` | `CUSTOMER` |
 | `RefundController` | `GET /api/refunds` | Any authenticated user |
@@ -187,9 +188,46 @@ Input security uses two complementary layers:
 
 ### 6.1 Input Validation (Bean Validation / Jakarta)
 
-**Location:** all controller methods and DTOs in `App/src/main/java/com/example/desofs/shared/dtos/`
+**Location:** controller methods, DTOs in `App/src/main/java/com/example/desofs/shared/dtos/`, and domain entities in `App/src/main/java/com/example/desofs/domain/`
 
-`@Valid` annotations on controller parameters trigger declarative constraint checking before business logic runs. Malformed requests are rejected with `400 Bad Request` before reaching the service layer.
+All user-facing input is validated **declaratively** using Jakarta Bean Validation annotations (`jakarta.validation.constraints.*`). This approach ensures that invalid data is rejected at the API boundary, before it reaches services or the database - producing a consistent `400 Bad Request` response with field-level error details.
+
+#### Why Jakarta Bean Validation
+
+- **Fail-fast at the boundary** - constraints are evaluated by the framework as soon as the request body is deserialized, so no business logic or database call is executed with invalid data.
+- **Declarative and co-located** - validation rules live next to the fields they protect, making them easy to read and audit.
+- **Consistent error format** - all constraint violations are caught by the `GlobalExceptionHandler` (`MethodArgumentNotValidException`) and returned in the standard JSON error structure with field-level messages.
+
+#### How it is applied
+
+Controllers annotate `@RequestBody` parameters with `@Valid`. This triggers the validation cascade on the incoming payload:
+
+```java
+// MovieController
+public ResponseEntity<Movie> create(@AuthenticationPrincipal Jwt jwt,
+                                     @Valid @RequestBody Movie m) { ... }
+
+// OrderController
+public ResponseEntity<OrderResponseDTO> createOrder(@AuthenticationPrincipal Jwt jwt,
+                                                     @Valid @RequestBody PurchaseRequestDTO request) { ... }
+
+// RefundController
+public ResponseEntity<RefundRequestDTO> createRefundRequest(@AuthenticationPrincipal Jwt jwt,
+                                                             @Valid @RequestBody CreateRefundRequest request) { ... }
+```
+
+#### Constraints used across the codebase
+
+The following annotations are applied on DTOs and domain entities:
+
+| Annotation | Purpose | Example |
+|---|---|---|
+| `@NotNull` | Field must be present | `price` (Movie), `movieId` (PurchaseItemDTO), `orderId` (CreateRefundRequest) |
+| `@NotBlank` | String must be non-null and non-empty | `title` (Movie), `receiptName` (PurchaseRequestDTO), `reason` (CreateRefundRequest) |
+| `@Size(max=N)` | Bounds string/collection length | `description` max 5000, `genre` max 100, `items` max 10 (PurchaseRequestDTO) |
+| `@Min(N)` | Numeric minimum | `stockQuantity >= 0` (Movie), `quantity >= 1` (PurchaseItemDTO) |
+| `@DecimalMin` | Decimal minimum (exclusive) | `price > 0.0` (Movie) |
+| `@Valid` (nested) | Cascades validation into child objects | `items` list in PurchaseRequestDTO validates each PurchaseItemDTO |
 
 ### 6.2 Input Sanitization (Receipt File Service & Path Traversal Protection)
 
@@ -302,8 +340,33 @@ Every response includes the following security headers:
 | `Content-Security-Policy` | `default-src 'self'; frame-ancestors 'none'` | XSS / framing |
 | `X-XSS-Protection` | `1; mode=block` | Reflected XSS (legacy browsers) |
 | `Referrer-Policy` | `no-referrer` | Referrer leakage |
+| `Cross-Origin-Resource-Policy` | `same-origin` | Spectre side-channel attacks |
 
 These are also configured at the Spring Security `HttpSecurity` level (HSTS, frame options, content-type options), providing defence-in-depth.
+
+### CORS (Cross-Origin Resource Sharing)
+
+CORS is handled with **origin validation** rather than a permissive wildcard (`*`). The filter reads the `Origin` header from each request and only adds CORS response headers if the origin is present in a configurable allowlist.
+
+```java
+private void addCorsHeaders(HttpServletRequest request, HttpServletResponse response) {
+    String origin = request.getHeader("Origin");
+    if (origin != null && allowedOrigins.contains(origin)) {
+        response.setHeader("Access-Control-Allow-Origin", origin);
+        response.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
+        response.setHeader("Access-Control-Allow-Headers", "Authorization,Content-Type,X-Requested-With");
+        response.setHeader("Access-Control-Max-Age", "3600");
+    }
+}
+```
+
+Allowed origins are configured via `application.properties`:
+
+```properties
+emovieshop.cors.allowed-origins=${CORS_ALLOWED_ORIGINS:http://localhost:3000}
+```
+
+Multiple origins can be specified as a comma-separated list. Requests from unlisted origins receive no CORS headers, causing the browser to block the cross-origin request.
 
 ---
 
@@ -327,3 +390,59 @@ The `id` field has no public setter, it is assigned only by JPA after persistenc
 `GET /api/audit-logs`, restricted to `ADMIN` role, returns the full audit trail.
 
 > **Known gap (TODO):** Phase 1 documentation also mandates logging for refund decisions and catalog edits. This is not yet implemented.
+
+---
+
+## 10. Error Handling & Information Disclosure Prevention
+
+**Location:** `App/src/main/java/com/example/desofs/exceptions/GlobalExceptionHandler.java`
+
+A `@RestControllerAdvice` centralizes all error responses into a consistent JSON format, preventing stack traces or internal details from leaking to clients.
+
+### Response format
+
+Every error response follows the same structure:
+
+```json
+{
+  "correlationId": "uuid",
+  "status": 400,
+  "message": "Human-readable message",
+  "timestamp": "2026-05-15T12:00:00"
+}
+```
+
+The `correlationId` allows operators to trace an error in server logs without exposing internals to the client.
+
+### Exception mapping
+
+| Exception | HTTP Status | Message exposed |
+|---|---|---|
+| `MethodArgumentNotValidException` | 400 | Field-level validation errors |
+| `IllegalArgumentException` | 400 | Business input error |
+| `HttpMessageNotReadableException` | 400 | "Malformed request body" |
+| `DataIntegrityViolationException` | 400 | "Invalid data: a required field is missing or violates constraints" |
+| `SecurityException` | 400 | "Invalid request" (generic) |
+| `AccessDeniedException` | 403 | "Access denied" |
+| `NoResourceFoundException` | 404 | "Resource not found" |
+| `HttpRequestMethodNotSupportedException` | 405 | "Method not allowed" |
+| `IllegalStateException` | 409 | Conflict message |
+| `HttpMediaTypeNotSupportedException` | 415 | "Unsupported media type" |
+| `Exception` (catch-all) | 500 | "An unexpected error occurred" |
+
+### Custom Error Controller
+
+**Location:** `App/src/main/java/com/example/desofs/controllers/CustomErrorController.java`
+
+Spring Boot's default `BasicErrorController` returns `text/html` error pages for requests that fall outside the DispatcherServlet scope (e.g., requests to the root path or unknown paths without a matching controller). Since eMovieShop is a pure REST API, a custom `ErrorController` implementation replaces this default behaviour, ensuring **all error responses are returned as `application/json`**, regardless of the request path or the client's `Accept` header.
+
+The controller maps `GET` and `HEAD` on `/error` (Spring internally forwards to this path) and returns the same JSON structure used by the `GlobalExceptionHandler`.
+
+### Security properties
+
+- **No stack traces** - `server.error.include-stacktrace=never` in `application.properties`
+- **No internal messages** - `server.error.include-message=never`
+- **Generic catch-all** - unexpected exceptions always return a safe generic message; the real error is logged server-side with the correlation ID
+- **Consistent JSON Content-Type** - all error responses from both `GlobalExceptionHandler` and `CustomErrorController` explicitly set `Content-Type: application/json`, preventing content-type mismatch issues
+- **404 for unknown paths** - requests to undefined endpoints return 404 (not 500), preventing path enumeration from triggering noisy error responses
+- **Database constraint errors** - `DataIntegrityViolationException` is caught and returns 400 with a safe message, preventing SQL/schema details from leaking

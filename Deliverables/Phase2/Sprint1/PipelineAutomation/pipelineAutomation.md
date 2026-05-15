@@ -5,7 +5,8 @@
 1. [Branching Strategy & Team Workflow](#1-branching-strategy--team-workflow)
 2. [Development Pipeline](#2-development-pipeline)
 3. [CodeQL SAST Pipeline](#3-codeql-sast-pipeline)
-4. [Release Pipeline](#4-release-pipeline)
+4. [Security Pipeline (DAST)](#4-security-pipeline-dast)
+5. [Release Pipeline](#5-release-pipeline)
 
 ---
 
@@ -63,7 +64,54 @@ Reports generated:
 
 ---
 
-## 4. Release Pipeline
+## 4. Security Pipeline (DAST)
+
+**Workflow file:** [`.github/workflows/security.yml`](../../../../.github/workflows/security.yml)
+
+**Triggers:** Invoked via `workflow_call` (reusable workflow, called from the development pipeline).
+
+This pipeline performs four security checks in parallel:
+
+### 4.1 Jobs Overview
+
+| Job | Tool | Purpose |
+|---|---|---|
+| Secret Scan | GitLeaks 1.6.0 | Detect hardcoded secrets in the repository history |
+| SAST | CodeQL (Java) | Static analysis for injection, path traversal, unsafe deserialization |
+| SCA | OWASP Dependency-Check + Anchore SBOM | CVE scanning and Software Bill of Materials generation |
+| DAST | OWASP ZAP 0.10.0 | Dynamic black-box testing against the running application |
+
+### 4.2 DAST Job - OWASP ZAP
+
+The DAST job performs dynamic application security testing against the live API:
+
+1. **Build** - compiles the application JAR (skipping tests for speed)
+2. **Start** - launches the Spring Boot app with a MySQL database and Auth0 configuration; waits up to 150 s for `/actuator/health` to respond
+3. **Verify OpenAPI** - confirms `/v3/api-docs` is accessible (required for ZAP's API scan mode)
+4. **Obtain Auth0 token** - requests a Machine-to-Machine (M2M) token via `client_credentials` grant; the token is masked in logs (`::add-mask::`)
+5. **Verify token** - tests the token against `GET /api/movies` to ensure it's accepted
+6. **Run ZAP** - executes `zaproxy/action-api-scan@v0.10.0` against the OpenAPI spec, injecting the Bearer token via ZAP's Replacer add-on so authenticated endpoints are exercised
+
+#### ZAP Configuration
+
+- **Scan mode:** OpenAPI-driven API scan
+- **Authentication:** Bearer token injected into every request via ZAP Replacer
+- **Fail threshold:** Build fails on any unignored alert (`fail_action: true`)
+- **Suppressed rules** (informational / not applicable):
+
+| Rule ID | Reason |
+|---|---|
+| 10015 | Cache-control headers not relevant for API |
+| 10096 | Timestamp disclosure (informational) |
+| 10036 | Server version leakage (Spring Boot doesn't expose by default) |
+| 90005 | Sec-Fetch-Dest missing (browser-only header) |
+| 10038 | CSP header set by filter but not on error pages |
+| 10021 | X-Content-Type-Options set by filter |
+| 40018 | SQL Injection false positive, JPA uses prepared statements; behavioural difference caused by input sanitizer, not injection |
+
+---
+
+## 5. Release Pipeline
 
 **Workflow file:** [`.github/workflows/release-please.yml`](../../../../.github/workflows/release-please.yml)
 
