@@ -70,11 +70,7 @@ jobs:
 
       - name: Run OWASP Dependency-Check
         working-directory: App
-        run: |
-          mvn -B org.owasp:dependency-check-maven:check \
-            -DnvdApiKey=${{ secrets.NVD_API_KEY }} \
-            -DfailBuildOnCVSS=7 \
-            -Dformats=HTML,JSON
+        run: mvn -B dependency-check:check -DnvdApiKey=${{ secrets.NVD_API_KEY }}
 
       - name: Upload Dependency-Check Report
         if: always()
@@ -130,11 +126,11 @@ jobs:
 
       - name: Start Application
         env:
-          SPRING_DATASOURCE_URL: jdbc:mysql://127.0.0.1:3306/desofs_test
-          SPRING_DATASOURCE_USERNAME: testuser
-          SPRING_DATASOURCE_PASSWORD: testpass
-          SPRING_JPA_HIBERNATE_DDL_AUTO: create-drop
+          SPRING_DATASOURCE_URL: ${{ secrets.SPRING_DATASOURCE_URL }}
+          SPRING_DATASOURCE_USERNAME: ${{ secrets.SPRING_DATASOURCE_USERNAME }}
+          SPRING_DATASOURCE_PASSWORD: ${{ secrets.SPRING_DATASOURCE_PASSWORD }}
           SERVER_PORT: 8080
+          SPRING_JPA_HIBERNATE_DDL_AUTO: create-drop
           SPRINGDOC_API_DOCS_ENABLED: "true"
           SPRINGDOC_SWAGGER_UI_ENABLED: "true"
         run: |
