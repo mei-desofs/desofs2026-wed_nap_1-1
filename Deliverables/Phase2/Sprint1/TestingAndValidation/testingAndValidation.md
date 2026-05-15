@@ -142,12 +142,14 @@ The obtained code coverage is reported per layer and globally:
 
 | Layer | What is measured | Coverage Status |
 |------|------------------|-----------------|
-| Domain | Domain classes and value objects |  |
-| Mappers | DTO/entity conversion logic |  |
-| Services | Business rules and orchestration logic | |
-| Controllers | Request handling and API flow validation |  |
-| Integration slice | End-to-end Spring context coverage |  |
-| Total | Whole application coverage |  |
+| Domain | Domain classes and value objects | 100.00% (116/116 lines) |
+| Mappers | DTO/entity conversion logic | 100.00% (55/55 lines) |
+| Services | Business rules and orchestration logic | 92.00% (161/175 lines) |
+| Controllers | Request handling and API flow validation | 90.24% (74/82 lines) |
+| Config | Application configuration and Tomcat/Auth0 helpers | 93.51% (72/77 lines) |
+| Security | Security filters, guards and headers | 93.75% (90/96 lines) |
+| Integration slice | End-to-end Spring context coverage | 91.44% (235/257 lines) |
+| Total | Whole application coverage | 80.63% (687/852 lines) |
 
 ---
 
