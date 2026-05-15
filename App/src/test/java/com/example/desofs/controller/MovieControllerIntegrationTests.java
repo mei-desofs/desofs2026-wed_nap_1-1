@@ -3,6 +3,8 @@ package com.example.desofs.controller;
 import com.example.desofs.config.SecurityConfig;
 import com.example.desofs.controllers.MovieController;
 import com.example.desofs.domain.Movie;
+import com.example.desofs.domain.Role;
+import com.example.desofs.security.RoleGuard;
 import com.example.desofs.services.MovieService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -11,6 +13,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.http.MediaType;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.test.web.servlet.MockMvc;
 
 import org.springframework.context.annotation.Import;
@@ -22,6 +26,8 @@ import java.util.List;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasSize;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -39,6 +45,9 @@ class MovieControllerIntegrationTests {
 
     @MockitoBean
     private MovieService movieService;
+
+    @MockitoBean
+    private RoleGuard roleGuard;
 
     private Movie testMovie1;
     private Movie testMovie2;
@@ -198,6 +207,139 @@ class MovieControllerIntegrationTests {
         mockMvc.perform(get("/api/movies/1%20OR%201=1")
                         .with(jwt())
                         .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("POST /api/movies with non-ADMIN role should return 403 Forbidden")
+    void testCreateMovie_WithNonAdminRole_Returns403() throws Exception {
+        doThrow(new AccessDeniedException("Access denied. Required role: ADMIN"))
+                .when(roleGuard).requireRole(any(Jwt.class), eq(Role.ADMIN));
+
+        String requestBody = "{"
+                + "\"title\":\"Avatar\","
+                + "\"description\":\"Blue aliens\","
+                + "\"genre\":\"Action\","
+                + "\"platform\":\"4K\","
+                + "\"price\":19.99,"
+                + "\"stockQuantity\":15"
+                + "}";
+
+        mockMvc.perform(post("/api/movies")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody)
+                        .with(jwt()
+                                .jwt(jwt -> jwt.subject("auth0|user123"))
+                        ))
+                .andExpect(status().isForbidden());
+
+        verify(movieService, never()).create(any(Movie.class));
+    }
+
+    // ============ AUTHENTICATION Tests ============
+
+    @Test
+    @DisplayName("GET /api/movies without JWT should return 401 Unauthorized")
+    void testGetMovies_WithoutJwt_Returns401() throws Exception {
+        mockMvc.perform(get("/api/movies")
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isUnauthorized());
+
+        verify(movieService, never()).listAll();
+    }
+
+    @Test
+    @DisplayName("GET /api/movies/{id} without JWT should return 401 Unauthorized")
+    void testGetMovieById_WithoutJwt_Returns401() throws Exception {
+        mockMvc.perform(get("/api/movies/1")
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isUnauthorized());
+
+        verify(movieService, never()).get(any());
+    }
+
+    @Test
+    @DisplayName("POST /api/movies without JWT should return 401 Unauthorized")
+    void testCreateMovie_WithoutJwt_Returns401() throws Exception {
+        String requestBody = "{"
+                + "\"title\":\"Avatar\","
+                + "\"description\":\"Blue aliens\","
+                + "\"genre\":\"Action\","
+                + "\"platform\":\"4K\","
+                + "\"price\":19.99,"
+                + "\"stockQuantity\":15"
+                + "}";
+
+        mockMvc.perform(post("/api/movies")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody))
+                .andExpect(status().isUnauthorized());
+
+        verify(movieService, never()).create(any(Movie.class));
+    }
+
+    // ============ REQUEST VALIDATION Tests ============
+
+    @Test
+    @DisplayName("POST /api/movies with malformed JSON should return 400 Bad Request")
+    void testCreateMovie_WithMalformedJson_Returns400() throws Exception {
+        String invalidJson = "{\"title\":invalid}";
+
+        mockMvc.perform(post("/api/movies")
+                        .with(csrf())
+                        .with(jwt())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(invalidJson))
+                .andExpect(status().isBadRequest());
+
+        verify(movieService, never()).create(any(Movie.class));
+    }
+
+    @Test
+    @DisplayName("POST /api/movies with negative price should return 400 Bad Request")
+    void testCreateMovie_WithNegativePrice_Returns400() throws Exception {
+        when(movieService.create(any(Movie.class)))
+                .thenThrow(new IllegalArgumentException("Price must be positive"));
+
+        String requestBody = "{"
+                + "\"title\":\"Bad Movie\","
+                + "\"description\":\"Invalid\","
+                + "\"genre\":\"Action\","
+                + "\"platform\":\"DVD\","
+                + "\"price\":-5.00,"
+                + "\"stockQuantity\":10"
+                + "}";
+
+        mockMvc.perform(post("/api/movies")
+                        .with(csrf())
+                        .with(jwt())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("POST /api/movies with negative stock should return 400 Bad Request")
+    void testCreateMovie_WithNegativeStock_Returns400() throws Exception {
+        when(movieService.create(any(Movie.class)))
+                .thenThrow(new IllegalArgumentException("Stock cannot be negative"));
+
+        String requestBody = "{"
+                + "\"title\":\"Bad Movie\","
+                + "\"description\":\"Invalid\","
+                + "\"genre\":\"Action\","
+                + "\"platform\":\"DVD\","
+                + "\"price\":9.99,"
+                + "\"stockQuantity\":-1"
+                + "}";
+
+        mockMvc.perform(post("/api/movies")
+                        .with(csrf())
+                        .with(jwt())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody))
                 .andExpect(status().isBadRequest());
     }
 
