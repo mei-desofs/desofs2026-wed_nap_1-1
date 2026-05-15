@@ -1,6 +1,7 @@
 package com.example.desofs.domain;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.*;
 import java.math.BigDecimal;
 
 /**
@@ -18,21 +19,31 @@ public class Movie {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @NotBlank(message = "Title is required")
+    @Size(max = 255, message = "Title must not exceed 255 characters")
     @Column(nullable = false)
     private String title;
 
+    @Size(max = 5000, message = "Description must not exceed 5000 characters")
     @Column(columnDefinition = "TEXT")
     private String description;
 
+    @NotBlank(message = "Genre is required")
+    @Size(max = 100, message = "Genre must not exceed 100 characters")
     @Column(nullable = false)
     private String genre;
 
+    @Size(max = 100, message = "Platform must not exceed 100 characters")
     @Column
     private String platform;
 
+    @NotNull(message = "Price is required")
+    @DecimalMin(value = "0.0", inclusive = false, message = "Price must be greater than zero")
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal price;
 
+    @NotNull(message = "Stock quantity is required")
+    @Min(value = 0, message = "Stock quantity must not be negative")
     @Column(nullable = false)
     private Integer stockQuantity;
 

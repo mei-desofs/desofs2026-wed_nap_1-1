@@ -1,10 +1,9 @@
 package com.example.desofs.controller;
 
-/*
+
 import com.example.desofs.controllers.CustomErrorController;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpServletRequest;
@@ -12,8 +11,6 @@ import org.springframework.mock.web.MockHttpServletRequest;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 @DisplayName("CustomErrorController Tests")
 class CustomErrorControllerTest {
@@ -72,5 +69,3 @@ class CustomErrorControllerTest {
         assertThat(body.get("timestamp").toString()).isNotBlank();
     }
 }
-
- */
