@@ -3,4 +3,5 @@
 /.claude
 
 App/target
-App/.env
+App/.env~
+App/.idea/
