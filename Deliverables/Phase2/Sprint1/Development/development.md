@@ -303,6 +303,7 @@ Every response includes the following security headers:
 | `Content-Security-Policy` | `default-src 'self'; frame-ancestors 'none'` | XSS / framing |
 | `X-XSS-Protection` | `1; mode=block` | Reflected XSS (legacy browsers) |
 | `Referrer-Policy` | `no-referrer` | Referrer leakage |
+| `Cross-Origin-Resource-Policy` | `same-origin` | Spectre side-channel attacks |
 
 These are also configured at the Spring Security `HttpSecurity` level (HSTS, frame options, content-type options), providing defence-in-depth.
 
@@ -383,6 +384,7 @@ The `correlationId` allows operators to trace an error in server logs without ex
 | `MethodArgumentNotValidException` | 400 | Field-level validation errors |
 | `IllegalArgumentException` | 400 | Business input error |
 | `HttpMessageNotReadableException` | 400 | "Malformed request body" |
+| `DataIntegrityViolationException` | 400 | "Invalid data: a required field is missing or violates constraints" |
 | `SecurityException` | 400 | "Invalid request" (generic) |
 | `AccessDeniedException` | 403 | "Access denied" |
 | `NoResourceFoundException` | 404 | "Resource not found" |
@@ -391,9 +393,17 @@ The `correlationId` allows operators to trace an error in server logs without ex
 | `HttpMediaTypeNotSupportedException` | 415 | "Unsupported media type" |
 | `Exception` (catch-all) | 500 | "An unexpected error occurred" |
 
+### Custom Error Controller
+
+**Location:** `App/src/main/java/com/example/desofs/exceptions/CustomErrorController.java`
+
+Spring Boot's default `BasicErrorController` returns `text/html` error pages. A custom `ErrorController` implementation overrides this behaviour to always return `application/json`, ensuring the API never leaks HTML content to clients (which DAST tools flag as "Unexpected Content-Type").
+
 ### Security properties
 
 - **No stack traces** - `server.error.include-stacktrace=never` in `application.properties`
 - **No internal messages** - `server.error.include-message=never`
+- **JSON-only errors** - custom `ErrorController` ensures all error responses are `application/json`, never `text/html`
 - **Generic catch-all** - unexpected exceptions always return a safe generic message; the real error is logged server-side with the correlation ID
 - **404 for unknown paths** - requests to undefined endpoints return 404 (not 500), preventing path enumeration from triggering noisy error responses
+- **Database constraint errors** - `DataIntegrityViolationException` is caught and returns 400 with a safe message, preventing SQL/schema details from leaking

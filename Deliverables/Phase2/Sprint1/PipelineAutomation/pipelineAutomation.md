@@ -107,6 +107,7 @@ The DAST job performs dynamic application security testing against the live API:
 | 90005 | Sec-Fetch-Dest missing (browser-only header) |
 | 10038 | CSP header set by filter but not on error pages |
 | 10021 | X-Content-Type-Options set by filter |
+| 40018 | SQL Injection false positive, JPA uses prepared statements; behavioural difference caused by input sanitizer, not injection |
 
 ---
 
