@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.2.2](https://github.com/mei-desofs/desofs2026-wed_nap_1-1/compare/v1.2.1...v1.2.2) (2026-05-15)
+
+
+### Bug Fixes
+
+* update release workflow to trigger on prod branch ([aa39c6b](https://github.com/mei-desofs/desofs2026-wed_nap_1-1/commit/aa39c6baac2d0dadcfbbe5f17a556ab0afe9089f))
+* update release workflow to trigger on prod branch ([8e93e7a](https://github.com/mei-desofs/desofs2026-wed_nap_1-1/commit/8e93e7a030c2150e961c98bc9c4ceb4d1a985d1c))
+
 ## [1.2.1](https://github.com/mei-desofs/desofs2026-wed_nap_1-1/compare/v1.2.0...v1.2.1) (2026-05-15)
 
 
