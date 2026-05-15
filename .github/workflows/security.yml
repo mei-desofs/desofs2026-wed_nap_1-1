@@ -125,7 +125,7 @@ jobs:
           SPRING_DATASOURCE_URL: ${{ secrets.SPRING_DATASOURCE_URL }}
           SPRING_DATASOURCE_USERNAME: ${{ secrets.SPRING_DATASOURCE_USERNAME }}
           SPRING_DATASOURCE_PASSWORD: ${{ secrets.SPRING_DATASOURCE_PASSWORD }}
-          AUTH0_DOMAIN: ${{ secrets.AUTH0_DOMAIN }}
+          AUTH0_ISSUER_URI: https://${{ secrets.AUTH0_DOMAIN }}/
           AUTH0_AUDIENCE: ${{ vars.AUTH0_AUDIENCE }}
           SERVER_PORT: 8080
           SPRING_JPA_HIBERNATE_DDL_AUTO: create-drop
@@ -133,36 +133,68 @@ jobs:
           SPRINGDOC_SWAGGER_UI_ENABLED: "true"
         run: |
           java -jar App/target/*.jar > app.log 2>&1 &
-          echo "Waiting for application to start..."
-          curl --retry 30 \
-               --retry-delay 5 \
-               --retry-connrefused \
-               http://localhost:8080/actuator/health
-          echo "Application is healthy."
+          APP_PID=$!
+          echo "Waiting for application to start (PID: $APP_PID)..."
+          for i in $(seq 1 30); do
+            if curl -sf http://localhost:8080/actuator/health > /dev/null 2>&1; then
+              echo "Application is healthy."
+              break
+            fi
+            if ! kill -0 $APP_PID 2>/dev/null; then
+              echo "Application crashed. Logs:"
+              cat app.log
+              exit 1
+            fi
+            echo "Attempt $i/30 - waiting 5s..."
+            sleep 5
+          done
+          # Final check
+          curl -sf http://localhost:8080/actuator/health || { echo "App failed to start. Logs:"; cat app.log; exit 1; }
+
+      - name: Verify OpenAPI spec is accessible
+        run: |
+          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/v3/api-docs)
+          echo "OpenAPI spec endpoint returned: $HTTP_CODE"
+          if [ "$HTTP_CODE" != "200" ]; then
+            echo "ERROR: /v3/api-docs is not accessible (got $HTTP_CODE). Check SecurityConfig permitAll patterns."
+            cat app.log
+            exit 1
+          fi
 
       - name: Get Auth0 M2M Token
         id: get_token
         run: |
           RESPONSE=$(curl -s --request POST \
-          --url "https://${{ secrets.AUTH0_DOMAIN }}/oauth/token" \
-          --header 'content-type: application/json' \
-          --data '{
-           "client_id": "${{ secrets.AUTH0_CLIENT_ID }}",
-           "client_secret": "${{ secrets.AUTH0_CLIENT_SECRET }}",
-           "audience": "${{ vars.AUTH0_AUDIENCE }}",
-           "grant_type": "client_credentials"
-          }')
+            --url "https://${{ secrets.AUTH0_DOMAIN }}/oauth/token" \
+            --header 'content-type: application/json' \
+            --data "{
+              \"client_id\": \"${{ secrets.AUTH0_CLIENT_ID }}\",
+              \"client_secret\": \"${{ secrets.AUTH0_CLIENT_SECRET }}\",
+              \"audience\": \"${{ vars.AUTH0_AUDIENCE }}\",
+              \"grant_type\": \"client_credentials\"
+            }")
+          echo "Auth0 response (redacted): $(echo $RESPONSE | jq '{token_type, expires_in}')"
           TOKEN=$(echo $RESPONSE | jq -r '.access_token')
           if [ "$TOKEN" = "null" ] || [ -z "$TOKEN" ]; then
-          echo "Failed to obtain Auth0 token"
-          exit 1
+            echo "Failed to obtain Auth0 token. Response: $(echo $RESPONSE | jq '.error_description')"
+            exit 1
           fi
+          echo "::add-mask::$TOKEN"
           echo "TOKEN=$TOKEN" >> $GITHUB_OUTPUT
+
+      - name: Verify token works against API
+        run: |
+          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" \
+            -H "Authorization: Bearer ${{ steps.get_token.outputs.TOKEN }}" \
+            http://localhost:8080/api/movies)
+          echo "GET /api/movies with token returned: $HTTP_CODE"
+          if [ "$HTTP_CODE" = "401" ]; then
+            echo "WARNING: Token is not accepted by the API. The M2M token may lack required audience or issuer."
+          fi
 
       - name: Create ZAP Rules File
         run: |
-          mkdir -p .zap
-          cat <<EOF > .zap/rules.tsv
+          cat <<'EOF' > rules.tsv
           10015	IGNORE	(Incomplete or No Cache-control Header Set)
           10096	IGNORE	(Timestamp Disclosure)
           10036	IGNORE	(Server Leaks Version Information)
@@ -177,10 +209,5 @@ jobs:
           target: 'http://localhost:8080/v3/api-docs'
           format: openapi
           fail_action: true
-          rules_file_name: '.zap/rules.tsv'
-          cmd_options: >-
-            -z "-config replacer.full_list(0).description=auth
-                -config replacer.full_list(0).enabled=true
-                -config replacer.full_list(0).matchtype=REQ_HEADER
-                -config replacer.full_list(0).matchstr=Authorization
-                -config replacer.full_list(0).replacement=Bearer ${{ steps.get_token.outputs.TOKEN }}"
+          rules_file_name: 'rules.tsv'
+          cmd_options: '-z "-config replacer.full_list(0).description=auth -config replacer.full_list(0).enabled=true -config replacer.full_list(0).matchtype=REQ_HEADER -config replacer.full_list(0).matchstr=Authorization -config replacer.full_list(0).regex=false -config replacer.full_list(0).replacement=Bearer\ ${{ steps.get_token.outputs.TOKEN }}"'
