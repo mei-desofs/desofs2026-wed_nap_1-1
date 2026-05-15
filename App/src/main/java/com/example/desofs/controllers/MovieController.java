@@ -71,6 +71,7 @@ public class MovieController {
     @PostMapping
     public ResponseEntity<Movie> create(@AuthenticationPrincipal Jwt jwt, @Valid @RequestBody Movie m) {
         roleGuard.requireRole(jwt, Role.ADMIN);
+        m.setId(null);
         Movie created = movieService.create(m);
         return ResponseEntity.created(URI.create("/api/movies/" + created.getId())).body(created);
     }
