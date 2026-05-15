@@ -11,6 +11,7 @@ import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.time.LocalDateTime;
 import java.util.Map;
@@ -132,6 +133,15 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED)
                 .body(errorBody(correlationId, HttpStatus.METHOD_NOT_ALLOWED.value(), "Method not allowed"));
+    }
+
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleNoResourceFound(NoResourceFoundException ex) {
+        String correlationId = UUID.randomUUID().toString();
+        logger.debug("Resource not found [{}]: {}", correlationId, ex.getMessage());
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(errorBody(correlationId, HttpStatus.NOT_FOUND.value(), "Resource not found"));
     }
 
     /**

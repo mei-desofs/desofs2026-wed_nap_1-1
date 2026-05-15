@@ -1,5 +1,6 @@
 package com.example.desofs.security;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.stereotype.Component;
 import jakarta.servlet.FilterChain;
@@ -7,19 +8,26 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.List;
 
 /**
  * Security Headers Filter to add security-related HTTP headers
  * Includes CORS, CSP, X-Frame-Options, HSTS, etc.
- * To be implemented with appropriate security headers
  */
 @Component
 public class SecurityHeadersFilter extends OncePerRequestFilter {
 
+    private final List<String> allowedOrigins;
+
+    public SecurityHeadersFilter(
+            @Value("${emovieshop.cors.allowed-origins:http://localhost:3000}") String allowedOriginsStr) {
+        this.allowedOrigins = List.of(allowedOriginsStr.split(","));
+    }
+
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
                                    FilterChain filterChain) throws ServletException, IOException {
-        addCorsHeaders(response);
+        addCorsHeaders(request, response);
         addContentSecurityPolicy(response);
         addClickjackingProtection(response);
         response.setHeader("X-Content-Type-Options", "nosniff");
@@ -30,13 +38,16 @@ public class SecurityHeadersFilter extends OncePerRequestFilter {
     }
 
     /**
-     * Add CORS headers to response
-     * @param response HTTP response
+     * Add CORS headers to response with origin validation
      */
-    private void addCorsHeaders(HttpServletResponse response) {
-        response.setHeader("Access-Control-Allow-Origin", "*");
-        response.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
-        response.setHeader("Access-Control-Allow-Headers", "Authorization,Content-Type,X-Requested-With");
+    private void addCorsHeaders(HttpServletRequest request, HttpServletResponse response) {
+        String origin = request.getHeader("Origin");
+        if (origin != null && allowedOrigins.contains(origin)) {
+            response.setHeader("Access-Control-Allow-Origin", origin);
+            response.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
+            response.setHeader("Access-Control-Allow-Headers", "Authorization,Content-Type,X-Requested-With");
+            response.setHeader("Access-Control-Max-Age", "3600");
+        }
     }
 
     /**
