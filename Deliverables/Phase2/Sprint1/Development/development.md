@@ -44,6 +44,7 @@ The application is a **stateless OAuth2 Resource Server**. It never handles pass
 
 - Every request must carry a **Bearer JWT** in the `Authorization` header.
 - Spring Security validates the token signature against Auth0's JWKS endpoint.
+- `JwtValidators.createDefaultWithIssuer()` enforces **token expiration** (`exp`) and **not-before** (`nbf`) claims via the built-in `JwtTimestampValidator`, with a **60-second clock skew** tolerance. Expired tokens are rejected with `401 Unauthorized`.
 - A custom `AudienceValidator` additionally verifies the JWT `aud` claim matches `emovieshop-api`, preventing token reuse from other Auth0 applications.
 - Sessions are **stateless** (`SessionCreationPolicy.STATELESS`), no server-side session is ever created.
 - CSRF protection is disabled (correct for a stateless JWT API, no cookies, no session).

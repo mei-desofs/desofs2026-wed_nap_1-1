@@ -68,6 +68,9 @@ public class SecurityConfig {
         NimbusJwtDecoder jwtDecoder = JwtDecoders.fromIssuerLocation(issuerUri);
 
         OAuth2TokenValidator<Jwt> audienceValidator = new AudienceValidator(audience);
+
+        // createDefaultWithIssuer includes JwtTimestampValidator (checks exp/nbf with 60s clock skew)
+        // and JwtIssuerValidator (checks iss claim) — token expiration is enforced here
         OAuth2TokenValidator<Jwt> issuerValidator = JwtValidators.createDefaultWithIssuer(issuerUri);
 
         jwtDecoder.setJwtValidator(new DelegatingOAuth2TokenValidator<>(issuerValidator, audienceValidator));
