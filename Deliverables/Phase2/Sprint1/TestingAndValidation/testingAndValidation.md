@@ -2,26 +2,21 @@
 
 ## Index
 
-- [1. Purpose](#1-purpose)
-- [2. Strategy Overview](#2-strategy-overview)
-- [3. Testing Approach](#3-testing-approach)
-    - [3.1 SAST - Static Analysis](#31-sast---static-analysis)
-    - [3.2 SCA - Dependency Scanning](#32-sca---dependency-scanning)
-    - [3.3 Functional & Unit Tests](#33-functional--unit-tests)
-    - [3.4 DAST - Dynamic Testing](#34-dast---dynamic-testing)
-    - [3.5 IAST - Instrumented Testing](#35-iast---instrumented-testing)
-    - [3.6 Pen Testing](#36-pen-testing)
-- [4. Functional Tests](#4-functional-tests)
-- [5. Security Testing Results](#5-security-testing-results)
-- [6. Results & Observations](#6-results--observations)
-- [7. Tool Selection Justification Summary](#7-tool-selection-justification-summary)
-- [8. References](#8-references)
+- [1. Strategy Overview](#2-strategy-overview)
+- [2. Testing Approach](#3-testing-approach)
+    - [2.1 SAST - Static Analysis](#31-sast---static-analysis)
+    - [2.2 SCA - Dependency Scanning](#32-sca---dependency-scanning)
+    - [2.3 DAST - Dynamic Testing](#34-dast---dynamic-testing)
+    - [2.4 IAST - Instrumented Testing](#35-iast---instrumented-testing)
+- [3. Functional Tests](#4-functional-tests)
+- [4. Security Testing Results](#5-security-testing-results)
+- [5. Results & Observations](#6-results--observations)
+- [6. Tool Selection Justification Summary](#7-tool-selection-justification-summary)
+- [7. References](#8-references)
 
-## 1. Purpose
+Here we document the test strategy, executed tests, and validation results for Sprint 1. This strategy integrates security testing throughout the development lifecycle (SAST, DAST, IAST, and SCA).
 
-Document the test strategy, executed tests, and validation results for Sprint 1. This strategy integrates security testing throughout the development lifecycle (SAST, DAST, IAST, and SCA).
-
-## 2. Strategy Overview
+## 1. Strategy Overview
 
 The testing strategy follows three core principles:
 
@@ -29,9 +24,9 @@ The testing strategy follows three core principles:
 - **Automation**: Continuous security scanning in the CI/CD pipeline
 - **Multiple Layers**: Different testing methodologies catch vulnerabilities at different stages
 
-## 3. Testing Approach
+## 2. Testing Approach
 
-### 3.1 SAST - Static Analysis (Development Phase)
+### 2.1 SAST - Static Analysis
 
 Catches vulnerabilities before compilation.
 
@@ -42,7 +37,6 @@ Catches vulnerabilities before compilation.
 | Setup Complexity | Simple | Simple | Complex |
 | CI/CD Integration | Native GitHub | Good | Good |
 | Centralized Results | GitHub Security tab | External server | External server |
-| **Selection** | **Chosen** | Alternative | Alternative |
 
 **Selected: CodeQL**
 - Free and natively integrated with GitHub Actions
@@ -64,7 +58,7 @@ In addition to CodeQL in the CI pipeline, two Maven plugins run **locally during
 
 Both plugins are configured in `pom.xml` and execute during `mvn verify`, so we can get immediate feedback on our local machine before creating a PR.
 
-### 3.2 SCA - Dependency Scanning (Build Phase)
+### 2.2 SCA - Dependency Scanning
 
 Third-party libraries often contain known vulnerabilities.
 
@@ -80,12 +74,7 @@ Third-party libraries often contain known vulnerabilities.
 - Generates Software Bill of Materials (SBOM)
 - No external accounts required
 
-### 3.3 Functional & Unit Tests
-
-- Security-focused test cases (authentication, authorization, input validation)
-- Coverage target: >70%
-
-### 3.4 DAST - Dynamic Testing
+### 2.3 DAST - Dynamic Testing
 
 Tests the running application as an attacker would (black box).
 
@@ -101,7 +90,7 @@ Tests the running application as an attacker would (black box).
 - Excellent for CI/CD integration
 - No licensing concerns
 
-### 3.5 IAST - Instrumented Testing
+### 2.4 IAST - Instrumented Testing
 
 > **TODO**  - IAST tooling not yet selected or integrated.
 
@@ -115,21 +104,53 @@ IAST instruments the application at runtime (via a JVM agent) and observes code 
 
 **Status:** Not yet implemented - planned for a future sprint.
 
-### 3.6 Pen Testing
-
-TODO
-
 ---
 
 ## 4. Functional Tests
 
-### Test Scenarios
+The functional testing strategy for this sprint was split into two layers: unit tests and integration tests. The goal was to validate the business rules in isolation first, and then verify that the main application flows work correctly when the Spring context, persistence layer, security configuration, and web layer are exercised together.
 
-TBD
+### 4.1 Unit Tests
 
-| Use Case | Test Cases | Security Focus |
-|----------|-----------|-----------------|
-|          |           |                 |
+Unit tests focus on the smallest verifiable units of behaviour. In this project, they cover:
+
+- **Domain classes**: validation rules, invariants, state transitions, and helper methods in the core model.
+- **Mappers**: conversion between entities, DTOs, and domain objects, ensuring field mapping and transformation logic are correct.
+- **Services**: business rules, branching logic, and exception handling.
+
+To keep unit tests fast and deterministic, external dependencies are replaced with **mocks**. Repository access, file I/O, time-sensitive operations, and other collaborators are mocked so each test only exercises the code under test. This makes it possible to isolate failure causes and validate expected behaviour with both positive and negative scenarios.
+
+The unit test style combines:
+
+- **White-box testing** for service methods and domain logic, because the test cases are derived from the internal control flow, validation branches, and exception paths.
+- **Black-box testing** for mappers and public domain behaviour, because the focus is on observable input/output rather than implementation details.
+
+### 4.2 Integration Tests
+
+Integration tests verify that multiple application layers work correctly together. Here the emphasis is on the interaction between:
+
+- **Controllers** and request/response handling
+- **Services** and their collaborators
+- **Domain objects** and persistence mappings
+- **Security and validation layers** where applicable
+
+These tests run with a larger portion of the Spring Boot stack enabled, so they validate routing, serialization, validation, dependency injection, and the end-to-end behaviour of the main API flows. Compared with unit tests, they are broader and slower, but they provide stronger confidence that the application behaves correctly in realistic execution paths.
+
+### 4.3 Coverage Tracking
+
+The obtained code coverage is reported per package and globally:
+
+| Package | Coverage Status |
+|---------|-----------------|
+| `com.example.desofs.services` | 92% |
+| `com.example.desofs.controllers` | 88% |
+| `com.example.desofs.security` | 92% |
+| `com.example.desofs.config` | 95% |
+| `com.example.desofs.exceptions` | 97% |
+| `com.example.desofs.domain` | 100% |
+| `com.example.desofs.shared.mappers` | 100% |
+| `com.example.desofs` | 37% |
+| Total | 94% |
 
 ---
 

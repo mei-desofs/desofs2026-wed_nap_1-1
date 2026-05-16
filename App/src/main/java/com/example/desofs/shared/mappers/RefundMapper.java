@@ -2,31 +2,38 @@ package com.example.desofs.shared.mappers;
 
 import com.example.desofs.domain.RefundRequest;
 import com.example.desofs.shared.dtos.RefundRequestDTO;
+import org.springframework.stereotype.Component;
 
 /**
- * Maps refund domain objects to transport DTOs.
+ * Default implementation of {@link IRefundMapper} converting refund
+ * domain objects into transport DTOs.
  */
-public final class RefundMapper {
+@Component
+public final class RefundMapper implements IRefundMapper {
 
-    private RefundMapper() {
+    /**
+     * Default constructor for DI container instantiation.
+     */
+    public RefundMapper() {
     }
 
     /**
-     * Converts a domain {@link RefundRequest} to a transport {@link RefundRequestDTO}.
+     * Converts a {@link RefundRequest} domain entity into a {@link RefundRequestDTO}.
      *
      * @param refund domain refund request
-     * @return corresponding DTO representation
+     * @return transport {@link RefundRequestDTO} representing the refund
      */
-    public static RefundRequestDTO toDTO(RefundRequest refund) {
+    @Override
+    public RefundRequestDTO toDTO(RefundRequest refund) {
         return new RefundRequestDTO(
-            refund.getId(),
-            refund.getOrder().getId(),
-            refund.getAuth0Id(),
-            refund.getAmount(),
-            refund.getStatus().toString(),
-            refund.getReason(),
-            refund.getCreatedAt(),
-            refund.getUpdatedAt()
+                refund.getId(),
+                refund.getOrder().getId(),
+                refund.getAuth0Id(),
+                refund.getAmount(),
+                refund.getStatus().toString(),
+                refund.getReason(),
+                refund.getCreatedAt(),
+                refund.getUpdatedAt()
         );
     }
 }

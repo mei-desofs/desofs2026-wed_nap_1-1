@@ -7,7 +7,7 @@ import com.example.desofs.repositories.OrderRepository;
 import com.example.desofs.repositories.RefundRequestRepository;
 import com.example.desofs.shared.dtos.CreateRefundRequest;
 import com.example.desofs.shared.dtos.RefundRequestDTO;
-import com.example.desofs.shared.mappers.RefundMapper;
+import com.example.desofs.shared.mappers.IRefundMapper;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,7 +29,7 @@ import java.util.stream.Collectors;
  * (orders and users) when creating new refund requests.
  */
 @Service
-public class RefundService {
+public class RefundService implements IRefundService {
     /** Logger for audit and error tracking. */
     private static final Logger logger = LoggerFactory.getLogger(RefundService.class);
 
@@ -38,6 +38,7 @@ public class RefundService {
 
     /** Repository used to lookup orders referenced by refund requests. */
     private final OrderRepository orderRepository;
+    private final IRefundMapper refundMapper;
 
     /**
      * Constructs the service with required repositories.
@@ -45,9 +46,10 @@ public class RefundService {
      * @param refundRequestRepository repository for refund requests
      * @param orderRepository repository for orders
      */
-    public RefundService(RefundRequestRepository refundRequestRepository, OrderRepository orderRepository) {
+    public RefundService(RefundRequestRepository refundRequestRepository, OrderRepository orderRepository, IRefundMapper refundMapper) {
         this.refundRequestRepository = refundRequestRepository;
         this.orderRepository = orderRepository;
+        this.refundMapper = refundMapper;
     }
 
     /**
@@ -57,7 +59,7 @@ public class RefundService {
      */
     public List<RefundRequestDTO> listAll() {
         return refundRequestRepository.findAll().stream()
-            .map(RefundMapper::toDTO)
+            .map(refundMapper::toDTO)
             .collect(Collectors.toList());
     }
 
@@ -68,7 +70,7 @@ public class RefundService {
      * @return optional refund request
      */
     public Optional<RefundRequestDTO> get(Long id) {
-        return refundRequestRepository.findById(id).map(RefundMapper::toDTO);
+        return refundRequestRepository.findById(id).map(refundMapper::toDTO);
     }
 
     /**
@@ -109,7 +111,7 @@ public class RefundService {
         RefundRequest savedRefund = refundRequestRepository.save(refund);
         logger.info("Refund request created with ID: {}", savedRefund.getId());
 
-        return RefundMapper.toDTO(savedRefund);
+        return refundMapper.toDTO(savedRefund);
     }
 
     /**
@@ -147,7 +149,7 @@ public class RefundService {
     public RefundRequestDTO approve(Long id) {
         return refundRequestRepository.findById(id).map(refund -> {
             refund.setStatus(RefundRequest.RefundStatus.APPROVED);
-            return RefundMapper.toDTO(refundRequestRepository.save(refund));
+            return refundMapper.toDTO(refundRequestRepository.save(refund));
         }).orElse(null);
     }
 
@@ -162,7 +164,7 @@ public class RefundService {
         return refundRequestRepository.findById(id).map(refund -> {
             refund.setStatus(RefundRequest.RefundStatus.REJECTED);
             refund.setReason(reason);
-            return RefundMapper.toDTO(refundRequestRepository.save(refund));
+            return refundMapper.toDTO(refundRequestRepository.save(refund));
         }).orElse(null);
     }
 }

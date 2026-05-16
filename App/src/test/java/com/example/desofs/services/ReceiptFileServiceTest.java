@@ -54,7 +54,6 @@ class ReceiptFileServiceTest {
         assertFalse(result.contains("/"));
         assertFalse(result.contains("\\"));
     }
-
     @Test
     @DisplayName("Null bytes are stripped")
     void sanitizeReceiptName_nullBytes_stripped() {
@@ -76,8 +75,6 @@ class ReceiptFileServiceTest {
     @ValueSource(strings = {"CON", "NUL", "PRN", "AUX", "COM1", "LPT1"})
     @DisplayName("Windows reserved names are sanitized (no special characters remain)")
     void sanitizeReceiptName_windowsReserved_sanitized(String name) {
-        // These names should pass sanitization (they're alphanumeric),
-        // but the orderId suffix in filename makes them safe
         String result = receiptFileService.sanitizeReceiptName(name);
         assertNotNull(result);
         assertFalse(result.isBlank());
@@ -139,7 +136,6 @@ class ReceiptFileServiceTest {
         assertTrue(content.contains("Order ID"));
         assertTrue(content.contains("TOTAL"));
     }
-
     @Test
     @DisplayName("Receipt file with path traversal in name stays in sandbox")
     void createReceiptFile_pathTraversalName_staysInSandbox() throws IOException {

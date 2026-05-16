@@ -2,8 +2,10 @@ package com.example.desofs.controllers;
 
 import com.example.desofs.domain.AuditLog;
 import com.example.desofs.domain.Role;
-import com.example.desofs.security.RoleGuard;
-import com.example.desofs.services.AuditLogService;
+import com.example.desofs.security.IRoleGuard;
+import com.example.desofs.services.IAuditLogService;
+import com.example.desofs.shared.dtos.AuditLogDTO;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -11,20 +13,20 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@RestController
-@RequestMapping("/api/audit-logs")
 /**
  * REST controller exposing endpoints to access audit log entries.
  * <p>
  * All endpoints are restricted to users with the {@link Role#ADMIN} role.
  */
+@RestController
+@RequestMapping("/api/audit-logs")
 public class AuditLogController {
 
     /** Service responsible for managing audit log entries. */
-    private final AuditLogService auditLogService;
+    private final IAuditLogService auditLogService;
 
     /** Guard that enforces role-based access checks. */
-    private final RoleGuard roleGuard;
+    private final IRoleGuard roleGuard;
 
     /**
      * Creates a new controller backed by the provided service and role guard.
@@ -32,7 +34,7 @@ public class AuditLogController {
      * @param auditLogService service used to retrieve audit log data
      * @param roleGuard guard used to enforce admin-only access
      */
-    public AuditLogController(AuditLogService auditLogService, RoleGuard roleGuard) {
+    public AuditLogController(IAuditLogService auditLogService, IRoleGuard roleGuard) {
         this.auditLogService = auditLogService;
         this.roleGuard = roleGuard;
     }
@@ -44,7 +46,7 @@ public class AuditLogController {
      * @return list of all {@link AuditLog} records
      */
     @GetMapping
-    public List<AuditLog> list(@AuthenticationPrincipal Jwt jwt) {
+    public List<AuditLogDTO> list(@AuthenticationPrincipal Jwt jwt) {
         roleGuard.requireRole(jwt, Role.ADMIN);
         return auditLogService.listAll();
     }
@@ -57,8 +59,10 @@ public class AuditLogController {
      * @return {@link ResponseEntity} containing the audit log, or 404 if not found
      */
     @GetMapping("/{id}")
-    public ResponseEntity<AuditLog> get(@AuthenticationPrincipal Jwt jwt, @PathVariable Long id) {
+    public ResponseEntity<AuditLogDTO> get(@AuthenticationPrincipal Jwt jwt, @PathVariable Long id) {
         roleGuard.requireRole(jwt, Role.ADMIN);
-        return ResponseEntity.notFound().build();
+        return auditLogService.get(id)
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 }
