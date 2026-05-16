@@ -92,8 +92,6 @@ Tests the running application as an attacker would (black box).
 
 ### 2.4 IAST - Instrumented Testing
 
-> **TODO**  - IAST tooling not yet selected or integrated.
-
 IAST instruments the application at runtime (via a JVM agent) and observes code execution paths as requests flow through, combining the depth of SAST with the realism of DAST. Unlike DAST (black box), IAST can pinpoint the exact vulnerable line of code.
 
 | Tool | License | JVM Agent | Notes |
@@ -102,8 +100,17 @@ IAST instruments the application at runtime (via a JVM agent) and observes code 
 | Seeker (Synopsys) | Commercial | Yes | CI/CD integration |
 | HCL AppScan | Commercial | Yes | Broad language support |
 
-**Status:** Not yet implemented - planned for a future sprint.
+The adoption of IAST tests for Java applications is heavily constrained by the commercial nature of the available tools. Contrast Security previously offered a Community Edition that provided some IAST capabilities free of charge, however, this offering was discontinued in early 2025, leaving no tool, free or open-source, available for Java/Spring Boot applications at the time of this project.
 
+Given these constraints, integrating a IAST agent into the CI/CD pipeline was not possible without incurring licensing costs or relying on trial accounts with restricted functionality.
+
+As alternative, we implemented a **runtime execution log analysis** step in the security pipeline. This approach starts the application with production-equivalent configuration, exercises it through the 
+existing integration test suite, and captures the complete runtime output. The resulting log is then automatically scanned for security-relevant patterns before being archived as a pipeline artifact for 
+manual review.
+
+While this does not replicate the data-flow instrumentation that a true IAST agent provides, it achieves partial coverage of the same intent like detecting runtime security anomalies that are only observable when the application is executing under realistic conditions, and that would not be caught by static analysis alone.
+
+While we are aware that this is not a complete implementation of the IAST methodology, the adopted approach is a pragmatic substitute constrained by tool availability.
 ---
 
 ## 4. Functional Tests
