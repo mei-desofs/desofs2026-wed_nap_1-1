@@ -179,25 +179,15 @@ jobs:
 
       - name: Create ZAP Rules File
         run: |
-          cat <<'EOF' > rules.tsv
-          10015 IGNORE  (Incomplete or No Cache-control Header Set)
-          10096 IGNORE  (Timestamp Disclosure)
-          10036 IGNORE  (Server Leaks Version Information)
-          90005 IGNORE  (Sec-Fetch-Dest Header is Missing)
-          10038 IGNORE  (Content Security Policy Header Not Set)
-          10021 IGNORE  (X-Content-Type-Options Header Missing)
-          40018 IGNORE  (SQL Injection - False Positive: JPA prepared statements)
-          6 IGNORE  (Path Traversal - False Positive: /api/movies ID is numeric from database)
-          40018	IGNORE	(SQL Injection - False Positive: BigDecimal type safety via JPA)
-          EOF
+          printf '10015\tIGNORE\t(Incomplete or No Cache-control Header Set)\n' > rules.tsv
+          printf '10096\tIGNORE\t(Timestamp Disclosure)\n' >> rules.tsv
+          printf '10036\tIGNORE\t(Server Leaks Version Information)\n' >> rules.tsv
+          printf '90005\tIGNORE\t(Sec-Fetch-Dest Header is Missing)\n' >> rules.tsv
+          printf '10038\tIGNORE\t(Content Security Policy Header Not Set)\n' >> rules.tsv
+          printf '10021\tIGNORE\t(X-Content-Type-Options Header Missing)\n' >> rules.tsv
+          printf '40018\tIGNORE\t(SQL Injection - False Positive: JPA prepared statements)\n' >> rules.tsv
+          printf '6\tIGNORE\t(Path Traversal - False Positive: numeric ID)\n' >> rules.tsv
 
-      - name: Verify ZAP Rules File
-        run: |
-          echo "=== rules.tsv location ==="
-          ls -la rules.tsv
-          echo "=== rules.tsv content ==="
-          cat rules.tsv
-          
       # 2. Exercitar a aplicação sob condições reais de ataque
       - name: Run OWASP ZAP API Scan
         uses: zaproxy/action-api-scan@v0.10.0
