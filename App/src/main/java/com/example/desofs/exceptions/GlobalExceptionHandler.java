@@ -12,6 +12,7 @@ import org.springframework.transaction.TransactionSystemException;
 import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
@@ -85,6 +86,25 @@ public class GlobalExceptionHandler {
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(errorBody(correlationId, HttpStatus.CONFLICT.value(), ex.getMessage()));
     }
+    
+    /**
+     * Handles malformed request parameters that fail type conversion.
+     * 
+     * <p>This keeps invalid path variables and query parameters from bubbling up as
+     * generic server errors.</p>
+     * 
+     * @param ex type mismatch exception raised while binding a request parameter
+     * @return HTTP 400 response with a sanitized error message
+     */
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<Map<String, Object>> handleTypeMismatch(MethodArgumentTypeMismatchException ex) {
+        String correlationId = UUID.randomUUID().toString();
+        logger.warn("Type mismatch [{}]: {}", correlationId, ex.getMessage());
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(errorBody(correlationId, HttpStatus.BAD_REQUEST.value(), "Invalid path parameter"));
+}
 
     /**
      * Handles authorization failures detected by the security layer.
