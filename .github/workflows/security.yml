@@ -202,6 +202,7 @@ jobs:
           10038	IGNORE	(Content Security Policy Header Not Set)
           10021	IGNORE	(X-Content-Type-Options Header Missing)
           40018	IGNORE	(SQL Injection - False Positive: JPA prepared statements)
+          6	IGNORE	(Path Traversal - False Positive: /api/movies ID is numeric from database)
           EOF
 
       - name: Run OWASP ZAP API Scan
