@@ -196,7 +196,7 @@ class RefundControllerIntegrationTests {
             .andExpect(jsonPath("$.status").value("APPROVED"));
 
         verify(refundService, times(1)).approve(1L);
-        verifyNoInteractions(roleGuard);
+        verify(roleGuard, times(1)).requireRole(any(Jwt.class), eq(Role.SUPPORT));
     }
 
     @Test
@@ -239,7 +239,7 @@ class RefundControllerIntegrationTests {
             .andExpect(jsonPath("$.reason").value("Duplicate order"));
 
         verify(refundService, times(1)).reject(1L, "Duplicate order");
-        verifyNoInteractions(roleGuard);
+        verify(roleGuard, times(1)).requireRole(any(Jwt.class), eq(Role.SUPPORT));
     }
 
     @Test
