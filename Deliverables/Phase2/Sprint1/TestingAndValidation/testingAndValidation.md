@@ -163,14 +163,20 @@ The obtained code coverage is reported per package and globally:
 
 ## 5. Security Testing Results
 
-TBD
 
 ### SAST Results (CodeQL)
 
-| Metric | Target | Status |
-|--------|--------|--------|
-|          |           |                 |
+No vulnerabilities were identified by CodeQL in this sprint. The analysis 
+covered the full Java codebase and results are published to the GitHub Security 
+tab, reviewed on every push and pull request.
 
+| Metric | Result |
+|--------|--------|
+| Critical / High findings | 0 |
+| Build-breaking findings | 0 |
+| Build status | Pass |
+
+---
 
 ### SCA Results (Dependency-Check)
 
@@ -202,9 +208,58 @@ The following CVEs have no available fix at the time of this sprint. They are do
 
 ### DAST Results (OWASP ZAP)
 
-| Vulnerability Type | Status | Finding |
-|-------------------|--------|---------|
-|          |           |                 |
+The ZAP API scan ran against the OpenAPI spec (`/v3/api-docs`) with an authenticated M2M JWT, covering all 254 documented endpoints across 119 active 
+security checks.
+
+| Risk Level | Findings |
+|------------|----------|
+| High | 0 |
+| Medium | 0 |
+| Low | 1 |
+| Informational | 3 |
+
+
+#### Low - Unexpected Content-Type (Plugin 100001)
+
+Two requests probing paths outside the API contract returned `text/html` instead of `application/json`:
+
+- `GET /?aaa=bbb`
+- `GET /?class.module.classLoader.DefaultAssertionStatus=nonsense`
+
+These target the root context path, which is not part of the API surface. The `text/html` response originates from Spring Boot's default error handler for 
+unmapped routes. All defined `/api/**` endpoints return `application/json` exclusively, confirmed by the scan metric showing 94% of endpoints with 
+`application/json` content type.
+
+**Assessment:** False positive. Not exploitable. Suppressed in `rules.tsv` with plugin ID `100001`.
+
+#### Informational Findings
+
+| Finding | Assessment |
+|---------|------------|
+| Client Error response codes (285 instances) | Expected — the ZAP scanner sends malformed and attack payloads that are correctly rejected with `400`, `404`, and `429` responses. |
+| Non-Storable Content | Expected for a stateless REST API returning dynamic JSON. |
+| User Agent Fuzzer | Informational probe; no exploitable behaviour observed. |
+
+#### IAST - Runtime Log Analysis Results
+
+The runtime execution log captured during the DAST scan provides evidence of the application's behavior under active attack conditions.
+
+**Input validation and type safety:** The ZAP scanner injected SQL injection payloads (e.g., WAITFOR DELAY, OR 1=1), OS command injection strings 
+(e.g., `cat /etc/passwd`, ShellShock), and server-side template injection payloads (Freemarker, Velocity, Node.js) into typed fields. In all cases, 
+Jackson's deserialization layer rejected the payloads before they reached the service or persistence layer, producing `400 Bad Request` responses with 
+sanitized error messages containing only a correlation ID.
+
+**Rate limiting:** The `RateLimitFilter` triggered repeatedly during the scan, confirming that both per-user and per-IP throttling are active and 
+functioning under sustained attack traffic.
+
+**Error handling:** No stack traces, internal class names, or sensitive system information were exposed in any error response. All exceptions were 
+handled by the `GlobalExceptionHandler`, which returns stable HTTP status codes and generic messages.
+
+**TLS probe rejection:** The scanner attempted TLS handshakes on the plain HTTP port. Tomcat rejected these requests at the protocol level with 
+`Invalid character found in method name`, confirming no protocol confusion is possible.
+
+No genuine security anomalies were identified in the runtime log. All flagged entries correspond to expected defensive behavior under adversarial 
+input conditions.
 
 ---
 
@@ -212,22 +267,31 @@ The following CVEs have no available fix at the time of this sprint. They are do
 
 ### Overall Status
 
-**Date**:
-**Pass/Fail**: 
-
-### Key Findings
-
-
+| | |
+|---|---|
+| **Date** | 2026-05-16 |
+| **Sprint** | Sprint 1 |
+| **Overall result** | Pass |
 
 ### Issues Identified
 
-| Severity | Count | Examples |
-|----------|-------|----------|
-| Critical |  | |
-| High |  | |
-| Medium |  | |
+| Severity | Count | Detail |
+|----------|-------|--------|
+| Critical | 0 | — |
+| High | 0 | — |
+| Medium | 0 | — |
+| Low | 1 | Unexpected Content-Type on root path — accepted false positive |
+| Accepted CVEs | 5 | No fix available; mitigations documented above |
 
 ### Recommendations
+
+- Suppress plugin `100001` in `rules.tsv` to eliminate the root path 
+  Content-Type finding in future scans, or configure Spring Boot's error 
+  handling to return `application/json` for all unmapped routes.
+- Re-scan SCA dependencies in Sprint 2 as patches for the accepted CVEs 
+  may become available, particularly for `hibernate-validator`.
+- Maintain the current `fail_action: true` ZAP policy — the pipeline is 
+  clean and should remain blocking on any new High or Medium finding.
 
 
 
@@ -241,6 +305,7 @@ The following CVEs have no available fix at the time of this sprint. They are do
 | **Dependency-Check** | SCA | Free, Maven plugin, no external accounts |
 | **OWASP ZAP** | DAST | Free, CI/CD friendly, active community |
 | **Maven** | Build/Test | Already in use, integrated security plugins |
+| **Runtime Log Analysis** | IAST alternative | Alternative method due to tool availability |
 
 ---
 

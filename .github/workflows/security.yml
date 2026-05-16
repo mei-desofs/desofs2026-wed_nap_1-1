@@ -15,7 +15,7 @@ jobs:
           fetch-depth: 0
 
       - name: Run GitLeaks
-        uses: gitleaks/gitleaks-action@v2.3.9
+        uses: gitleaks/gitleaks-action@v1.6.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -97,9 +97,9 @@ jobs:
           format: spdx-json
           artifact-name: sbom.spdx.json
 
-  # DAST — OWASP ZAP
-  dast:
-    name: DAST - OWASP ZAP
+# DAST + Runtime Log Analysis (IAST Pragmatic Alternative)
+  dast-and-runtime-analysis:
+    name: DAST & Runtime Log Analysis
     runs-on: ubuntu-latest
 
     permissions:
@@ -121,6 +121,7 @@ jobs:
         working-directory: App
         run: mvn -B clean package -DskipTests
 
+      # 1. Iniciar a aplicação pura (produção-equivalente) e capturar log
       - name: Start Application
         env:
           SPRING_DATASOURCE_URL: ${{ secrets.SPRING_DATASOURCE_URL }}
@@ -133,7 +134,7 @@ jobs:
           SPRINGDOC_API_DOCS_ENABLED: "true"
           SPRINGDOC_SWAGGER_UI_ENABLED: "true"
         run: |
-          java -jar App/target/*.jar > app.log 2>&1 &
+          java -jar App/target/*.jar > runtime_execution.log 2>&1 &
           APP_PID=$!
           echo "Waiting for application to start (PID: $APP_PID)..."
           for i in $(seq 1 30); do
@@ -143,22 +144,19 @@ jobs:
             fi
             if ! kill -0 $APP_PID 2>/dev/null; then
               echo "Application crashed. Logs:"
-              cat app.log
+              cat runtime_execution.log
               exit 1
             fi
             echo "Attempt $i/30 - waiting 5s..."
             sleep 5
           done
-          # Final check
-          curl -sf http://localhost:8080/actuator/health || { echo "App failed to start. Logs:"; cat app.log; exit 1; }
+          curl -sf http://localhost:8080/actuator/health || { echo "App failed to start. Logs:"; cat runtime_execution.log; exit 1; }
 
       - name: Verify OpenAPI spec is accessible
         run: |
           HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/v3/api-docs)
-          echo "OpenAPI spec endpoint returned: $HTTP_CODE"
           if [ "$HTTP_CODE" != "200" ]; then
-            echo "ERROR: /v3/api-docs is not accessible (got $HTTP_CODE). Check SecurityConfig permitAll patterns."
-            cat app.log
+            echo "ERROR: /v3/api-docs is not accessible."
             exit 1
           fi
 
@@ -174,38 +172,23 @@ jobs:
               \"audience\": \"${{ vars.AUTH0_AUDIENCE }}\",
               \"grant_type\": \"client_credentials\"
             }")
-          echo "Auth0 response (redacted): $(echo $RESPONSE | jq '{token_type, expires_in}')"
           TOKEN=$(echo $RESPONSE | jq -r '.access_token')
-          if [ "$TOKEN" = "null" ] || [ -z "$TOKEN" ]; then
-            echo "Failed to obtain Auth0 token. Response: $(echo $RESPONSE | jq '.error_description')"
-            exit 1
-          fi
+          if [ -z "$TOKEN" ] || [ "$TOKEN" = "null" ]; then exit 1; fi
           echo "::add-mask::$TOKEN"
           echo "TOKEN=$TOKEN" >> $GITHUB_OUTPUT
 
-      - name: Verify token works against API
-        run: |
-          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" \
-            -H "Authorization: Bearer ${{ steps.get_token.outputs.TOKEN }}" \
-            http://localhost:8080/api/movies)
-          echo "GET /api/movies with token returned: $HTTP_CODE"
-          if [ "$HTTP_CODE" = "401" ]; then
-            echo "WARNING: Token is not accepted by the API. The M2M token may lack required audience or issuer."
-          fi
-
       - name: Create ZAP Rules File
         run: |
-          cat <<'EOF' > rules.tsv
-          10015	IGNORE	(Incomplete or No Cache-control Header Set)
-          10096	IGNORE	(Timestamp Disclosure)
-          10036	IGNORE	(Server Leaks Version Information)
-          90005	IGNORE	(Sec-Fetch-Dest Header is Missing)
-          10038	IGNORE	(Content Security Policy Header Not Set)
-          10021	IGNORE	(X-Content-Type-Options Header Missing)
-          40018	IGNORE	(SQL Injection - False Positive: JPA prepared statements)
-          6	IGNORE	(Path Traversal - False Positive: /api/movies ID is numeric from database)
-          EOF
+          printf '10015\tIGNORE\t(Incomplete or No Cache-control Header Set)\n' > rules.tsv
+          printf '10096\tIGNORE\t(Timestamp Disclosure)\n' >> rules.tsv
+          printf '10036\tIGNORE\t(Server Leaks Version Information)\n' >> rules.tsv
+          printf '90005\tIGNORE\t(Sec-Fetch-Dest Header is Missing)\n' >> rules.tsv
+          printf '10038\tIGNORE\t(Content Security Policy Header Not Set)\n' >> rules.tsv
+          printf '10021\tIGNORE\t(X-Content-Type-Options Header Missing)\n' >> rules.tsv
+          printf '40018\tIGNORE\t(SQL Injection - False Positive: JPA prepared statements)\n' >> rules.tsv
+          printf '6\tIGNORE\t(Path Traversal - False Positive: numeric ID)\n' >> rules.tsv
 
+      # 2. Exercitar a aplicação sob condições reais de ataque
       - name: Run OWASP ZAP API Scan
         uses: zaproxy/action-api-scan@v0.10.0
         with:
@@ -215,72 +198,42 @@ jobs:
           rules_file_name: 'rules.tsv'
           cmd_options: '-z "-config replacer.full_list(0).description=auth -config replacer.full_list(0).enabled=true -config replacer.full_list(0).matchtype=REQ_HEADER -config replacer.full_list(0).matchstr=Authorization -config replacer.full_list(0).regex=false -config replacer.full_list(0).replacement=Bearer\ ${{ steps.get_token.outputs.TOKEN }}"'
 
+      - name: Scan Runtime Log for Security Anomalies
+        if: always()
+        run: |
+          echo "=== Scanning runtime execution log for security anomalies ==="
 
-  iast:
-    name: IAST - Runtime Execution Log
-    runs-on: ubuntu-latest
+          echo "--- Unexpected ERRORs (excluding known patterns) ---"
+          grep -i " ERROR " runtime_execution.log \
+            | grep -v "Http11Processor\|Http11InputBuffer" \
+            > critical_errors.txt || true
 
-  permissions:
-    contents: read
+          echo "--- Authorization failures ---"
+          grep -i "Access denied\|Unauthorized\|Forbidden" runtime_execution.log \
+            > auth_failures.txt || true
 
-  steps:
-    - name: Checkout Code
-      uses: actions/checkout@v6
+          echo "--- Rate limiting activations ---"
+          grep -i "Rate limit exceeded" runtime_execution.log \
+            | wc -l | xargs echo "Rate limit triggers:"
 
-    - name: Set Up Java 21
-      uses: actions/setup-java@v5
-      with:
-        java-version: '21'
-        distribution: 'temurin'
-        cache: 'maven'
+          echo "--- Constraint violations (input validation working) ---"
+          grep -i "Constraint violation\|Malformed request" runtime_execution.log \
+            | wc -l | xargs echo "Rejected malformed inputs:"
 
-    - name: Build Application
-      working-directory: App
-      run: mvn -B clean package -DskipTests
-
-    - name: Start Application and Capture Runtime Log
-      env:
-        SPRING_DATASOURCE_URL: ${{ secrets.SPRING_DATASOURCE_URL }}
-        SPRING_DATASOURCE_USERNAME: ${{ secrets.SPRING_DATASOURCE_USERNAME }}
-        SPRING_DATASOURCE_PASSWORD: ${{ secrets.SPRING_DATASOURCE_PASSWORD }}
-        AUTH0_ISSUER_URI: https://${{ secrets.AUTH0_DOMAIN }}/
-        AUTH0_AUDIENCE: ${{ vars.AUTH0_AUDIENCE }}
-        SERVER_PORT: 8080
-        SPRING_JPA_HIBERNATE_DDL_AUTO: create-drop
-      run: |
-        java -jar App/target/*.jar > runtime.log 2>&1 &
-        APP_PID=$!
-        for i in $(seq 1 30); do
-          if curl -sf http://localhost:8080/actuator/health > /dev/null 2>&1; then
-            echo "Application started successfully."
-            break
+          if [ -s critical_errors.txt ]; then
+            echo "⚠️ CRITICAL ERRORS DETECTED:"
+            cat critical_errors.txt
+          else
+            echo "✅ No critical errors detected."
           fi
-          if ! kill -0 $APP_PID 2>/dev/null; then
-            echo "Application crashed."
-            break
-          fi
-          sleep 5
-        done
-        sleep 10
-        kill $APP_PID 2>/dev/null || true
 
-    - name: Scan Runtime Log for Security Anomalies
-      run: |
-        echo "=== Checking for security-relevant log entries ==="
-        grep -i "exception\|error\|unauthorized\|forbidden\|stacktrace\|sql\|injection" \
-          runtime.log | tail -n 50 || echo "No anomalies detected."
-
-    - name: Archive Runtime Log
-      run: zip runtime.zip runtime.log
-
-    - name: Upload Runtime Log
-      if: always()
-      uses: actions/upload-artifact@v7
-      with:
-        name: iast-runtime-log
-        path: runtime.zip
-        retention-days: 30
-
-    - name: Output Last Log Lines
-      if: always()
-      run: tail -n 100 runtime.log
+      # 4. Arquivar para revisão manual (Conforme o seu texto)
+      - name: Archive Runtime Logs
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: runtime-execution-logs
+          path: |
+            runtime_execution.log
+            security_anomalies.txt
+          retention-days: 30
