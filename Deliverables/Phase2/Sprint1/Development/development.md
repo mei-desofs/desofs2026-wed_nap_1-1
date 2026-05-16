@@ -2,16 +2,18 @@
 
 ## Table of Contents
 
+
 1. [Technology Stack](#1-technology-stack)
-2. [Authentication & JWT Validation](#2-authentication--jwt-validation)
-3. [Auth0 Configuration](#3-auth0-configuration)
-4. [Role-Based Access Control (RBAC)](#4-role-based-access-control-rbac)
-5. [Data Transfer Objects (DTOs)](#5-data-transfer-objects-dtos)
-6. [Input Validation & Sanitization](#6-input-validation--sanitization)
-7. [Rate Limiting & DoS Protection](#7-rate-limiting--dos-protection)
-8. [Security HTTP Headers](#8-security-http-headers)
-9. [Audit Logging](#9-audit-logging)
-10. [Error Handling & Information Disclosure Prevention](#10-error-handling--information-disclosure-prevention)
+2. [Architecture & Design](#2-architecture--design)
+3. [Authentication & JWT Validation](#3-authentication--jwt-validation)
+4. [Auth0 Configuration](#4-auth0-configuration)
+5. [Role-Based Access Control (RBAC)](#5-role-based-access-control-rbac)
+6. [Data Transfer Objects (DTOs)](#6-data-transfer-objects-dtos)
+7. [Input Validation & Sanitization](#7-input-validation--sanitization)
+8. [Rate Limiting & DoS Protection](#8-rate-limiting--dos-protection)
+9. [Security HTTP Headers](#9-security-http-headers)
+10. [Audit Logging](#10-audit-logging)
+11. [Error Handling & Information Disclosure Prevention](#11-error-handling--information-disclosure-prevention)
 
 ---
 
@@ -29,13 +31,61 @@
 | SAST | CodeQL (GitHub), SpotBugs + FindSecBugs, PMD |
 | SCA | OWASP Dependency-Check 11.1.1 |
 | DAST | OWASP ZAP (GitHub Actions) |
-| IAST | Not implemented (planned) |
 | Coverage | JaCoCo 0.8.12 |
 | Testing | JUnit 5, Mockito, AssertJ, Spring Security Test |
 
+## 2. Architecture & Design
+
+This project follows a layered, testable design that embraces interface-driven development, clear separation of concerns, and pragmatic elements of Clean Architecture.
+
+### 2.1 High-level architecture
+
+- **Controllers (API adapters):** handle HTTP, authentication, validation and translate requests to application inputs. (See `App/src/main/java/com/example/desofs/controllers`)
+- **Services (use-cases / application logic):** implemented behind interfaces (`IMovieService`, `IAuditLogService`, etc.). Services encapsulate business rules and orchestration. (See `App/src/main/java/com/example/desofs/services`)
+- **Repositories / Gateways:** JPA repositories and Data Access Object layers isolate persistence concerns from business logic. (See `App/src/main/java/com/example/desofs/repositories`)
+- **Domain:** entities and value objects representing core business concepts. (See `App/src/main/java/com/example/desofs/domain`)
+- **DTOs & Mappers:** API surface uses DTOs; mappers convert between DTOs and domain entities. Mappers are kept explicit to avoid mass-assignment risks. (See `App/src/main/java/com/example/desofs/shared/dtos` and `App/src/main/java/com/example/desofs/shared/mappers`)
+
+### 2.2 Interfaces and Dependency Inversion
+
+- All service contracts are exposed as Java interfaces (e.g., `IMovieService`). Controllers depend on these interfaces, not concrete classes. This follows the **Dependency Inversion Principle** and makes units easy to mock in tests (`@MockitoBean IMovieService`).
+- Example benefit: `MovieController` can be tested in isolation by mocking `IMovieService` and `IRoleGuard` without needing the full JPA stack.
+
+### 2.3 Mappers
+
+- Mappers live in `com.example.desofs.shared.mappers` and are intentionally explicit. They may be implemented manually or via a compile-time mapping tool (MapStruct) depending on complexity. The project currently uses straightforward mapping utilities to maintain clarity and avoid hidden mapping behaviour.
+- Mappers protect the domain model by controlling which fields are mapped to/from external DTOs.
+
+### 2.4 SOLID and Clean Architecture principles applied
+
+- **Single Responsibility:** each controller, service and repository has a single focused responsibility (e.g., `ReceiptFileService` only handles receipt file creation and sanitization).
+- **Open/Closed:** services expose behavior via interfaces so new behaviors can be added via new implementations without changing existing callers.
+- **Liskov Substitution:** interfaces are designed so implementations are interchangeable (no surprising side-effects).
+- **Interface Segregation:** small focused interfaces (service per aggregate) avoid forcing callers to implement unused methods.
+- **Dependency Inversion:** high-level modules (controllers/use-cases) depend on abstractions (interfaces) rather than concrete persistence or framework specifics.
+
+Clean Architecture mapping:
+
+- **Entities (Domain):** business objects in `domain/`.
+- **Use Cases (Application Services):** `services/` implement the application-specific business rules.
+- **Interface Adapters:** `controllers/` and `shared/mappers` adapt input/output for use cases.
+- **Frameworks & Drivers:** Spring Boot, JPA, Security live at the outermost layer and are injected via interfaces.
+
+### 2.5 Examples & File locations
+
+- Service interface: `App/src/main/java/com/example/desofs/services/IMovieService.java`
+- Service impl: `App/src/main/java/com/example/desofs/services/MovieService.java`
+- Guard interface: `App/src/main/java/com/example/desofs/security/IRoleGuard.java`
+- DTOs: `App/src/main/java/com/example/desofs/shared/dtos/MovieDTO.java`
+- Mappers: `App/src/main/java/com/example/desofs/shared/mappers/`
+
+### 2.6 Rationale
+
+This structure improves testability, supports safe swapping of implementations (for example, replacing JPA with a different persistence mechanism), reduces blast radius for changes, and makes security reviews and auditing easier because responsibilities are narrow and well-located.
+
 ---
 
-## 2. Authentication & JWT Validation
+## 3. Authentication & JWT Validation
 
 **Location:** `App/src/main/java/com/example/desofs/config/SecurityConfig.java`
 
@@ -67,11 +117,11 @@ All other endpoints require a valid JWT.
 
 ---
 
-## 3. Auth0 Configuration
+## 4. Auth0 Configuration
 
 Auth0 is the external Identity Provider (IdP) for eMovieShop. The following settings were configured in the Auth0 dashboard.
 
-### 3.1 Roles
+### 4.1 Roles
 
 Three roles (`ADMIN`, `CUSTOMER`, `SUPPORT`) are defined in Auth0, each with a corresponding test user.
 
@@ -79,7 +129,7 @@ Three roles (`ADMIN`, `CUSTOMER`, `SUPPORT`) are defined in Auth0, each with a c
 
 ![Users](../images/Users.jpeg)
 
-### 3.2 Post Login Action-Add Roles to Token
+### 4.2 Post Login Action-Add Roles to Token
 
 A **Post Login** custom action injects the user's Auth0 roles into the JWT under the namespace `https://emovieshop.com/roles`, and also attaches the user's email. The backend reads this claim in `RoleGuard` to enforce access control.
 
@@ -87,7 +137,7 @@ A **Post Login** custom action injects the user's Auth0 roles into the JWT under
 
 ![Add roles to token action](../images/Action_add_roles_to_token.jpeg)
 
-### 3.3 Token Lifetimes
+### 4.3 Token Lifetimes
 
 Access token lifetime is set to **3600 s (1 hour)** for all flows.
 
@@ -97,13 +147,13 @@ Refresh tokens expire after **7 days of inactivity** (idle) with an absolute max
 
 ![Refresh Token Expiration](../images/Refresh_Token_Expiration_Settings.jpeg)
 
-### 3.4 Refresh Token Rotation
+### 4.4 Refresh Token Rotation
 
 Refresh tokens are **rotated on every use** with a 0 s overlap period-the old token is immediately invalidated, preventing replay attacks.
 
 ![Refresh Token Rotation](../images/Refresh_Token_Rotation_Settings.jpeg)
 
-### 3.5 Attack Protection
+### 4.5 Attack Protection
 
 Suspicious IP Throttling and Brute-force Protection are **enabled**. Bot Detection is disabled.
 
@@ -113,7 +163,7 @@ Suspicious IP Throttling and Brute-force Protection are **enabled**. Bot Detecti
 
 ---
 
-## 4. Role-Based Access Control (RBAC)
+## 5. Role-Based Access Control (RBAC)
 
 **Location:** `App/src/main/java/com/example/desofs/security/RoleGuard.java`
 
@@ -161,7 +211,7 @@ Roles are carried in a **custom Auth0 claim** namespaced as `https://emovieshop.
 
 ---
 
-## 5. Data Transfer Objects (DTOs)
+## 6. Data Transfer Objects (DTOs)
 
 **Location:** `App/src/main/java/com/example/desofs/shared/dtos/`
 
@@ -182,11 +232,11 @@ DTOs decouple the API surface from domain entities, preventing mass assignment v
 
 ---
 
-## 6. Input Validation & Sanitization
+## 7. Input Validation & Sanitization
 
 Input security uses two complementary layers:
 
-### 6.1 Input Validation (Bean Validation / Jakarta)
+### 7.1 Input Validation (Bean Validation / Jakarta)
 
 **Location:** controller methods, DTOs in `App/src/main/java/com/example/desofs/shared/dtos/`, and domain entities in `App/src/main/java/com/example/desofs/domain/`
 
@@ -229,7 +279,7 @@ The following annotations are applied on DTOs and domain entities:
 | `@DecimalMin` | Decimal minimum (exclusive) | `price > 0.0` (Movie) |
 | `@Valid` (nested) | Cascades validation into child objects | `items` list in PurchaseRequestDTO validates each PurchaseItemDTO |
 
-### 6.2 Input Sanitization (Receipt File Service & Path Traversal Protection)
+### 7.2 Input Sanitization (Receipt File Service & Path Traversal Protection)
 
 **Location:** `App/src/main/java/com/example/desofs/services/ReceiptFileService.java`
 
@@ -302,7 +352,7 @@ If all characters were stripped (e.g., input was `"../../"` or `";;;"`), the req
 
 ---
 
-## 7. Rate Limiting & DoS Protection
+## 8. Rate Limiting & DoS Protection
 
 **Location:** `App/src/main/java/com/example/desofs/security/RateLimitFilter.java`
 
@@ -326,7 +376,7 @@ emovieshop.rate-limit.user.requests-per-minute=120
 
 ---
 
-## 8. Security HTTP Headers
+## 9. Security HTTP Headers
 
 **Location:** `App/src/main/java/com/example/desofs/security/SecurityHeadersFilter.java`
 
@@ -370,7 +420,7 @@ Multiple origins can be specified as a comma-separated list. Requests from unlis
 
 ---
 
-## 9. Audit Logging
+## 10. Audit Logging
 
 **Location:** `App/src/main/java/com/example/desofs/domain/AuditLog.java`, `App/src/main/java/com/example/desofs/services/AuditLogService.java`
 
@@ -393,7 +443,7 @@ The `id` field has no public setter, it is assigned only by JPA after persistenc
 
 ---
 
-## 10. Error Handling & Information Disclosure Prevention
+## 11. Error Handling & Information Disclosure Prevention
 
 **Location:** `App/src/main/java/com/example/desofs/exceptions/GlobalExceptionHandler.java`
 
