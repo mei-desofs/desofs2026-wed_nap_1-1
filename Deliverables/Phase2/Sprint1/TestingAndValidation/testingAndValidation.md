@@ -138,18 +138,19 @@ These tests run with a larger portion of the Spring Boot stack enabled, so they 
 
 ### 4.3 Coverage Tracking
 
-The obtained code coverage is reported per layer and globally:
+The obtained code coverage is reported per package and globally:
 
-| Layer | What is measured | Coverage Status |
-|------|------------------|-----------------|
-| Domain | Domain classes and value objects | 100.00% (116/116 lines) |
-| Mappers | DTO/entity conversion logic | 100.00% (55/55 lines) |
-| Services | Business rules and orchestration logic | 92.00% (161/175 lines) |
-| Controllers | Request handling and API flow validation | 90.24% (74/82 lines) |
-| Config | Application configuration and Tomcat/Auth0 helpers | 93.51% (72/77 lines) |
-| Security | Security filters, guards and headers | 93.75% (90/96 lines) |
-| Integration slice | End-to-end Spring context coverage | 91.44% (235/257 lines) |
-| Total | Whole application coverage | 80.63% (687/852 lines) |
+| Package | Coverage Status |
+|---------|-----------------|
+| `com.example.desofs.services` | 92% |
+| `com.example.desofs.controllers` | 88% |
+| `com.example.desofs.security` | 92% |
+| `com.example.desofs.config` | 95% |
+| `com.example.desofs.exceptions` | 97% |
+| `com.example.desofs.domain` | 100% |
+| `com.example.desofs.shared.mappers` | 100% |
+| `com.example.desofs` | 37% |
+| Total | 94% |
 
 ---
 
