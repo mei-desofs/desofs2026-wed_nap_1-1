@@ -133,7 +133,6 @@ jobs:
           SPRING_JPA_HIBERNATE_DDL_AUTO: create-drop
           SPRINGDOC_API_DOCS_ENABLED: "true"
           SPRINGDOC_SWAGGER_UI_ENABLED: "true"
-          APP_RATE_LIMIT_ENABLED: "false"
         run: |
           java -jar App/target/*.jar > runtime_execution.log 2>&1 &
           APP_PID=$!
@@ -189,8 +188,16 @@ jobs:
           10021 IGNORE  (X-Content-Type-Options Header Missing)
           40018 IGNORE  (SQL Injection - False Positive: JPA prepared statements)
           6 IGNORE  (Path Traversal - False Positive: /api/movies ID is numeric from database)
+          40018	IGNORE	(SQL Injection - False Positive: BigDecimal type safety via JPA)
           EOF
 
+      - name: Verify ZAP Rules File
+        run: |
+          echo "=== rules.tsv location ==="
+          ls -la rules.tsv
+          echo "=== rules.tsv content ==="
+          cat rules.tsv
+          
       # 2. Exercitar a aplicação sob condições reais de ataque
       - name: Run OWASP ZAP API Scan
         uses: zaproxy/action-api-scan@v0.10.0
