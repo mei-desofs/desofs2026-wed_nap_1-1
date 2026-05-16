@@ -1,38 +1,60 @@
 # Code Review & Release Strategy
 
-A nossa equipa adota um **Branch-based Workflow** suportado por integração contínua (CI) e automação de lançamentos. O objetivo desta estratégia é garantir que qualquer código que chegue à *branch* principal (`main`) seja funcional, seguro e devidamente revisto, minimizando a introdução de regressões ou vulnerabilidades.
+Our team follows a **branch-based workflow** supported by Continuous Integration (CI) and release automation. The goal of this strategy is to ensure that any code reaching the `main` branch is functional, secure and properly reviewed, minimising the introduction of regressions or vulnerabilities.
 
-Abaixo detalhamos o ciclo de vida de uma alteração de código, desde o desenvolvimento até ao lançamento da versão.
+Below we describe the lifecycle of a code change, from development through to official release.
 
-## 1. Desenvolvimento em Branches Isoladas
-* Cada nova funcionalidade, correção de erro ou tarefa de manutenção é desenvolvida numa *branch* separada.
-* Sempre que novos *commits* são enviados (push) para estas *branches* secundárias, o workflow `Feature Checks` é acionado automaticamente.
-* Este passo preliminar compila o projeto em Java 21 e corre testes unitários e análises estáticas básicas (SpotBugs), garantindo que o código base está íntegro antes de sequer ser proposto para integração.
+## Table of Contents
 
-## 2. Criação do Pull Request (PR)
-* Quando o trabalho na *branch* está concluído, o developer cria um Pull Request para obter *feedback* e fundir o trabalho na `main`.
-* É obrigatório que o título do Pull Request e os *commits* finais sigam a especificação de **Conventional Commits** (ex: `feat:`, `fix:`, `chore:`), pois isto é essencial para a fase de lançamento.
+1. [Development in Isolated Branches](#1-development-in-isolated-branches)
+2. [Creating the Pull Request (PR)](#2-creating-the-pull-request-pr)
+3. [Automated Validation (CI & Security)](#3-automated-validation-ci--security)
+4. [Code Review (Peer Review)](#4-code-review-peer-review)
+5. [Promotion to Production (main -> prod)](#5-promotion-to-production-main---prod)
+6. [Official Release and Automation (release-please)](#6-official-release-and-automation-release-please)
 
-## 3. Validação Automática (Integração Contínua e Segurança)
-A criação ou atualização de um PR para a `main` serve como *trigger* para o nosso workflow principal de validação (`Development CI` e `Security Pipeline`). Antes de qualquer revisão humana, o GitHub Actions executa automaticamente:
-* **Build & Test:** Compilação do código fonte (Maven) e execução de todos os testes automatizados.
-* **Secret Scan:** Verificação de credenciais expostas no código através do GitLeaks.
-* **SAST (Static Application Security Testing):** Análise de vulnerabilidades no código fonte utilizando o CodeQL e FindSecBugs.
-* **SCA (Software Composition Analysis):** Verificação de vulnerabilidades em dependências externas através do OWASP Dependency-Check e geração do SBOM.
-* **DAST (Dynamic Application Security Testing):** Análise dinâmica à API em execução usando o OWASP ZAP.
+---
 
-## 4. Revisão de Código (Peer Review)
-* Com as pipelines concluídas, um elemento da equipa (diferente do autor) assume o papel de revisor.
-* O revisor tem acesso imediato aos resultados das verificações de segurança e testes automatizados. Se a pipeline falhar (indicadores a vermelho), o revisor sabe de antemão que o código precisa de correções, poupando tempo na revisão manual.
-* Se os testes passarem e a qualidade do código for validada, o revisor aprova o Pull Request e o código é integrado na `main`.
+## 1. Development in Isolated Branches
 
-## 5. Promoção para Produção (`main` -> `prod`)
-Após o código estar estabilizado na branch `main`, é necessário realizar a promoção para o ambiente de produção.
-* Para enviar as alterações para a branch `prod`, deve ser criado um Pull Request específico da `main` para `prod`.
-* Este Pull Request de promoção é sujeito a uma nova revisão formal pela equipa para garantir que o conjunto de funcionalidades está pronto para ser distribuído.
+- Each new feature, bug fix or maintenance task is developed in a separate branch.
+- Whenever new commits are pushed to these feature branches, the `Feature Checks` workflow is triggered automatically.
+- This preliminary step builds the project on Java 21 and runs unit tests and basic static analyses (SpotBugs), ensuring the base code is healthy before it is proposed for integration.
 
-## 6. Lançamento Oficial e Automação (`release-please`)
-O lançamento oficial acontece no momento em que o código é fundido (merge) na branch `prod`.
-* A integração na branch `prod` serve como gatilho para a action **Release Please**.
-* O *Release Please* analisa o histórico de Conventional Commits integrados e cria/atualiza um Pull Request de release automático.
-* O papel fundamental do *Release Please* neste fluxo é a gestão do versionamento semântico, atualização do `CHANGELOG.md` e, principalmente, a disponibilização do artefacto `.jar` da nova versão através da página de Releases do GitHub, facilitando a distribuição da versão estável.
+## 2. Creating the Pull Request (PR)
+
+- When work on the branch is complete, the developer opens a Pull Request to get feedback and merge the change into `main`.
+- The PR title and final commits must follow **Conventional Commits** (for example: `feat:`, `fix:`, `chore:`). This is required for the release tooling.
+
+## 3. Automated Validation (CI & Security)
+
+Opening or updating a PR against `main` triggers main validation workflows (`Development CI` and `Security Pipeline`). Before any human review, GitHub Actions runs the following checks automatically:
+
+- **Build & Test:** compile the source (Maven) and run all automated tests.
+- **Secret Scan:** detect exposed credentials using GitLeaks.
+- **SAST (Static Application Security Testing):** analyse source for vulnerabilities using CodeQL and FindSecBugs.
+- **SCA (Software Composition Analysis):** check third-party dependencies for known vulnerabilities using OWASP Dependency-Check and generate an SBOM.
+- **DAST (Dynamic Application Security Testing):** run dynamic API scans against a deployed test instance using OWASP ZAP.
+
+## 4. Code Review (Peer Review)
+
+- After pipelines complete, a team member other than the author conducts the peer review.
+- The reviewer has immediate access to CI and security results. If a pipeline failed, the reviewer knows the PR requires fixes before approval.
+- If tests pass and quality is validated, the reviewer approves the PR and the change is merged into `main`.
+
+## 5. Promotion to Production (main -> prod)
+
+Once changes are stabilised on `main`, promotion to production is performed via a dedicated PR from `main` to `prod`.
+
+- Create a Pull Request from `main` to `prod` to promote a release candidate.
+- This promotion PR receives a formal team review to ensure the feature set is ready for distribution.
+
+## 6. Official Release and Automation (release-please)
+
+The official release is performed when changes are merged into the `prod` branch.
+
+- Merging into `prod` triggers the **Release Please** action.
+- `release-please` inspects the integrated Conventional Commits and creates/updates a release PR.
+- It manages semantic versioning, updates the `CHANGELOG.md`, and publishes the built `.jar` artifact via the GitHub Releases page for distribution.
+
+This document mirrors the structure used across the project's documentation and can be referenced from the team's Contributing or Release guides.
