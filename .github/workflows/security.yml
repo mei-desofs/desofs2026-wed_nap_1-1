@@ -188,6 +188,7 @@ jobs:
           10021 IGNORE  (X-Content-Type-Options Header Missing)
           40018 IGNORE  (SQL Injection - False Positive: JPA prepared statements)
           6 IGNORE  (Path Traversal - False Positive: /api/movies ID is numeric from database)
+          40018	IGNORE	(SQL Injection - False Positive: BigDecimal type safety via JPA)
           EOF
 
       # 2. Exercitar a aplicação sob condições reais de ataque

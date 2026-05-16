@@ -163,6 +163,10 @@ The obtained code coverage is reported per package and globally:
 
 ## 5. Security Testing Results
 
+Alert 40018 (SQL Injection) on POST /api/refunds was confirmed as a false positive. The affected parameter (amount) is typed as BigDecimal with 
+@Positive validation, making SQL injection structurally impossible, the injected payload fails Jackson deserialization before reaching the 
+service or persistence layer. All database interactions use Spring Data JPA with parameterized queries.
+
 TBD
 
 ### SAST Results (CodeQL)
