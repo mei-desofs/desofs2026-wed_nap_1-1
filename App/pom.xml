@@ -165,7 +165,7 @@
           <version>0.8.12</version>
           <configuration>
             <excludes>
-              <exclude>com/example/desofs/shared/dtos</exclude>
+              <exclude>com/example/desofs/shared/dtos/**</exclude>
             </excludes>
           </configuration>
           <executions>
