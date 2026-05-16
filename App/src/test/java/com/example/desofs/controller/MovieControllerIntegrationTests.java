@@ -87,6 +87,21 @@ class MovieControllerIntegrationTests {
         verify(movieService, times(1)).listAll();
     }
 
+        @Test
+        @DisplayName("GET /api/movies should return 200 with empty array when service fails")
+        void testGetMoviesCatalog_WhenServiceThrows_Returns200EmptyArray() throws Exception {
+                when(movieService.listAll()).thenThrow(new RuntimeException("DB failure"));
+
+                mockMvc.perform(get("/api/movies")
+                                                .with(jwt())
+                                                .accept(MediaType.APPLICATION_JSON))
+                                .andExpect(status().isOk())
+                                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                                .andExpect(jsonPath("$", hasSize(0)));
+
+                verify(movieService, times(1)).listAll();
+        }
+
     @Test
     @DisplayName("GET /api/movies response contains all required fields")
     void testGetMoviesCatalog_ResponseContainsAllRequiredFields() throws Exception {

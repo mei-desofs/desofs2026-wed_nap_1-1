@@ -2,6 +2,8 @@ package com.example.desofs.controllers;
 
 import com.example.desofs.services.IMovieService;
 import com.example.desofs.shared.dtos.MovieDTO;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,6 +19,8 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/movies")
 public class MovieController {
+
+    private static final Logger logger = LoggerFactory.getLogger(MovieController.class);
     
     /** Service responsible for movie persistence and business logic. */
     private final IMovieService movieService;
@@ -37,7 +41,12 @@ public class MovieController {
      */
     @GetMapping
     public List<MovieDTO> list() {
-        return movieService.listAll();
+        try {
+            return movieService.listAll();
+        } catch (RuntimeException ex) {
+            logger.error("Failed to list movies", ex);
+            return List.of();
+        }
     }
 
     /**

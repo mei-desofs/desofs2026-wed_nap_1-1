@@ -98,28 +98,45 @@ public class RefundController {
 
     /**
      * Approves the refund request identified by {@code id}.
-     *
+     * Enforces that the authenticated user has the {@link Role#SUPPORT} role.
      * @param id refund request identifier
+     * @param jwt authenticated JWT principal
      * @return 200 OK with updated DTO when successful, otherwise 404 Not Found
      */
     @PutMapping("/{id}/approve")
-    public ResponseEntity<RefundRequestDTO> approve(@PathVariable Long id) {
+    public ResponseEntity<RefundRequestDTO> approve(@AuthenticationPrincipal Jwt jwt, @PathVariable Long id) {
+
+        String auth0Id = jwt.getSubject();
+        logger.info("Refund request analyzed by user: {}", auth0Id);
+
+        // Enforce SUPPORT role via RoleGuard (reads role from JWT claims)
+        roleGuard.requireRole(jwt, Role.SUPPORT);
+
         RefundRequestDTO refund = refundService.approve(id);
         if (refund == null) return ResponseEntity.notFound().build();
+        logger.info("Refund request approved. Refund ID: {}", refund.getId());
         return ResponseEntity.ok(refund);
     }
 
     /**
      * Rejects a refund request with an optional reason.
-     *
+     * Enforces that the authenticated user has the {@link Role#SUPPORT} role.
+     * @param jwt authenticated JWT principal
      * @param id refund request identifier
      * @param rejectReq payload containing the rejection reason
      * @return 200 OK with updated DTO when successful, otherwise 404 Not Found
      */
     @PutMapping("/{id}/reject")
-    public ResponseEntity<RefundRequestDTO> reject(@PathVariable Long id, @RequestBody RejectRefundRequest rejectReq) {
+    public ResponseEntity<RefundRequestDTO> reject(@AuthenticationPrincipal Jwt jwt, @PathVariable Long id, @RequestBody RejectRefundRequest rejectReq) {
+        String auth0Id = jwt.getSubject();
+        logger.info("Refund request analyzed by user: {}", auth0Id);
+
+        // Enforce SUPPORT role via RoleGuard (reads role from JWT claims)
+        roleGuard.requireRole(jwt, Role.SUPPORT);
+
         RefundRequestDTO refund = refundService.reject(id, rejectReq.getReason());
         if (refund == null) return ResponseEntity.notFound().build();
+        logger.info("Refund request rejected. Refund ID: {}", refund.getId());
         return ResponseEntity.ok(refund);
     }
 }
