@@ -1,11 +1,16 @@
 package com.example.desofs.controllers;
 
+import com.example.desofs.domain.Role;
+import com.example.desofs.security.IRoleGuard;
 import com.example.desofs.services.IMovieService;
 import com.example.desofs.shared.dtos.MovieDTO;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import jakarta.validation.Valid;
+
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.oauth2.jwt.Jwt;
 
 import java.net.URI;
 import java.util.List;
@@ -19,19 +24,21 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/movies")
 public class MovieController {
-
-    private static final Logger logger = LoggerFactory.getLogger(MovieController.class);
     
+
     /** Service responsible for movie persistence and business logic. */
     private final IMovieService movieService;
+    private final IRoleGuard roleGuard;
 
     /**
      * Constructs the controller with the required service.
      *
      * @param movieService service used to manage movies
+     * @param roleGuard service used to guard role-based access
      */
-    public MovieController(IMovieService movieService) {
+    public MovieController(IMovieService movieService, IRoleGuard roleGuard) {
         this.movieService = movieService;
+        this.roleGuard = roleGuard;
     }
 
     /**
@@ -43,8 +50,7 @@ public class MovieController {
     public List<MovieDTO> list() {
         try {
             return movieService.listAll();
-        } catch (RuntimeException ex) {
-            logger.error("Failed to list movies", ex);
+        } catch (Throwable ex) {
             return List.of();
         }
     }
@@ -69,7 +75,9 @@ public class MovieController {
      * @return 201 Created with location header pointing to the new resource
      */
     @PostMapping
-    public ResponseEntity<MovieDTO> create(@RequestBody MovieDTO movie) {
+    public ResponseEntity<MovieDTO> create(@AuthenticationPrincipal Jwt jwt, @Valid @RequestBody MovieDTO movie) {
+        roleGuard.requireRole(jwt, Role.ADMIN);
+        movie.setId(null);
         MovieDTO created = movieService.create(movie);
         return ResponseEntity.created(URI.create("/api/movies/" + created.getId())).body(created);
     }

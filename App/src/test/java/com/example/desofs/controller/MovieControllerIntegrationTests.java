@@ -2,6 +2,7 @@ package com.example.desofs.controller;
 
 import com.example.desofs.config.SecurityConfig;
 import com.example.desofs.controllers.MovieController;
+import com.example.desofs.security.IRoleGuard;
 import com.example.desofs.services.IMovieService;
 import com.example.desofs.shared.dtos.MovieDTO;
 import org.junit.jupiter.api.BeforeEach;
@@ -39,6 +40,9 @@ class MovieControllerIntegrationTests {
 
     @MockitoBean
         private IMovieService movieService;
+
+    @MockitoBean
+        private IRoleGuard roleGuard;
 
         private MovieDTO testMovie1;
         private MovieDTO testMovie2;
@@ -91,6 +95,21 @@ class MovieControllerIntegrationTests {
         @DisplayName("GET /api/movies should return 200 with empty array when service fails")
         void testGetMoviesCatalog_WhenServiceThrows_Returns200EmptyArray() throws Exception {
                 when(movieService.listAll()).thenThrow(new RuntimeException("DB failure"));
+
+                mockMvc.perform(get("/api/movies")
+                                                .with(jwt())
+                                                .accept(MediaType.APPLICATION_JSON))
+                                .andExpect(status().isOk())
+                                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                                .andExpect(jsonPath("$", hasSize(0)));
+
+                verify(movieService, times(1)).listAll();
+        }
+
+        @Test
+        @DisplayName("GET /api/movies should return 200 with empty array when service throws an error")
+        void testGetMoviesCatalog_WhenServiceThrowsError_Returns200EmptyArray() throws Exception {
+                when(movieService.listAll()).thenThrow(new AssertionError("Unexpected failure"));
 
                 mockMvc.perform(get("/api/movies")
                                                 .with(jwt())
