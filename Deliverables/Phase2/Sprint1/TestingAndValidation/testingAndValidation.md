@@ -163,10 +163,6 @@ The obtained code coverage is reported per package and globally:
 
 ## 5. Security Testing Results
 
-Alert 40018 (SQL Injection) on POST /api/refunds was confirmed as a false positive. The affected parameter (amount) is typed as BigDecimal with 
-@Positive validation, making SQL injection structurally impossible, the injected payload fails Jackson deserialization before reaching the 
-service or persistence layer. All database interactions use Spring Data JPA with parameterized queries.
-
 TBD
 
 ### SAST Results (CodeQL)
@@ -220,6 +216,27 @@ The following CVEs have no available fix at the time of this sprint. They are do
 **Pass/Fail**: 
 
 ### Key Findings
+
+#### Runtime Log Analysis Results
+
+The runtime execution log captured during the DAST scan provides evidence of the application's behavior under active attack conditions.
+
+**Input validation and type safety:** The ZAP scanner injected SQL injection payloads (e.g., WAITFOR DELAY, OR 1=1), OS command injection strings 
+(e.g., `cat /etc/passwd`, ShellShock), and server-side template injection payloads (Freemarker, Velocity, Node.js) into typed fields. In all cases, 
+Jackson's deserialization layer rejected the payloads before they reached the service or persistence layer, producing `400 Bad Request` responses with 
+sanitized error messages containing only a correlation ID.
+
+**Rate limiting:** The `RateLimitFilter` triggered repeatedly during the scan, confirming that both per-user and per-IP throttling are active and 
+functioning under sustained attack traffic.
+
+**Error handling:** No stack traces, internal class names, or sensitive system information were exposed in any error response. All exceptions were 
+handled by the `GlobalExceptionHandler`, which returns stable HTTP status codes and generic messages.
+
+**TLS probe rejection:** The scanner attempted TLS handshakes on the plain HTTP port. Tomcat rejected these requests at the protocol level with 
+`Invalid character found in method name`, confirming no protocol confusion is possible.
+
+No genuine security anomalies were identified in the runtime log. All flagged entries correspond to expected defensive behavior under adversarial 
+input conditions.
 
 
 
