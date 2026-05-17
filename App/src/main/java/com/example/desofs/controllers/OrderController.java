@@ -5,6 +5,7 @@ import com.example.desofs.shared.dtos.OrderResponseDTO;
 import com.example.desofs.shared.dtos.PurchaseRequestDTO;
 import com.example.desofs.security.IRoleGuard;
 import com.example.desofs.services.IOrderService;
+import com.example.desofs.services.IAuditLogService;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,6 +31,9 @@ public class OrderController {
     /** Service responsible for order processing and persistence. */
     private final IOrderService orderService;
 
+    /** Service responsible for recording audit log entries. */
+    private final IAuditLogService auditLogService;
+
     /** Guard that enforces role-based access checks. */
     private final IRoleGuard roleGuard;
 
@@ -39,8 +43,9 @@ public class OrderController {
      * @param orderService service to handle order business logic
      * @param roleGuard component used to enforce role checks
      */
-    public OrderController(IOrderService orderService, IRoleGuard roleGuard) {
+    public OrderController(IOrderService orderService, IAuditLogService auditLogService, IRoleGuard roleGuard) {
         this.orderService = orderService;
+        this.auditLogService = auditLogService;
         this.roleGuard = roleGuard;
     }
 
@@ -64,6 +69,7 @@ public class OrderController {
         roleGuard.requireRole(jwt, Role.CUSTOMER);
 
         OrderResponseDTO response = orderService.createOrder(auth0Id, request);
+        auditLogService.log(auth0Id, auth0Id, Role.CUSTOMER, "CREATE_ORDER");
 
         logger.info("Purchase completed. Order ID: {}", response.orderId());
         return ResponseEntity.status(HttpStatus.CREATED).body(response);

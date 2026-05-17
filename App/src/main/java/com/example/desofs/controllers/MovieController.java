@@ -3,6 +3,7 @@ package com.example.desofs.controllers;
 import com.example.desofs.domain.Role;
 import com.example.desofs.security.IRoleGuard;
 import com.example.desofs.services.IMovieService;
+import com.example.desofs.services.IAuditLogService;
 import com.example.desofs.shared.dtos.MovieDTO;
 
 import jakarta.validation.Valid;
@@ -28,6 +29,10 @@ public class MovieController {
 
     /** Service responsible for movie persistence and business logic. */
     private final IMovieService movieService;
+
+    /** Service responsible for recording audit log entries. */
+    private final IAuditLogService auditLogService;
+
     private final IRoleGuard roleGuard;
 
     /**
@@ -36,8 +41,9 @@ public class MovieController {
      * @param movieService service used to manage movies
      * @param roleGuard service used to guard role-based access
      */
-    public MovieController(IMovieService movieService, IRoleGuard roleGuard) {
+    public MovieController(IMovieService movieService, IAuditLogService auditLogService, IRoleGuard roleGuard) {
         this.movieService = movieService;
+        this.auditLogService = auditLogService;
         this.roleGuard = roleGuard;
     }
 
@@ -79,6 +85,7 @@ public class MovieController {
         roleGuard.requireRole(jwt, Role.ADMIN);
         movie.setId(null);
         MovieDTO created = movieService.create(movie);
+        auditLogService.log(jwt.getSubject(), jwt.getSubject(), Role.ADMIN, "CREATE_MOVIE");
         return ResponseEntity.created(URI.create("/api/movies/" + created.getId())).body(created);
     }
 }

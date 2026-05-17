@@ -424,7 +424,7 @@ Multiple origins can be specified as a comma-separated list. Requests from unlis
 
 **Location:** `App/src/main/java/com/example/desofs/domain/AuditLog.java`, `App/src/main/java/com/example/desofs/services/AuditLogService.java`
 
-Security-sensitive administrative operations are persisted to a dedicated `audit_logs` database table. This supports ASVS V16 (Security Logging) requirements.
+Security-sensitive operations are persisted to a dedicated `audit_logs` database table. This supports ASVS V16 (Security Logging) requirements.
 
 ### What is logged
 
@@ -432,14 +432,21 @@ Security-sensitive administrative operations are persisted to a dedicated `audit
 |---|---|
 | Role assigned to user | `actorId`, `targetUserId`, `role`, `operation=ASSIGN`, `timestamp` |
 | Role removed from user | `actorId`, `targetUserId`, `role`, `operation=REMOVE`, `timestamp` |
+| Movie created | `actorId`, `targetUserId`, `role`, `operation=CREATE_MOVIE`, `timestamp` |
+| Order created | `actorId`, `targetUserId`, `role`, `operation=CREATE_ORDER`, `timestamp` |
+| Refund requested | `actorId`, `targetUserId`, `role`, `operation=CREATE_REFUND_REQUEST`, `timestamp` |
+| Refund approved | `actorId`, `targetUserId`, `role`, `operation=APPROVE_REFUND`, `timestamp` |
+| Refund rejected | `actorId`, `targetUserId`, `role`, `operation=REJECT_REFUND`, `timestamp` |
 
 The `id` field has no public setter, it is assigned only by JPA after persistence, preventing audit record tampering.
+
+For resource-creation events where there is no separate target user, the current implementation stores the authenticated subject in both `actorId` and `targetUserId` so the event remains traceable.
 
 ### Querying audit logs
 
 `GET /api/audit-logs`, restricted to `ADMIN` role, returns the full audit trail.
 
-> **Known gap (TODO):** Phase 1 documentation also mandates logging for refund decisions and catalog edits. This is not yet implemented.
+> **Current scope:** logging is implemented for role changes, movie creation, order creation, and refund lifecycle events. Additional event types can be added later if the audit policy expands.
 
 ---
 

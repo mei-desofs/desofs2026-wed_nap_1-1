@@ -1,22 +1,13 @@
 -- Flyway migration: Create audit logs table
 CREATE TABLE audit_logs (
   id BIGINT AUTO_INCREMENT PRIMARY KEY,
-  action VARCHAR(100) NOT NULL,
-  entity_type VARCHAR(50) NOT NULL,
-  entity_id BIGINT,
-  user_id BIGINT NOT NULL,
-  user_role VARCHAR(50) NOT NULL,
-  ip_address VARCHAR(45),
-  user_agent TEXT,
-  details JSON,
-  success BOOLEAN NOT NULL DEFAULT TRUE,
+  actor_id VARCHAR(255) NOT NULL,
+  target_user_id VARCHAR(255) NOT NULL,
+  role VARCHAR(50) NOT NULL,
+  operation VARCHAR(100) NOT NULL,
   timestamp TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE RESTRICT
+  INDEX idx_audit_logs_actor_id (actor_id),
+  INDEX idx_audit_logs_target_user_id (target_user_id),
+  INDEX idx_audit_logs_role (role),
+  INDEX idx_audit_logs_timestamp (timestamp)
 );
-
--- Add indices for performance
-CREATE INDEX idx_audit_action ON audit_logs(action);
-CREATE INDEX idx_audit_entity_type ON audit_logs(entity_type);
-CREATE INDEX idx_audit_user_id ON audit_logs(user_id);
-CREATE INDEX idx_audit_timestamp ON audit_logs(timestamp);
-CREATE INDEX idx_audit_entity_type_id ON audit_logs(entity_type, entity_id);

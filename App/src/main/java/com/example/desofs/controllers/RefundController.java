@@ -4,6 +4,7 @@ import com.example.desofs.shared.dtos.CreateRefundRequest;
 import com.example.desofs.shared.dtos.RejectRefundRequest;
 import com.example.desofs.shared.dtos.RefundRequestDTO;
 import com.example.desofs.services.IRefundService;
+import com.example.desofs.services.IAuditLogService;
 import com.example.desofs.domain.Role;
 import com.example.desofs.security.IRoleGuard;
 import jakarta.validation.Valid;
@@ -34,6 +35,9 @@ public class RefundController {
     /** Service handling refund business logic and data access. */
     private final IRefundService refundService;
 
+    /** Service responsible for recording audit log entries. */
+    private final IAuditLogService auditLogService;
+
     /** Guard that enforces role-based access checks. */
     private final IRoleGuard roleGuard;
 
@@ -43,8 +47,9 @@ public class RefundController {
      * @param refundService service for refund operations
      * @param roleGuard component to enforce role checks
      */
-    public RefundController(IRefundService refundService, IRoleGuard roleGuard) {
+    public RefundController(IRefundService refundService, IAuditLogService auditLogService, IRoleGuard roleGuard) {
         this.refundService = refundService;
+        this.auditLogService = auditLogService;
         this.roleGuard = roleGuard;
     }
 
@@ -91,6 +96,7 @@ public class RefundController {
         roleGuard.requireRole(jwt, Role.CUSTOMER);
 
         RefundRequestDTO created = refundService.createRefundRequest(auth0Id, request);
+        auditLogService.log(auth0Id, created.getUserId(), Role.CUSTOMER, "CREATE_REFUND_REQUEST");
 
         logger.info("Refund request created. Refund ID: {}", created.getId());
         return ResponseEntity.created(URI.create("/api/refunds/" + created.getId())).body(created);
@@ -114,6 +120,7 @@ public class RefundController {
 
         RefundRequestDTO refund = refundService.approve(id);
         if (refund == null) return ResponseEntity.notFound().build();
+        auditLogService.log(jwt.getSubject(), refund.getUserId(), Role.SUPPORT, "APPROVE_REFUND");
         logger.info("Refund request approved. Refund ID: {}", refund.getId());
         return ResponseEntity.ok(refund);
     }
@@ -136,6 +143,7 @@ public class RefundController {
 
         RefundRequestDTO refund = refundService.reject(id, rejectReq.getReason());
         if (refund == null) return ResponseEntity.notFound().build();
+        auditLogService.log(jwt.getSubject(), refund.getUserId(), Role.SUPPORT, "REJECT_REFUND");
         logger.info("Refund request rejected. Refund ID: {}", refund.getId());
         return ResponseEntity.ok(refund);
     }
