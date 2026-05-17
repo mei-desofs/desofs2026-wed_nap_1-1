@@ -7,6 +7,7 @@
 3. [CodeQL SAST Pipeline](#3-codeql-sast-pipeline)
 4. [Security Pipeline (DAST)](#4-security-pipeline-dast)
 5. [Release Pipeline](#5-release-pipeline)
+6. [Secrets and Variables Management](#6-secrets-and-variables-management--compliance-statement)
 
 ---
 
@@ -123,3 +124,28 @@ The DAST job performs dynamic application security testing against the live API:
 2. On merge of the release PR, tags the commit and creates a GitHub Release.
 
 This ensures every production-bound artifact is versioned and traceable to the commits it includes.
+
+---
+
+## 6. Secrets and Variables Management — Compliance Statement
+
+The project follows GitHub Secrets best practices for CI workflows: sensitive values are not committed to source control, secrets are referenced via `${{secrets.SECRET_NAME}}`, outputs that may contain secrets are masked, and environment-level protections are used for production secrets where applicable.
+
+[]()
+
+DAST/security pipeline uses masked tokens in the workflow (see `.github/workflows/security.yml` and the DAST job which obtains and masks the Auth0 token with `::add-mask::`).
+
+Workflows reference secrets via the `${{secrets.*}}` syntax in the reusable DAST workflow documented in this repository.
+
+### Repository variables and screenshots
+
+We comply with GitHub Actions secrets and variables best practices in our CI pipelines for the following reasons:
+
+- Credentials are not committed to the repository; sensitive values are stored as GitHub `Repository secrets`, preventing accidental leakage in source code.
+- Workflows reference secrets using the `${{secrets.NAME}}` syntax (see `.github/workflows/security.yml` and the release workflows), ensuring sensitive values are not present in source files.
+- Tokens and sensitive values used in jobs are masked with `::add-mask::` and are not printed to logs (e.g., the Auth0 token in the DAST job), reducing accidental exposure during CI runs.
+- Repository variables (e.g., `AUTH0_AUDIENCE`) are used for non-sensitive configuration, preserving a clear separation between secrets and reusable configuration.
+
+![Repository Secrets](../images/RepoSecrets.png)
+
+![Environment Variables](../images/EnvVariables.png)
