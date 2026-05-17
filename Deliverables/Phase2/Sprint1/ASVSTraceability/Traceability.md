@@ -15,6 +15,28 @@ validate coverage.
 
 ---
 
+## Index
+
+Jump to section:
+
+- [V1 — Encoding and Sanitization](#v1)
+- [V2 — Validation and Business Logic](#v2)
+- [V3 — Authentication](#v3)
+- [V4 — Access Control](#v4)
+- [V5 — Session Management](#v5)
+- [V6 — Malicious Input Handling](#v6)
+- [V7 — API Security](#v7)
+- [V8 — Data Protection](#v8)
+- [V9 — File and Resource Handling](#v9)
+- [V10 — Cryptography and Keys](#v10)
+- [V11 — Cryptography](#v11)
+- [V12 — Secure Communication](#v12)
+- [V13 — Configuration](#v13)
+- [V14 — Data Protection (detailed)](#v14)
+- [V15 — Secure Coding and Architecture](#v15)
+- [V16 — Security Logging and Error Handling](#v16)
+
+
 ## V1 — Encoding and Sanitization
 
 This section maps the ASVS V1 - Encoding and Sanitization - checklist section to implemented controls and evidence in the codebase. Each item below lists the ASVS requirement identifier, a short statement of compliance, the implementation locations, and available evidence/tests.
