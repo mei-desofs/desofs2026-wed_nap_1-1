@@ -1534,18 +1534,21 @@ This section maps the ASVS V1 - Encoding and Sanitization - checklist section to
 - Status: `Partial`
 - Implementation: application-level logging is present via standard frameworks (SLF4J/Logback via Spring Boot) and audit endpoints exist (AuditLogController). However, there is no repository-stored log inventory or centralised documentation mapping each logged event to retention/access controls in the repo.
 - Evidence / Tests:
-	- `App/src/main/java/com/example/desofs/controller/AuditLogController.java` and related tests in `App/target/surefire-reports/`.
-	- Recommendation: produce and store a log inventory document (CSV/Markdown) listing events, retention, sensitivity, and access roles.
+	- `App/src/main/java/com/example/desofs/controllers/AuditLogController.java`, `App/src/main/java/com/example/desofs/services/AuditLogService.java`, and related tests in `App/target/surefire-reports/`.
+	- `Deliverables/Phase2/Sprint1/Development/development.md` documents the implemented audit events.
+	- Recommendation: produce and store a standalone log inventory document (CSV/Markdown) listing events, retention, sensitivity, and access roles.
 
 ### V16.2 - General Logging
 
 #### V16.2.1 - Verify that each log entry includes necessary metadata (such as when, where, who, what) that would allow for a detailed investigation of the timeline when an event happens.
 
-- Status: `Partial`
-- Implementation: logs include timestamps and contextual information when MDC is used; some controllers populate user context for audit logs. A standardised structured logging approach is not fully enforced.
+- Status: `Compliant`
+- Implementation: audit log entries include `actorId`, `targetUserId`, `role`, `operation`, and `timestamp`, which together provide the required who/what/when context for audited business events. Standard SLF4J request logs remain in place for operational tracing.
 - Evidence / Tests:
-	- Tests referencing audit logs in `App/target/surefire-reports/` and `AuditLogControllerIntegrationTests`.
-	- Recommendation: adopt structured logging (JSON), ensure MDC usage for user and request identifiers, and add CI linting for log format.
+	- `App/src/main/java/com/example/desofs/domain/AuditLog.java`
+	- `App/src/main/java/com/example/desofs/services/AuditLogService.java`
+	- `App/src/test/java/com/example/desofs/services/AuditLogServiceTest.java`
+	- `App/src/test/java/com/example/desofs/controller/AuditLogControllerIntegrationTests.java`
 
 #### V16.2.2 - Verify that time sources for all logging components are synchronized, and that timestamps in security event metadata use UTC or include an explicit time zone offset. UTC is recommended to ensure consistency across distributed systems and to prevent confusion during daylight saving time transitions.
 
@@ -1594,9 +1597,10 @@ This section maps the ASVS V1 - Encoding and Sanitization - checklist section to
 #### V16.3.3 - Verify that the application logs the security events that are defined in the documentation and also logs attempts to bypass the security controls, such as input validation, business logic, and anti-automation.
 
 - Status: `Partial`
-- Implementation: security tests exist and some events are logged; completeness against a documented event list cannot be verified until a log inventory is produced.
+- Implementation: the documented audit events are now implemented for role changes, movie creation, order creation, and refund lifecycle actions. Validation bypass attempts and anti-automation attempts are still handled through tests and generic error responses rather than dedicated audit events.
 - Evidence / Tests:
-	- Unit/integration tests and code references; recommendation: produce an event catalog and gap-check it against tests.
+	- Unit/integration tests and code references.
+	- Recommendation: expand the event catalog if future phases require dedicated logging of validation-bypass or rate-limit abuse attempts.
 
 #### V16.3.4 - Verify that the application logs unexpected errors and security control failures such as backend TLS failures.
 
@@ -1617,8 +1621,9 @@ This section maps the ASVS V1 - Encoding and Sanitization - checklist section to
 #### V16.4.2 - Verify that logs are protected from unauthorized access and cannot be modified.
 
 - Status: `Partial`
-- Implementation: log storage and access control are deployment concerns (external log management). The repo lacks documentation about who can access logs and how they are protected.
+- Implementation: the audit trail is stored in a dedicated database table and is only exposed through an ADMIN-only controller endpoint. Full log immutability and storage hardening still depend on deployment and database policy.
 - Evidence / Tests:
+	- `App/src/main/java/com/example/desofs/controllers/AuditLogController.java`
 	- Recommendation: document log access controls and retention in the operations runbook and ensure transport uses TLS and logs are immutable when possible (WORM/append-only storage).
 
 #### V16.4.3 - Verify that logs are securely transmitted to a logically separate system for analysis, detection, alerting, and escalation. The aim is to ensure that if the application is breached, the logs are not compromised.

@@ -1,6 +1,5 @@
 package com.example.desofs.controllers;
 
-import com.example.desofs.domain.AuditLog;
 import com.example.desofs.domain.Role;
 import com.example.desofs.security.IRoleGuard;
 import com.example.desofs.services.IAuditLogService;
@@ -43,7 +42,7 @@ public class AuditLogController {
      * Returns all audit log entries. Requires {@link Role#ADMIN}.
      *
      * @param jwt authenticated JWT principal
-     * @return list of all {@link AuditLog} records
+    * @return list of all {@link AuditLogDTO} records
      */
     @GetMapping
     public List<AuditLogDTO> list(@AuthenticationPrincipal Jwt jwt) {
@@ -56,7 +55,7 @@ public class AuditLogController {
      *
      * @param jwt authenticated JWT principal
      * @param id identifier of the audit log entry
-     * @return {@link ResponseEntity} containing the audit log, or 404 if not found
+    * @return {@link ResponseEntity} containing the audit log DTO, or 404 if not found
      */
     @GetMapping("/{id}")
     public ResponseEntity<AuditLogDTO> get(@AuthenticationPrincipal Jwt jwt, @PathVariable Long id) {

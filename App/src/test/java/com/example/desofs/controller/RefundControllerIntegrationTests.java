@@ -3,6 +3,7 @@ package com.example.desofs.controller;
 import com.example.desofs.controllers.RefundController;
 import com.example.desofs.domain.Role;
 import com.example.desofs.security.IRoleGuard;
+import com.example.desofs.services.IAuditLogService;
 import com.example.desofs.services.IRefundService;
 import com.example.desofs.shared.dtos.CreateRefundRequest;
 import com.example.desofs.shared.dtos.RefundRequestDTO;
@@ -50,6 +51,9 @@ class RefundControllerIntegrationTests {
 
     @MockitoBean
     private IRefundService refundService;
+
+    @MockitoBean
+    private IAuditLogService auditLogService;
 
     @MockitoBean
     private IRoleGuard roleGuard;
@@ -165,6 +169,7 @@ class RefundControllerIntegrationTests {
 
         verify(roleGuard, times(1)).requireRole(any(Jwt.class), eq(Role.CUSTOMER));
         verify(refundService, times(1)).createRefundRequest(eq("auth0|user123"), any(CreateRefundRequest.class));
+        verify(auditLogService, times(1)).log(eq("auth0|user123"), eq("auth0|user123"), eq(Role.CUSTOMER), eq("CREATE_REFUND_REQUEST"));
     }
 
     @Test
@@ -181,6 +186,7 @@ class RefundControllerIntegrationTests {
             .andExpect(status().isForbidden());
 
         verify(refundService, never()).createRefundRequest(any(), any());
+        verifyNoInteractions(auditLogService);
     }
 
     @Test
@@ -190,13 +196,14 @@ class RefundControllerIntegrationTests {
 
         mockMvc.perform(put("/api/refunds/1/approve")
                 .with(csrf())
-                .with(jwt()))
+                .with(jwt().jwt(jwt -> jwt.subject("auth0|support1"))))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.id").value(2L))
             .andExpect(jsonPath("$.status").value("APPROVED"));
 
         verify(refundService, times(1)).approve(1L);
         verify(roleGuard, times(1)).requireRole(any(Jwt.class), eq(Role.SUPPORT));
+        verify(auditLogService, times(1)).log(eq("auth0|support1"), eq("auth0|user456"), eq(Role.SUPPORT), eq("APPROVE_REFUND"));
     }
 
     @Test
@@ -210,6 +217,7 @@ class RefundControllerIntegrationTests {
             .andExpect(status().isNotFound());
 
         verify(refundService, times(1)).approve(999L);
+        verifyNoInteractions(auditLogService);
     }
 
     @Test
@@ -230,7 +238,7 @@ class RefundControllerIntegrationTests {
 
         mockMvc.perform(put("/api/refunds/1/reject")
                 .with(csrf())
-                .with(jwt())
+                .with(jwt().jwt(jwt -> jwt.subject("auth0|support1")))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"reason\":\"Duplicate order\"}"))
             .andExpect(status().isOk())
@@ -240,6 +248,7 @@ class RefundControllerIntegrationTests {
 
         verify(refundService, times(1)).reject(1L, "Duplicate order");
         verify(roleGuard, times(1)).requireRole(any(Jwt.class), eq(Role.SUPPORT));
+        verify(auditLogService, times(1)).log(eq("auth0|support1"), eq("auth0|admin"), eq(Role.SUPPORT), eq("REJECT_REFUND"));
     }
 
     @Test
@@ -255,5 +264,6 @@ class RefundControllerIntegrationTests {
             .andExpect(status().isNotFound());
 
         verify(refundService, times(1)).reject(999L, "Duplicate order");
+        verifyNoInteractions(auditLogService);
     }
 }

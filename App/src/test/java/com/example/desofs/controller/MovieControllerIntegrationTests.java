@@ -2,7 +2,9 @@ package com.example.desofs.controller;
 
 import com.example.desofs.config.SecurityConfig;
 import com.example.desofs.controllers.MovieController;
+import com.example.desofs.domain.Role;
 import com.example.desofs.security.IRoleGuard;
+import com.example.desofs.services.IAuditLogService;
 import com.example.desofs.services.IMovieService;
 import com.example.desofs.shared.dtos.MovieDTO;
 import org.junit.jupiter.api.BeforeEach;
@@ -45,6 +47,9 @@ class MovieControllerIntegrationTests {
 
     @MockitoBean
         private IMovieService movieService;
+
+        @MockitoBean
+                private IAuditLogService auditLogService;
 
     @MockitoBean
         private IRoleGuard roleGuard;
@@ -213,7 +218,7 @@ class MovieControllerIntegrationTests {
 
         mockMvc.perform(post("/api/movies")
                         .with(csrf())
-                        .with(jwt())
+                        .with(jwt().jwt(jwt -> jwt.subject("auth0|admin123")))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isCreated())
@@ -223,6 +228,7 @@ class MovieControllerIntegrationTests {
                 .andExpect(jsonPath("$.title").value("Avatar"));
 
         verify(movieService, times(1)).create(any(MovieDTO.class));
+        verify(auditLogService, times(1)).log(eq("auth0|admin123"), eq("auth0|admin123"), eq(Role.ADMIN), eq("CREATE_MOVIE"));
     }
 
     // ============ SECURITY & HEADERS ============
