@@ -146,5 +146,5 @@ public class RefundController {
         auditLogService.log(jwt.getSubject(), refund.getUserId(), Role.SUPPORT, "REJECT_REFUND");
         logger.info("Refund request rejected. Refund ID: {}", refund.getId());
         return ResponseEntity.ok(refund);
-    }
+    }   
 }
