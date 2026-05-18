@@ -10,14 +10,6 @@ import java.nio.file.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-/**
- * Security-focused tests for ReceiptFileService:
- * - Path traversal prevention
- * - File overwrite prevention
- * - Symlink attacks
- * - Race conditions (TOCTOU)
- * - OS command injection via filenames
- */
 class ReceiptFileServiceSecurityTest {
 
     private ReceiptFileService receiptFileService;
@@ -61,7 +53,6 @@ class ReceiptFileServiceSecurityTest {
     }
 
     // ---- File Overwrite Prevention ----
-
     @Test
     @DisplayName("Cannot overwrite existing receipt file")
     void createReceiptFile_existingFile_throwsException() throws IOException {
@@ -76,7 +67,6 @@ class ReceiptFileServiceSecurityTest {
     }
 
     // ---- OS Command Injection via Filenames ----
-
     @ParameterizedTest
     @ValueSource(strings = {
             "; rm -rf /",
@@ -98,7 +88,6 @@ class ReceiptFileServiceSecurityTest {
     }
 
     // ---- Special File Names ----
-
     @ParameterizedTest
     @ValueSource(strings = {
             "/dev/null",
@@ -116,7 +105,6 @@ class ReceiptFileServiceSecurityTest {
     }
 
     // ---- Unicode and Encoding Attacks ----
-
     @Test
     @DisplayName("Unicode normalization attack (homoglyph) is handled")
     void sanitizeReceiptName_unicodeHomoglyph_handled() {
@@ -135,7 +123,6 @@ class ReceiptFileServiceSecurityTest {
     }
 
     // ---- Length Boundary Tests ----
-
     @Test
     @DisplayName("Exactly max-length name is accepted")
     void sanitizeReceiptName_exactMaxLength_accepted() {
@@ -159,7 +146,6 @@ class ReceiptFileServiceSecurityTest {
     }
 
     // ---- Verify receipt file contents don't contain injected data ----
-
     @Test
     @DisplayName("Receipt file content is properly formatted")
     void createReceiptFile_contentIsProperlyFormatted() throws IOException {
@@ -174,4 +160,3 @@ class ReceiptFileServiceSecurityTest {
         assertFalse(content.contains("${"));
     }
 }
-

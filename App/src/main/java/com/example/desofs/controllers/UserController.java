@@ -1,10 +1,10 @@
 package com.example.desofs.controllers;
 
 import com.example.desofs.domain.Role;
-import com.example.desofs.security.RoleGuard;
+import com.example.desofs.security.IRoleGuard;
 import com.example.desofs.shared.dtos.RoleRequestDTO;
 import com.example.desofs.shared.dtos.UserDTO;
-import com.example.desofs.services.UserService;
+import com.example.desofs.services.IUserService;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -13,21 +13,21 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@RestController
-@RequestMapping("/api/users")
 /**
  * REST controller for user administration endpoints.
  * <p>
  * Allows administrators to list users and manage roles through the service
- * layer while enforcing access checks with {@link RoleGuard}.
+ * layer while enforcing access checks with {@link IRoleGuard}.
  */
+@RestController
+@RequestMapping("/api/users")
 public class UserController {
 
     /** Service used to read users and apply role changes. */
-    private final UserService userService;
+    private final IUserService userService;
 
     /** Guard used to enforce admin-only access. */
-    private final RoleGuard roleGuard;
+    private final IRoleGuard roleGuard;
 
     /**
      * Creates a new user controller.
@@ -36,7 +36,7 @@ public class UserController {
      * @param roleGuard guard used to validate the caller's role
      */
     @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "Spring-managed singleton beans injected via constructor")
-    public UserController(UserService userService, RoleGuard roleGuard) {
+    public UserController(IUserService userService, IRoleGuard roleGuard) {
         this.userService = userService;
         this.roleGuard = roleGuard;
     }

@@ -3,28 +3,33 @@ package com.example.desofs.services;
 import com.example.desofs.domain.AuditLog;
 import com.example.desofs.domain.Role;
 import com.example.desofs.repositories.AuditLogRepository;
+import com.example.desofs.shared.dtos.AuditLogDTO;
+import com.example.desofs.shared.mappers.IAuditMapper;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
-@Service
 /**
  * Service responsible for persisting audit log entries.
  * <p>
  * Provides helper methods for logging role-related operations performed by one
  * user against another user.
  */
-public class AuditLogService {
+@Service
+public class AuditLogService implements IAuditLogService {
     /** Repository used to persist audit log entries. */
     private final AuditLogRepository auditLogRepository;
+    private final IAuditMapper auditMapper;
 
     /**
      * Creates a new audit log service.
      *
      * @param auditLogRepository repository used to store audit logs
      */
-    public AuditLogService(AuditLogRepository auditLogRepository) {
+    public AuditLogService(AuditLogRepository auditLogRepository, IAuditMapper auditMapper) {
         this.auditLogRepository = auditLogRepository;
+        this.auditMapper = auditMapper;
     }
 
     /**
@@ -32,8 +37,20 @@ public class AuditLogService {
      *
      * @return list of audit log records
      */
-    public List<AuditLog> listAll() {
-        return auditLogRepository.findAll();
+    public List<AuditLogDTO> listAll() {
+        return auditLogRepository.findAll().stream()
+            .map(auditMapper::toDTO)
+            .toList();
+    }
+
+    /**
+     * Retrieves a single audit log entry by id.
+     *
+     * @param id audit log identifier
+     * @return optional audit log DTO
+     */
+    public Optional<AuditLogDTO> get(Long id) {
+        return auditLogRepository.findById(id).map(auditMapper::toDTO);
     }
 
     /**
@@ -45,9 +62,10 @@ public class AuditLogService {
      * @param operation audit operation name, such as {@code ASSIGN} or {@code REMOVE}
      * @return persisted audit log entry
      */
-    public AuditLog log(String actorId, String targetUserId, Role role, String operation) {
+    public AuditLogDTO log(String actorId, String targetUserId, Role role, String operation) {
         AuditLog auditLog = AuditLog.of(actorId, targetUserId, role, operation);
-        return auditLogRepository.save(auditLog);
+        AuditLog saved = auditLogRepository.save(auditLog);
+        return auditMapper.toDTO(saved);
     }
 
     /**
@@ -58,7 +76,7 @@ public class AuditLogService {
      * @param role role that was assigned
      * @return persisted audit log entry
      */
-    public AuditLog logRoleAssignment(String actorId, String targetUserId, Role role) {
+    public AuditLogDTO logRoleAssignment(String actorId, String targetUserId, Role role) {
         return log(actorId, targetUserId, role, "ASSIGN");
     }
 
@@ -70,7 +88,7 @@ public class AuditLogService {
      * @param role role that was removed
      * @return persisted audit log entry
      */
-    public AuditLog logRoleRemoval(String actorId, String targetUserId, Role role) {
+    public AuditLogDTO logRoleRemoval(String actorId, String targetUserId, Role role) {
         return log(actorId, targetUserId, role, "REMOVE");
     }
 }

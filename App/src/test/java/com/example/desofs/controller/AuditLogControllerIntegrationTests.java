@@ -1,7 +1,7 @@
 package com.example.desofs.controller;
 
 import com.example.desofs.controllers.AuditLogController;
-import com.example.desofs.domain.AuditLog;
+import com.example.desofs.shared.dtos.AuditLogDTO;
 import com.example.desofs.domain.Role;
 import com.example.desofs.security.RoleGuard;
 import com.example.desofs.services.AuditLogService;
@@ -42,14 +42,14 @@ class AuditLogControllerIntegrationTests {
     @MockitoBean
     private RoleGuard roleGuard;
 
-    private AuditLog assignLog;
-    private AuditLog removeLog;
+        private AuditLogDTO assignLog;
+        private AuditLogDTO removeLog;
 
     @BeforeEach
-    void setUp() {
-        assignLog = AuditLog.of("auth0|admin1", "auth0|user1", Role.SUPPORT, "ASSIGN");
-        removeLog = AuditLog.of("auth0|admin1", "auth0|user2", Role.CUSTOMER, "REMOVE");
-    }
+        void setUp() {
+                assignLog = new AuditLogDTO(1L, "auth0|admin1", "auth0|user1", Role.SUPPORT, "ASSIGN", java.time.LocalDateTime.now());
+                removeLog = new AuditLogDTO(2L, "auth0|admin1", "auth0|user2", Role.CUSTOMER, "REMOVE", java.time.LocalDateTime.now());
+        }
 
     // ============ AUTHENTICATION Tests ============
 

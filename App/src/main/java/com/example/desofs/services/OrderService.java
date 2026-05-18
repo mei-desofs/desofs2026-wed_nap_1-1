@@ -4,6 +4,7 @@ import com.example.desofs.domain.*;
 import com.example.desofs.repositories.MovieRepository;
 import com.example.desofs.repositories.OrderRepository;
 import com.example.desofs.shared.dtos.*;
+import com.example.desofs.shared.mappers.IOrderMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -23,7 +24,7 @@ import java.util.Map;
  * not rollback the persisted order.
  */
 @Service
-public class OrderService {
+public class OrderService implements IOrderService {
 
     /** Logger for audit and error tracking. */
     private static final Logger logger = LoggerFactory.getLogger(OrderService.class);
@@ -39,6 +40,8 @@ public class OrderService {
 
     /** Service responsible for receipt file generation. */
     private final ReceiptFileService receiptFileService;
+    /** Mapper interface for converting orders to DTOs. */
+    private final IOrderMapper orderMapper;
 
     /**
      * Constructs the service with required dependencies.
@@ -49,10 +52,12 @@ public class OrderService {
      */
     public OrderService(OrderRepository orderRepository,
                         MovieRepository movieRepository,
-                        ReceiptFileService receiptFileService) {
+                        ReceiptFileService receiptFileService,
+                        IOrderMapper orderMapper) {
         this.orderRepository = orderRepository;
         this.movieRepository = movieRepository;
         this.receiptFileService = receiptFileService;
+        this.orderMapper = orderMapper;
     }
 
     /**
@@ -119,7 +124,7 @@ public class OrderService {
 
         logger.info("Order {} created successfully for user {}", savedOrder.getId(), auth0Id);
 
-        return toResponseDTO(savedOrder);
+        return orderMapper.toResponseDTO(savedOrder);
     }
 
     /**
@@ -139,28 +144,4 @@ public class OrderService {
         }
     }
 
-    /**
-     * Converts a domain {@link Order} to a transport {@link OrderResponseDTO}.
-     *
-     * @param order domain order object
-     * @return corresponding DTO with order details and item breakdown
-     */
-    private OrderResponseDTO toResponseDTO(Order order) {
-        List<OrderItemResponseDTO> itemDTOs = order.getItems().stream()
-                .map(item -> new OrderItemResponseDTO(
-                        item.getMovie().getId(),
-                        item.getMovie().getTitle(),
-                        item.getQuantity(),
-                        item.getUnitPrice(),
-                        item.getSubtotal()))
-                .toList();
-
-        return new OrderResponseDTO(
-                order.getId(),
-                order.getStatus().name(),
-                order.getReceiptName(),
-                order.getTotalPrice(),
-                order.getCreatedAt(),
-                itemDTOs);
-    }
 }

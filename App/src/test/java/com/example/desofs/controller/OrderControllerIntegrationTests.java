@@ -2,8 +2,9 @@ package com.example.desofs.controller;
 
 import com.example.desofs.controllers.OrderController;
 import com.example.desofs.domain.Role;
-import com.example.desofs.security.RoleGuard;
-import com.example.desofs.services.OrderService;
+import com.example.desofs.security.IRoleGuard;
+import com.example.desofs.services.IAuditLogService;
+import com.example.desofs.services.IOrderService;
 import com.example.desofs.shared.dtos.OrderItemResponseDTO;
 import com.example.desofs.shared.dtos.OrderResponseDTO;
 import com.example.desofs.shared.dtos.PurchaseRequestDTO;
@@ -40,10 +41,13 @@ class OrderControllerIntegrationTests {
     private MockMvc mockMvc;
 
     @MockitoBean
-    private OrderService orderService;
+    private IOrderService orderService;
+
+        @MockitoBean
+        private IAuditLogService auditLogService;
 
     @MockitoBean
-    private RoleGuard roleGuard;
+    private IRoleGuard roleGuard;
 
     private OrderResponseDTO testOrderResponse;
     private String validRequestBody;
@@ -107,6 +111,8 @@ class OrderControllerIntegrationTests {
 
         verify(orderService, times(1))
                 .createOrder(eq("auth0|user123"), any(PurchaseRequestDTO.class));
+        verify(auditLogService, times(1))
+                .log(eq("auth0|user123"), eq("auth0|user123"), eq(Role.CUSTOMER), eq("CREATE_ORDER"));
     }
 
     // ============ AUTHORIZATION Tests ============

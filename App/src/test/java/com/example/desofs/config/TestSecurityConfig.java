@@ -7,7 +7,6 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 
 import java.time.Instant;
-import java.util.Map;
 
 /**
  * Test configuration that replaces the real JwtDecoder with a mock

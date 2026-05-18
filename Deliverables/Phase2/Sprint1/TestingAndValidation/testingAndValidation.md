@@ -2,26 +2,21 @@
 
 ## Index
 
-- [1. Purpose](#1-purpose)
-- [2. Strategy Overview](#2-strategy-overview)
-- [3. Testing Approach](#3-testing-approach)
-    - [3.1 SAST - Static Analysis](#31-sast---static-analysis)
-    - [3.2 SCA - Dependency Scanning](#32-sca---dependency-scanning)
-    - [3.3 Functional & Unit Tests](#33-functional--unit-tests)
-    - [3.4 DAST - Dynamic Testing](#34-dast---dynamic-testing)
-    - [3.5 IAST - Instrumented Testing](#35-iast---instrumented-testing)
-    - [3.6 Pen Testing](#36-pen-testing)
-- [4. Functional Tests](#4-functional-tests)
-- [5. Security Testing Results](#5-security-testing-results)
-- [6. Results & Observations](#6-results--observations)
-- [7. Tool Selection Justification Summary](#7-tool-selection-justification-summary)
-- [8. References](#8-references)
+- [1. Strategy Overview](#2-strategy-overview)
+- [2. Testing Approach](#3-testing-approach)
+    - [2.1 SAST - Static Analysis](#31-sast---static-analysis)
+    - [2.2 SCA - Dependency Scanning](#32-sca---dependency-scanning)
+    - [2.3 DAST - Dynamic Testing](#34-dast---dynamic-testing)
+    - [2.4 IAST - Instrumented Testing](#35-iast---instrumented-testing)
+- [3. Functional Tests](#4-functional-tests)
+- [4. Security Testing Results](#5-security-testing-results)
+- [5. Results & Observations](#6-results--observations)
+- [6. Tool Selection Justification Summary](#7-tool-selection-justification-summary)
+- [7. References](#8-references)
 
-## 1. Purpose
+Here we document the test strategy, executed tests, and validation results for Sprint 1. This strategy integrates security testing throughout the development lifecycle (SAST, DAST, IAST, and SCA).
 
-Document the test strategy, executed tests, and validation results for Sprint 1. This strategy integrates security testing throughout the development lifecycle (SAST, DAST, IAST, and SCA).
-
-## 2. Strategy Overview
+## 1. Strategy Overview
 
 The testing strategy follows three core principles:
 
@@ -29,9 +24,9 @@ The testing strategy follows three core principles:
 - **Automation**: Continuous security scanning in the CI/CD pipeline
 - **Multiple Layers**: Different testing methodologies catch vulnerabilities at different stages
 
-## 3. Testing Approach
+## 2. Testing Approach
 
-### 3.1 SAST - Static Analysis (Development Phase)
+### 2.1 SAST - Static Analysis
 
 Catches vulnerabilities before compilation.
 
@@ -42,7 +37,6 @@ Catches vulnerabilities before compilation.
 | Setup Complexity | Simple | Simple | Complex |
 | CI/CD Integration | Native GitHub | Good | Good |
 | Centralized Results | GitHub Security tab | External server | External server |
-| **Selection** | **Chosen** | Alternative | Alternative |
 
 **Selected: CodeQL**
 - Free and natively integrated with GitHub Actions
@@ -64,7 +58,7 @@ In addition to CodeQL in the CI pipeline, two Maven plugins run **locally during
 
 Both plugins are configured in `pom.xml` and execute during `mvn verify`, so we can get immediate feedback on our local machine before creating a PR.
 
-### 3.2 SCA - Dependency Scanning (Build Phase)
+### 2.2 SCA - Dependency Scanning
 
 Third-party libraries often contain known vulnerabilities.
 
@@ -80,12 +74,7 @@ Third-party libraries often contain known vulnerabilities.
 - Generates Software Bill of Materials (SBOM)
 - No external accounts required
 
-### 3.3 Functional & Unit Tests
-
-- Security-focused test cases (authentication, authorization, input validation)
-- Coverage target: >70%
-
-### 3.4 DAST - Dynamic Testing
+### 2.3 DAST - Dynamic Testing
 
 Tests the running application as an attacker would (black box).
 
@@ -101,9 +90,7 @@ Tests the running application as an attacker would (black box).
 - Excellent for CI/CD integration
 - No licensing concerns
 
-### 3.5 IAST - Instrumented Testing
-
-> **TODO**  - IAST tooling not yet selected or integrated.
+### 2.4 IAST - Instrumented Testing
 
 IAST instruments the application at runtime (via a JVM agent) and observes code execution paths as requests flow through, combining the depth of SAST with the realism of DAST. Unlike DAST (black box), IAST can pinpoint the exact vulnerable line of code.
 
@@ -113,36 +100,83 @@ IAST instruments the application at runtime (via a JVM agent) and observes code 
 | Seeker (Synopsys) | Commercial | Yes | CI/CD integration |
 | HCL AppScan | Commercial | Yes | Broad language support |
 
-**Status:** Not yet implemented - planned for a future sprint.
+The adoption of IAST tests for Java applications is heavily constrained by the commercial nature of the available tools. Contrast Security previously offered a Community Edition that provided some IAST capabilities free of charge, however, this offering was discontinued in early 2025, leaving no tool, free or open-source, available for Java/Spring Boot applications at the time of this project.
 
-### 3.6 Pen Testing
+Given these constraints, integrating a IAST agent into the CI/CD pipeline was not possible without incurring licensing costs or relying on trial accounts with restricted functionality.
 
-TODO
+As alternative, we implemented a **runtime execution log analysis** step in the security pipeline. This approach starts the application with production-equivalent configuration, exercises it through the 
+existing integration test suite, and captures the complete runtime output. The resulting log is then automatically scanned for security-relevant patterns before being archived as a pipeline artifact for 
+manual review.
 
+While this does not replicate the data-flow instrumentation that a true IAST agent provides, it achieves partial coverage of the same intent like detecting runtime security anomalies that are only observable when the application is executing under realistic conditions, and that would not be caught by static analysis alone.
+
+While we are aware that this is not a complete implementation of the IAST methodology, the adopted approach is a pragmatic substitute constrained by tool availability.
 ---
 
 ## 4. Functional Tests
 
-### Test Scenarios
+The functional testing strategy for this sprint was split into two layers: unit tests and integration tests. The goal was to validate the business rules in isolation first, and then verify that the main application flows work correctly when the Spring context, persistence layer, security configuration, and web layer are exercised together.
 
-TBD
+### 4.1 Unit Tests
 
-| Use Case | Test Cases | Security Focus |
-|----------|-----------|-----------------|
-|          |           |                 |
+Unit tests focus on the smallest verifiable units of behaviour. In this project, they cover:
+
+- **Domain classes**: validation rules, invariants, state transitions, and helper methods in the core model.
+- **Mappers**: conversion between entities, DTOs, and domain objects, ensuring field mapping and transformation logic are correct.
+- **Services**: business rules, branching logic, and exception handling.
+
+To keep unit tests fast and deterministic, external dependencies are replaced with **mocks**. Repository access, file I/O, time-sensitive operations, and other collaborators are mocked so each test only exercises the code under test. This makes it possible to isolate failure causes and validate expected behaviour with both positive and negative scenarios.
+
+The unit test style combines:
+
+- **White-box testing** for service methods and domain logic, because the test cases are derived from the internal control flow, validation branches, and exception paths.
+- **Black-box testing** for mappers and public domain behaviour, because the focus is on observable input/output rather than implementation details.
+
+### 4.2 Integration Tests
+
+Integration tests verify that multiple application layers work correctly together. Here the emphasis is on the interaction between:
+
+- **Controllers** and request/response handling
+- **Services** and their collaborators
+- **Domain objects** and persistence mappings
+- **Security and validation layers** where applicable
+
+These tests run with a larger portion of the Spring Boot stack enabled, so they validate routing, serialization, validation, dependency injection, and the end-to-end behaviour of the main API flows. Compared with unit tests, they are broader and slower, but they provide stronger confidence that the application behaves correctly in realistic execution paths.
+
+### 4.3 Coverage Tracking
+
+The obtained code coverage is reported per package and globally:
+
+| Package | Coverage Status |
+|---------|-----------------|
+| `com.example.desofs.services` | 92% |
+| `com.example.desofs.controllers` | 88% |
+| `com.example.desofs.security` | 92% |
+| `com.example.desofs.config` | 95% |
+| `com.example.desofs.exceptions` | 97% |
+| `com.example.desofs.domain` | 100% |
+| `com.example.desofs.shared.mappers` | 100% |
+| `com.example.desofs` | 37% |
+| Total | 94% |
 
 ---
 
 ## 5. Security Testing Results
 
-TBD
 
 ### SAST Results (CodeQL)
 
-| Metric | Target | Status |
-|--------|--------|--------|
-|          |           |                 |
+No vulnerabilities were identified by CodeQL in this sprint. The analysis 
+covered the full Java codebase and results are published to the GitHub Security 
+tab, reviewed on every push and pull request.
 
+| Metric | Result |
+|--------|--------|
+| Critical / High findings | 0 |
+| Build-breaking findings | 0 |
+| Build status | Pass |
+
+---
 
 ### SCA Results (Dependency-Check)
 
@@ -174,9 +208,58 @@ The following CVEs have no available fix at the time of this sprint. They are do
 
 ### DAST Results (OWASP ZAP)
 
-| Vulnerability Type | Status | Finding |
-|-------------------|--------|---------|
-|          |           |                 |
+The ZAP API scan ran against the OpenAPI spec (`/v3/api-docs`) with an authenticated M2M JWT, covering all 254 documented endpoints across 119 active 
+security checks.
+
+| Risk Level | Findings |
+|------------|----------|
+| High | 0 |
+| Medium | 0 |
+| Low | 1 |
+| Informational | 3 |
+
+
+#### Low - Unexpected Content-Type (Plugin 100001)
+
+Two requests probing paths outside the API contract returned `text/html` instead of `application/json`:
+
+- `GET /?aaa=bbb`
+- `GET /?class.module.classLoader.DefaultAssertionStatus=nonsense`
+
+These target the root context path, which is not part of the API surface. The `text/html` response originates from Spring Boot's default error handler for 
+unmapped routes. All defined `/api/**` endpoints return `application/json` exclusively, confirmed by the scan metric showing 94% of endpoints with 
+`application/json` content type.
+
+**Assessment:** False positive. Not exploitable. Suppressed in `rules.tsv` with plugin ID `100001`.
+
+#### Informational Findings
+
+| Finding | Assessment |
+|---------|------------|
+| Client Error response codes (285 instances) | Expected — the ZAP scanner sends malformed and attack payloads that are correctly rejected with `400`, `404`, and `429` responses. |
+| Non-Storable Content | Expected for a stateless REST API returning dynamic JSON. |
+| User Agent Fuzzer | Informational probe; no exploitable behaviour observed. |
+
+#### IAST - Runtime Log Analysis Results
+
+The runtime execution log captured during the DAST scan provides evidence of the application's behavior under active attack conditions.
+
+**Input validation and type safety:** The ZAP scanner injected SQL injection payloads (e.g., WAITFOR DELAY, OR 1=1), OS command injection strings 
+(e.g., `cat /etc/passwd`, ShellShock), and server-side template injection payloads (Freemarker, Velocity, Node.js) into typed fields. In all cases, 
+Jackson's deserialization layer rejected the payloads before they reached the service or persistence layer, producing `400 Bad Request` responses with 
+sanitized error messages containing only a correlation ID.
+
+**Rate limiting:** The `RateLimitFilter` triggered repeatedly during the scan, confirming that both per-user and per-IP throttling are active and 
+functioning under sustained attack traffic.
+
+**Error handling:** No stack traces, internal class names, or sensitive system information were exposed in any error response. All exceptions were 
+handled by the `GlobalExceptionHandler`, which returns stable HTTP status codes and generic messages.
+
+**TLS probe rejection:** The scanner attempted TLS handshakes on the plain HTTP port. Tomcat rejected these requests at the protocol level with 
+`Invalid character found in method name`, confirming no protocol confusion is possible.
+
+No genuine security anomalies were identified in the runtime log. All flagged entries correspond to expected defensive behavior under adversarial 
+input conditions.
 
 ---
 
@@ -184,22 +267,31 @@ The following CVEs have no available fix at the time of this sprint. They are do
 
 ### Overall Status
 
-**Date**:
-**Pass/Fail**: 
-
-### Key Findings
-
-
+| | |
+|---|---|
+| **Date** | 2026-05-16 |
+| **Sprint** | Sprint 1 |
+| **Overall result** | Pass |
 
 ### Issues Identified
 
-| Severity | Count | Examples |
-|----------|-------|----------|
-| Critical |  | |
-| High |  | |
-| Medium |  | |
+| Severity | Count | Detail |
+|----------|-------|--------|
+| Critical | 0 | — |
+| High | 0 | — |
+| Medium | 0 | — |
+| Low | 1 | Unexpected Content-Type on root path — accepted false positive |
+| Accepted CVEs | 5 | No fix available; mitigations documented above |
 
 ### Recommendations
+
+- Suppress plugin `100001` in `rules.tsv` to eliminate the root path 
+  Content-Type finding in future scans, or configure Spring Boot's error 
+  handling to return `application/json` for all unmapped routes.
+- Re-scan SCA dependencies in Sprint 2 as patches for the accepted CVEs 
+  may become available, particularly for `hibernate-validator`.
+- Maintain the current `fail_action: true` ZAP policy — the pipeline is 
+  clean and should remain blocking on any new High or Medium finding.
 
 
 
@@ -213,6 +305,7 @@ The following CVEs have no available fix at the time of this sprint. They are do
 | **Dependency-Check** | SCA | Free, Maven plugin, no external accounts |
 | **OWASP ZAP** | DAST | Free, CI/CD friendly, active community |
 | **Maven** | Build/Test | Already in use, integrated security plugins |
+| **Runtime Log Analysis** | IAST alternative | Alternative method due to tool availability |
 
 ---
 

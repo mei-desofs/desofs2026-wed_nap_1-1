@@ -17,8 +17,17 @@ public class MovieDTO {
     /** Movie description. */
     private String description;
 
+    /** Movie genre. */
+    private String genre;
+
+    /** Movie platform. */
+    private String platform;
+
     /** Movie price. */
     private BigDecimal price;
+
+    /** Current stock quantity. */
+    private Integer stockQuantity;
 
     /**
      * Creates an empty movie DTO.
@@ -33,11 +42,14 @@ public class MovieDTO {
      * @param description movie description
      * @param price movie price
      */
-    public MovieDTO(Long id, String title, String description, BigDecimal price) {
+    public MovieDTO(Long id, String title, String description, String genre, String platform, BigDecimal price, Integer stockQuantity) {
         this.id = id;
         this.title = title;
         this.description = description;
+        this.genre = genre;
+        this.platform = platform;
         this.price = price;
+        this.stockQuantity = stockQuantity;
     }
 
     /**
@@ -83,6 +95,34 @@ public class MovieDTO {
     public void setDescription(String description) { this.description = description; }
 
     /**
+     * Returns the movie genre.
+     *
+     * @return movie genre
+     */
+    public String getGenre() { return genre; }
+
+    /**
+     * Sets the movie genre.
+     *
+     * @param genre movie genre
+     */
+    public void setGenre(String genre) { this.genre = genre; }
+
+    /**
+     * Returns the movie platform.
+     *
+     * @return movie platform
+     */
+    public String getPlatform() { return platform; }
+
+    /**
+     * Sets the movie platform.
+     *
+     * @param platform movie platform
+     */
+    public void setPlatform(String platform) { this.platform = platform; }
+
+    /**
      * Returns the movie price.
      *
      * @return movie price
@@ -95,4 +135,18 @@ public class MovieDTO {
      * @param price movie price
      */
     public void setPrice(BigDecimal price) { this.price = price; }
+
+    /**
+     * Returns the current stock quantity.
+     *
+     * @return stock quantity
+     */
+    public Integer getStockQuantity() { return stockQuantity; }
+
+    /**
+     * Sets the current stock quantity.
+     *
+     * @param stockQuantity stock quantity
+     */
+    public void setStockQuantity(Integer stockQuantity) { this.stockQuantity = stockQuantity; }
 }

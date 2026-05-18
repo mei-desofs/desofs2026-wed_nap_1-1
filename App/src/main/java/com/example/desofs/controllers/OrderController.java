@@ -3,8 +3,9 @@ package com.example.desofs.controllers;
 import com.example.desofs.domain.Role;
 import com.example.desofs.shared.dtos.OrderResponseDTO;
 import com.example.desofs.shared.dtos.PurchaseRequestDTO;
-import com.example.desofs.security.RoleGuard;
-import com.example.desofs.services.OrderService;
+import com.example.desofs.security.IRoleGuard;
+import com.example.desofs.services.IOrderService;
+import com.example.desofs.services.IAuditLogService;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,24 +15,27 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
-@RestController
-@RequestMapping("/api/orders")
 /**
  * REST controller for order creation endpoints.
  * <p>
  * Exposes purchase order creation and enforces customer access through JWT
  * role checks.
  */
+@RestController
+@RequestMapping("/api/orders")
 public class OrderController {
 
     /** Logger for request tracing and diagnostics. */
     private static final Logger logger = LoggerFactory.getLogger(OrderController.class);
 
     /** Service responsible for order processing and persistence. */
-    private final OrderService orderService;
+    private final IOrderService orderService;
+
+    /** Service responsible for recording audit log entries. */
+    private final IAuditLogService auditLogService;
 
     /** Guard that enforces role-based access checks. */
-    private final RoleGuard roleGuard;
+    private final IRoleGuard roleGuard;
 
     /**
      * Constructs the controller with required dependencies.
@@ -39,8 +43,9 @@ public class OrderController {
      * @param orderService service to handle order business logic
      * @param roleGuard component used to enforce role checks
      */
-    public OrderController(OrderService orderService, RoleGuard roleGuard) {
+    public OrderController(IOrderService orderService, IAuditLogService auditLogService, IRoleGuard roleGuard) {
         this.orderService = orderService;
+        this.auditLogService = auditLogService;
         this.roleGuard = roleGuard;
     }
 
@@ -64,6 +69,7 @@ public class OrderController {
         roleGuard.requireRole(jwt, Role.CUSTOMER);
 
         OrderResponseDTO response = orderService.createOrder(auth0Id, request);
+        auditLogService.log(auth0Id, auth0Id, Role.CUSTOMER, "CREATE_ORDER");
 
         logger.info("Purchase completed. Order ID: {}", response.orderId());
         return ResponseEntity.status(HttpStatus.CREATED).body(response);

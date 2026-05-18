@@ -14,16 +14,16 @@ import java.util.List;
  * actions through the audit logging service.</p>
  */
 @Service
-public class UserService {
+public class UserService implements IUserService {
     /** Service used to record role change audit events. */
-    private final AuditLogService auditLogService;
+    private final IAuditLogService auditLogService;
 
     /**
      * Creates the service with the required audit logging dependency.
      *
      * @param auditLogService service used to log role changes
      */
-    public UserService(AuditLogService auditLogService) {
+    public UserService(IAuditLogService auditLogService) {
         this.auditLogService = auditLogService;
     }
 
