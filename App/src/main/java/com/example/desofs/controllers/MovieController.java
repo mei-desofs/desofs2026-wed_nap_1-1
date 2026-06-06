@@ -6,6 +6,7 @@ import com.example.desofs.services.IMovieService;
 import com.example.desofs.services.IAuditLogService;
 import com.example.desofs.shared.dtos.MovieDTO;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import jakarta.validation.Valid;
 
 import org.slf4j.Logger;
@@ -29,7 +30,7 @@ import java.util.List;
 public class MovieController {
 
     /** Logger for request tracing. */
-    private static final Logger logger = LoggerFactory.getLogger(RefundController.class);
+    private static final Logger logger = LoggerFactory.getLogger(MovieController.class);
 
     /** Service responsible for movie persistence and business logic. */
     private final IMovieService movieService;
@@ -46,6 +47,11 @@ public class MovieController {
      * @param movieService service used to manage movies
      * @param roleGuard service used to guard role-based access
      */
+
+    @SuppressFBWarnings(
+        value = "EI_EXPOSE_REP2",
+        justification = "Spring-managed dependency injection"
+    )
     public MovieController(IMovieService movieService, IAuditLogService auditLogService, IRoleGuard roleGuard) {
         this.movieService = movieService;
         this.auditLogService = auditLogService;
