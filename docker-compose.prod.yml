@@ -1,0 +1,15 @@
+services:
+  app:
+    image: emovieshop:latest
+    container_name: emovieshop-app
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
+      DB_NAME: ${DB_NAME}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      RECEIPTS_DIR: /app/receipts
+    volumes:
+      - /opt/emovieshop/receipts:/app/receipts
