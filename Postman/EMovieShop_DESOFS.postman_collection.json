@@ -1,60 +1,1437 @@
 {
   "info": {
-    "_postman_id": "677555da-26fc-4730-bc97-7515f704b86e",
+    "_postman_id": "6b7dde6a-d5ab-415c-b48f-441cd0e3fa48",
     "name": "EMovieShop_DESOFS",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
     "_exporter_id": "18711353"
   },
   "item": [
     {
-      "name": "Login",
-      "event": [
+      "name": "UC1 - Login",
+      "item": [
         {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "if (pm.response.code === 200) {\r",
-              "    const response = pm.response.json();\r",
-              "    pm.environment.set(\"ACCESS_TOKEN\", response.access_token);\r",
-              "    console.log(\"Token saved successfully\");\r",
-              "} else {\r",
-              "    console.error(\"Login failed:\", pm.response.text());\r",
-              "}"
-            ],
-            "type": "text/javascript",
-            "packages": {},
-            "requests": {}
-          }
-        }
-      ],
-      "request": {
-        "method": "POST",
-        "header": [],
-        "body": {
-          "mode": "raw",
-          "raw": "{\r\n  \"grant_type\": \"password\",\r\n  \"client_id\": \"QyWDKszhWdIghbyReetTG1cZJSTxrBbW\",\r\n  \"audience\": \"https://emovieshop-api\",\r\n  \"username\": \"{{USERNAME}}\",\r\n  \"password\": \"{{PASSWORD}}\",\r\n  \"scope\": \"openid profile email\"\r\n}",
-          "options": {
-            "raw": {
-              "language": "json"
+          "name": "Login Admin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {\r",
+                  "    const response = pm.response.json();\r",
+                  "    pm.environment.set(\"ACCESS_TOKEN\", response.access_token);\r",
+                  "    console.log(\"Token saved successfully\");\r",
+                  "} else {\r",
+                  "    console.error(\"Login failed:\", pm.response.text());\r",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
             }
-          }
-        },
-        "url": {
-          "raw": "https://dev-kiwnc36rxn8zsw24.us.auth0.com/oauth/token",
-          "protocol": "https",
-          "host": [
-            "dev-kiwnc36rxn8zsw24",
-            "us",
-            "auth0",
-            "com"
           ],
-          "path": [
-            "oauth",
-            "token"
-          ]
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"grant_type\": \"password\",\r\n  \"client_id\": \"QyWDKszhWdIghbyReetTG1cZJSTxrBbW\",\r\n  \"audience\": \"https://emovieshop-api\",\r\n  \"username\": \"{{USERNAME}}\",\r\n  \"password\": \"{{PASSWORD}}\",\r\n  \"scope\": \"openid profile email\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "https://dev-kiwnc36rxn8zsw24.us.auth0.com/oauth/token",
+              "protocol": "https",
+              "host": [
+                "dev-kiwnc36rxn8zsw24",
+                "us",
+                "auth0",
+                "com"
+              ],
+              "path": [
+                "oauth",
+                "token"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Login Customer",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {\r",
+                  "    const response = pm.response.json();\r",
+                  "    pm.environment.set(\"ACCESS_TOKEN_CUSTOMER\", response.access_token);\r",
+                  "    console.log(\"Token saved successfully\");\r",
+                  "} else {\r",
+                  "    console.error(\"Login failed:\", pm.response.text());\r",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"grant_type\": \"password\",\r\n  \"client_id\": \"QyWDKszhWdIghbyReetTG1cZJSTxrBbW\",\r\n  \"audience\": \"https://emovieshop-api\",\r\n  \"username\": \"{{USERNAME_CUSTOMER}}\",\r\n  \"password\": \"{{PASSWORD_CUSTOMER}}\",\r\n  \"scope\": \"openid profile email\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "https://dev-kiwnc36rxn8zsw24.us.auth0.com/oauth/token",
+              "protocol": "https",
+              "host": [
+                "dev-kiwnc36rxn8zsw24",
+                "us",
+                "auth0",
+                "com"
+              ],
+              "path": [
+                "oauth",
+                "token"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Login Support",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {\r",
+                  "    const response = pm.response.json();\r",
+                  "    pm.environment.set(\"ACCESS_TOKEN_SUPPORT\", response.access_token);\r",
+                  "    console.log(\"Token saved successfully\");\r",
+                  "} else {\r",
+                  "    console.error(\"Login failed:\", pm.response.text());\r",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"grant_type\": \"password\",\r\n  \"client_id\": \"QyWDKszhWdIghbyReetTG1cZJSTxrBbW\",\r\n  \"audience\": \"https://emovieshop-api\",\r\n  \"username\": \"{{USERNAME_SUPPORT}}\",\r\n  \"password\": \"{{PASSWORD_SUPPORT}}\",\r\n  \"scope\": \"openid profile email\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "https://dev-kiwnc36rxn8zsw24.us.auth0.com/oauth/token",
+              "protocol": "https",
+              "host": [
+                "dev-kiwnc36rxn8zsw24",
+                "us",
+                "auth0",
+                "com"
+              ],
+              "path": [
+                "oauth",
+                "token"
+              ]
+            }
+          },
+          "response": []
         }
-      },
-      "response": []
+      ]
+    },
+    {
+      "name": "UC2 - Browse Available Movies",
+      "item": [
+        {
+          "name": "List movies (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', function () { pm.response.to.have.status(200); });",
+                  "const body = pm.response.json();",
+                  "pm.test('Body is an array', function () { pm.expect(body).to.be.an('array'); });",
+                  "if (Array.isArray(body) && body.length > 0 && body[0].id) {",
+                  "    pm.environment.set('MOVIE_ID', body[0].id);",
+                  "    console.log('MOVIE_ID set to ' + body[0].id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{ACCESS_TOKEN}}"
+              }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/api/movies",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "movies"
+              ]
+            },
+            "description": "Lists the catalog. Any authenticated user. Auto-saves the first movie id into MOVIE_ID."
+          },
+          "response": []
+        },
+        {
+          "name": "Get movie by id (200/404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 or 404', function () { pm.expect([200, 404]).to.include(pm.response.code); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{ACCESS_TOKEN}}"
+              }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/api/movies/{{MOVIE_ID}}",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "movies",
+                "{{MOVIE_ID}}"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "UC3 - Purchase Movie",
+      "item": [
+        {
+          "name": "Create order (201 - customer)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('201 Created', function () { pm.response.to.have.status(201); });",
+                  "const body = pm.response.json();",
+                  "if (body && body.orderId) {",
+                  "    pm.environment.set('ORDER_ID', body.orderId);",
+                  "    console.log('ORDER_ID set to ' + body.orderId);",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ACCESS_TOKEN_CUSTOMER}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"receiptName\": \"receipt_test_001\",\n  \"items\": [\n    { \"movieId\": {{MOVIE_ID}}, \"quantity\": 1 }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/orders",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "orders"
+              ]
+            },
+            "description": "Requires CUSTOMER role. Uses MOVIE_ID populated by 'List movies'. Saves the resulting orderId into ORDER_ID."
+          },
+          "response": []
+        },
+        {
+          "name": "Negative - Create order without CUSTOMER (403)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('403 Forbidden', function () { pm.response.to.have.status(403); });"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ACCESS_TOKEN}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"receiptName\": \"should_fail\",\n  \"items\": [\n    { \"movieId\": {{MOVIE_ID}}, \"quantity\": 1 }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/orders",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "orders"
+              ]
+            },
+            "description": "Login as ADMIN/SUPPORT first; the guard rejects with 403."
+          },
+          "response": []
+        },
+        {
+          "name": "Negative - Receipt name with path traversal (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('400 Bad Request', function () { pm.response.to.have.status(400); });"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ACCESS_TOKEN_CUSTOMER}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"receiptName\": \"../../\",\n  \"items\": [\n    { \"movieId\": {{MOVIE_ID}}, \"quantity\": 1 }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/orders",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "orders"
+              ]
+            },
+            "description": "StartFragmentReceiptFileService.sanitizeReceiptName strips every char outside \\[a-zA-Z0-9 _-\\]. With '../../' the result is blank, raising IllegalArgumentException -> 400. Note: a name like '../../etc/passwd' would be sanitized to 'etcpasswd' (201) — that's allow-list behavior, not a vuln.EndFragment"
+          },
+          "response": []
+        },
+        {
+          "name": "Negative - Too many items (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('400 Bad Request', function () { pm.response.to.have.status(400); });"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ACCESS_TOKEN_CUSTOMER}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"receiptName\": \"too_many_items\",\n  \"items\": [\n    { \"movieId\": 1, \"quantity\": 1 },\n    { \"movieId\": 2, \"quantity\": 1 },\n    { \"movieId\": 3, \"quantity\": 1 },\n    { \"movieId\": 4, \"quantity\": 1 },\n    { \"movieId\": 5, \"quantity\": 1 },\n    { \"movieId\": 6, \"quantity\": 1 },\n    { \"movieId\": 7, \"quantity\": 1 },\n    { \"movieId\": 8, \"quantity\": 1 },\n    { \"movieId\": 9, \"quantity\": 1 },\n    { \"movieId\": 10, \"quantity\": 1 },\n    { \"movieId\": 11, \"quantity\": 1 }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/orders",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "orders"
+              ]
+            },
+            "description": "PurchaseRequestDTO caps items at 10 (@Size(max=10))."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "UC4 - Request Refund",
+      "item": [
+        {
+          "name": "Create refund (201 - customer)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('201 Created', function () { pm.response.to.have.status(201); });",
+                  "const body = pm.response.json();",
+                  "if (body && body.id) {",
+                  "    pm.environment.set('REFUND_ID', body.id);",
+                  "    console.log('REFUND_ID set to ' + body.id);",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ACCESS_TOKEN_CUSTOMER}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"orderId\": {{ORDER_ID}},\n  \"amount\": 16.99,\n  \"reason\": \"Damaged disc on arrival\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/refunds",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "refunds"
+              ]
+            },
+            "description": "Requires CUSTOMER role. Uses ORDER_ID populated by 'Create order'."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "UC5 - View Refund Requests",
+      "item": [
+        {
+          "name": "List refunds (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('200 OK', function () { pm.response.to.have.status(200); });",
+                  "const body = pm.response.json();",
+                  "pm.test('Body is an array', function () { pm.expect(body).to.be.an('array'); });",
+                  "if (Array.isArray(body) && body.length > 0 && body[0].id) {",
+                  "    pm.environment.set('REFUND_ID', body[0].id);",
+                  "    console.log('REFUND_ID set to ' + body[0].id);",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ACCESS_TOKEN}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/api/refunds",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "refunds"
+              ]
+            },
+            "description": "Any authenticated user. Auto-saves the first refund id into REFUND_ID."
+          },
+          "response": []
+        },
+        {
+          "name": "Get refund by id (200/404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('200 or 404', function () { pm.expect([200, 404]).to.include(pm.response.code); });"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ACCESS_TOKEN}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/api/refunds/{{REFUND_ID}}",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "refunds",
+                "{{REFUND_ID}}"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "UC6 - Handle Refund Request",
+      "item": [
+        {
+          "name": "Approve refund (200 - support)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('200 OK', function () { pm.response.to.have.status(200); });"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ACCESS_TOKEN_SUPPORT}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/api/refunds/{{REFUND_ID}}/approve",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "refunds",
+                "{{REFUND_ID}}",
+                "approve"
+              ]
+            },
+            "description": "Requires SUPPORT role. Login as a SUPPORT user before sending."
+          },
+          "response": []
+        },
+        {
+          "name": "Reject refund (200 - support)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('200 OK', function () { pm.response.to.have.status(200); });"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ACCESS_TOKEN_SUPPORT}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Outside refund period\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/refunds/{{REFUND_ID}}/reject",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "refunds",
+                "{{REFUND_ID}}",
+                "reject"
+              ]
+            },
+            "description": "Requires SUPPORT role."
+          },
+          "response": []
+        },
+        {
+          "name": "Negative - Approve without SUPPORT (403)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('403 Forbidden', function () { pm.response.to.have.status(403); });"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ACCESS_TOKEN_CUSTOMER}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/api/refunds/{{REFUND_ID}}/approve",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "refunds",
+                "{{REFUND_ID}}",
+                "approve"
+              ]
+            },
+            "description": "Login as CUSTOMER/ADMIN, not SUPPORT. RoleGuard rejects with 403."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "UC7 - Manage Movie Catalog",
+      "item": [
+        {
+          "name": "Create movie (201 - admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('201 Created', function () { pm.response.to.have.status(201); });",
+                  "const body = pm.response.json();",
+                  "if (body && body.id) {",
+                  "    pm.environment.set('MOVIE_ID', body.id);",
+                  "    console.log('MOVIE_ID set to ' + body.id);",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ACCESS_TOKEN}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Oppenheimer\",\n  \"description\": \"The story of J. Robert Oppenheimer and the atomic bomb\",\n  \"genre\": \"Drama\",\n  \"platform\": \"Bluray\",\n  \"price\": 16.99,\n  \"stockQuantity\": 25\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/movies",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "movies"
+              ]
+            },
+            "description": "Requires ADMIN role. Saves the new id into MOVIE_ID for follow-up requests."
+          },
+          "response": []
+        },
+        {
+          "name": "Negative - Create movie without ADMIN (403)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('403 Forbidden', function () { pm.response.to.have.status(403); });"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ACCESS_TOKEN_SUPPORT}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Should be rejected\",\n  \"description\": \"Caller is not admin\",\n  \"genre\": \"Drama\",\n  \"platform\": \"Bluray\",\n  \"price\": 1.0,\n  \"stockQuantity\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/movies",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "movies"
+              ]
+            },
+            "description": "Use a non-admin Login (CUSTOMER/SUPPORT). RoleGuard.requireRole rejects with AccessDeniedException -> 403."
+          },
+          "response": []
+        },
+        {
+          "name": "Negative - Create movie invalid payload (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('400 Bad Request', function () { pm.response.to.have.status(400); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{ACCESS_TOKEN}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"\",\n  \"price\": -5,\n  \"stockQuantity\": -1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/movies",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "movies"
+              ]
+            },
+            "description": "Bean Validation fires: blank title, non-positive price, negative stock."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "UC8 - Manage Roles",
+      "item": [
+        {
+          "name": "List Users (200 - admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('200 OK', function () { pm.response.to.have.status(200); });",
+                  "const body = pm.response.json();",
+                  "pm.test('Body is an array', function () { pm.expect(body).to.be.an('array'); });",
+                  "if (Array.isArray(body) && body.length > 0 && body[0].userId) {",
+                  "    pm.environment.set('TARGET_USER_ID', body[0].userId);",
+                  "    console.log('TARGET_USER_ID set to ' + body[0].userId);",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ACCESS_TOKEN}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/api/users",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "users"
+              ]
+            },
+            "description": "Lists Auth0 tenant users. Requires ADMIN role on the JWT. The first returned userId is auto-stored in TARGET_USER_ID for follow-up requests."
+          },
+          "response": []
+        },
+        {
+          "name": "Assign SUPPORT role (204)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('204 No Content', function () { pm.response.to.have.status(204); });"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ACCESS_TOKEN}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"role\": \"SUPPORT\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/users/{{TARGET_USER_ID}}/roles",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "users",
+                "{{TARGET_USER_ID}}",
+                "roles"
+              ]
+            },
+            "description": "Assigns the SUPPORT role to TARGET_USER_ID via the Auth0 Management API. Verify in Auth0 Dashboard → Users → <target> → Roles tab."
+          },
+          "response": []
+        },
+        {
+          "name": "Remove SUPPORT role (204)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('204 No Content', function () { pm.response.to.have.status(204); });"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ACCESS_TOKEN}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"role\": \"SUPPORT\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/users/{{TARGET_USER_ID}}/roles",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "users",
+                "{{TARGET_USER_ID}}",
+                "roles"
+              ]
+            },
+            "description": "Removes the SUPPORT role from TARGET_USER_ID via the Auth0 Management API."
+          },
+          "response": []
+        },
+        {
+          "name": "Negative - No token (401)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('401 Unauthorized', function () { pm.response.to.have.status(401); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/api/users",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "users"
+              ]
+            },
+            "description": "Confirms Spring Security rejects unauthenticated requests before reaching the controller."
+          },
+          "response": []
+        },
+        {
+          "name": "Negative - Invalid role enum (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('400 Bad Request', function () { pm.response.to.have.status(400); });"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ACCESS_TOKEN}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"role\": \"GOD\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/users/{{TARGET_USER_ID}}/roles",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "users",
+                "{{TARGET_USER_ID}}",
+                "roles"
+              ]
+            },
+            "description": "Confirms Jackson rejects unknown enum values; the request never reaches Auth0."
+          },
+          "response": []
+        },
+        {
+          "name": "Negative - Self modification (400)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Decode JWT sub claim and use it as the target user id",
+                  "const token = pm.environment.get('ACCESS_TOKEN');",
+                  "if (token) {",
+                  "    const parts = token.split('.');",
+                  "    if (parts.length === 3) {",
+                  "        const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));",
+                  "        pm.variables.set('SELF_USER_ID', payload.sub);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('400 Bad Request', function () { pm.response.to.have.status(400); });",
+                  "pm.test('Mentions self modification', function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect((body.message || '').toLowerCase()).to.include('own roles');",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ACCESS_TOKEN}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"role\": \"ADMIN\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/users/{{SELF_USER_ID}}/roles",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "users",
+                "{{SELF_USER_ID}}",
+                "roles"
+              ]
+            },
+            "description": "Confirms the self-modification guard in UserService blocks an admin from editing their own roles."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Admin - Audit Logs",
+      "item": [
+        {
+          "name": "List audit logs (200 - admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('200 OK', function () { pm.response.to.have.status(200); });",
+                  "const body = pm.response.json();",
+                  "pm.test('Body is an array', function () { pm.expect(body).to.be.an('array'); });",
+                  "if (Array.isArray(body) && body.length > 0 && body[0].id) {",
+                  "    pm.environment.set('AUDIT_LOG_ID', body[0].id);",
+                  "    console.log('AUDIT_LOG_ID set to ' + body[0].id);",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ACCESS_TOKEN}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/api/audit-logs",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "audit-logs"
+              ]
+            },
+            "description": "Requires ADMIN role. Auto-saves the first id into AUDIT_LOG_ID."
+          },
+          "response": []
+        },
+        {
+          "name": "Get audit log by id (200/404 - admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('200 or 404', function () { pm.expect([200, 404]).to.include(pm.response.code); });"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ACCESS_TOKEN}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/api/audit-logs/{{AUDIT_LOG_ID}}",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "audit-logs",
+                "{{AUDIT_LOG_ID}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Negative - Audit logs without ADMIN (403)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('403 Forbidden', function () { pm.response.to.have.status(403); });"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ACCESS_TOKEN_CUSTOMER}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/api/audit-logs",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "audit-logs"
+              ]
+            },
+            "description": "Login as CUSTOMER or SUPPORT first; the guard rejects with 403."
+          },
+          "response": []
+        }
+      ]
     }
   ],
   "variable": [
