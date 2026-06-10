@@ -14,4 +14,4 @@ This document serves as the main index for Sprint 1 of Phase 2. Here you will fi
 
 ### Use Cases
 
-- [Use Case 4 - Request Refund](./UseCases/UC4_RequestRefund/README.md)
+Use case specifications (description, sequence diagrams, STRIDE threat analysis, ASVS mapping) live in the Phase 1 baseline and are not duplicated here. Sprint 1 implements the UCs listed in the [Sprint Plan](./SprintPlan/sprintPlan.md#sprint-focus-areas); for the full UC catalogue see [Phase 1 Use Cases](../../Phase1/UseCases/).
