@@ -2,7 +2,7 @@
 
 ## Sprint Focus Areas
 
-- **Pipeline — DAST, SAST, IAST and SCA** integrate and run SAST (CodeQL/SpotBugs/PMD), IAST where available, and OpenAPI-driven DAST (OWASP ZAP). Owners: Miguel Cardoso (1220772), Pedro Soares (1200909) and Pedro Costa (1201576). 
+- **Pipeline - DAST, SAST, IAST and SCA** integrate and run SAST (CodeQL/SpotBugs/PMD), IAST where available, and OpenAPI-driven DAST (OWASP ZAP). Owners: Miguel Cardoso (1220772), Pedro Soares (1200909) and Pedro Costa (1201576). 
 
 - **Use Cases Implementation:** complete UC implementations (UC1, UC2, UC3 and UC4) per assignments above. Each UC owner delivers feature PRs with tests and ASVS evidence; testing lead consolidates test results. Owners: Diogo Ribeiro (1220812), Pedro Soares (1200909), Pedro Costa (1201576) and Pedro Silva (1221033)
 

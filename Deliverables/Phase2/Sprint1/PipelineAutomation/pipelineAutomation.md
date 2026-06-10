@@ -127,7 +127,7 @@ This ensures every production-bound artifact is versioned and traceable to the c
 
 ---
 
-## 6. Secrets and Variables Management — Compliance Statement
+## 6. Secrets and Variables Management - Compliance Statement
 
 The project follows GitHub Secrets best practices for CI workflows: sensitive values are not committed to source control, secrets are referenced via `${{secrets.SECRET_NAME}}`, outputs that may contain secrets are masked, and environment-level protections are used for production secrets where applicable.
 

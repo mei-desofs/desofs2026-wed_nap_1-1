@@ -14,6 +14,7 @@
 9. [Security HTTP Headers](#9-security-http-headers)
 10. [Audit Logging](#10-audit-logging)
 11. [Error Handling & Information Disclosure Prevention](#11-error-handling--information-disclosure-prevention)
+12. [Token Invalidation & Session Revocation on Role Change](#12-token-invalidation--session-revocation-on-role-change)
 
 ---
 
@@ -503,3 +504,210 @@ The controller maps `GET` and `HEAD` on `/error` (Spring internally forwards to 
 - **Consistent JSON Content-Type** - all error responses from both `GlobalExceptionHandler` and `CustomErrorController` explicitly set `Content-Type: application/json`, preventing content-type mismatch issues
 - **404 for unknown paths** - requests to undefined endpoints return 404 (not 500), preventing path enumeration from triggering noisy error responses
 - **Database constraint errors** - `DataIntegrityViolationException` is caught and returns 400 with a safe message, preventing SQL/schema details from leaking
+
+---
+
+## 12. Token Invalidation & Session Revocation on Role Change
+
+**Locations:**
+- `App/src/main/java/com/example/desofs/security/TokenFreshnessFilter.java`
+- `App/src/main/java/com/example/desofs/services/TokenInvalidationService.java`
+- `App/src/main/java/com/example/desofs/services/ITokenInvalidationService.java`
+- `App/src/main/java/com/example/desofs/domain/UserTokenInvalidation.java`
+- `App/src/main/java/com/example/desofs/repositories/UserTokenInvalidationRepository.java`
+- `App/src/main/java/com/example/desofs/security/Auth0ManagementClient.java` (method `invalidateSessions`)
+- `App/src/main/java/com/example/desofs/services/UserService.java` (hook on `assignRole` / `removeRole`)
+- `App/src/main/java/com/example/desofs/config/SecurityConfig.java` (filter wiring)
+- `App/src/main/resources/db/migration/V8__create_user_token_invalidations.sql`
+
+### 12.1 Problem statement
+
+The API is a **stateless OAuth2 Resource Server** with access tokens issued by Auth0 and a lifetime of 3600 s (see §4.3). With pure JWT validation, **any token issued before a privilege change remains valid until it expires**. The most damaging case is:
+
+1. An administrator removes the `ADMIN` role from a compromised account.
+2. The attacker still holds an unexpired access token that contains `roles: ["ADMIN"]`.
+3. For up to one hour the attacker continues to invoke privileged endpoints (`POST /api/users/{id}/roles/assign`, `POST /api/movies`, etc.) because the JWT signature is still valid and the `roles` claim is read from the token itself.
+
+The same window applies when a role is **assigned**: a freshly granted role does not appear in any token the user already holds, so the user must wait for a new token or log out and back in.
+
+This is exactly the case ASVS V7.4.1 calls out for self-contained tokens: the application must implement a per-user denylist, a per-user cut-off date, or a per-user signing key rotation. We adopted the **per-user cut-off date** approach because it is the cheapest at request time (one indexed primary-key lookup) and requires no changes to the IdP.
+
+### 12.2 Design
+
+Two complementary controls run on every administrative role change:
+
+1. **Server-side denylist (authoritative).** A row is upserted in the `user_token_invalidations` table with the `auth0_user_id` and a UTC timestamp `invalidated_after`. A request filter then rejects any JWT whose `iat` (issued-at) claim is **before** that cut-off, regardless of whether the JWT signature is still valid.
+2. **Auth0 session revocation (best-effort).** A `DELETE /api/v2/users/{id}/sessions` call is issued to the Auth0 Management API. This drops the IdP-side SSO session so the SPA's silent-auth refresh will fail and the user will be redirected to re-login. The Auth0 call is fire-and-forget: failures are logged but never propagate, because the denylist is the actual security control.
+
+The two controls together give the property that **role changes take effect on the next request**, not on the next token refresh.
+
+### 12.3 Component overview
+
+```
+            ┌────────────────────────┐
+   admin -> │ UserController         │
+            │  POST .../roles/assign │
+            └──────────┬─────────────┘
+                       │
+                       v
+            ┌────────────────────────────────────────────────┐
+            │ UserService.assignRole(target, role)            │
+            │  1. auth0.assignRole(...)            (IdP)      │
+            │  2. auditLog.log(...)                (DB)       │
+            │  3. invalidateUserSessions(target, reason)      │
+            │       a. tokenInvalidation.invalidateTokensFor  │
+            │           -> upsert user_token_invalidations    │
+            │       b. auth0.invalidateSessions   (best effort│
+            │           -> DELETE /users/{id}/sessions  )     │
+            └────────────────────────────────────────────────┘
+
+  Every subsequent request from the affected user:
+
+    Bearer JWT ── BearerTokenAuthenticationFilter ──> SecurityContext
+                                                            │
+                                                            v
+                                  TokenFreshnessFilter (new in this sprint)
+                                  if jwt.iat < cutoff -> 401 invalid_token
+                                                            │
+                                                            v
+                                                    RateLimitFilter
+                                                            │
+                                                            v
+                                                    Controller
+```
+
+### 12.4 Persistence model
+
+Migration `V8__create_user_token_invalidations.sql` (Flyway):
+
+```sql
+CREATE TABLE IF NOT EXISTS user_token_invalidations (
+    auth0_user_id      VARCHAR(200) NOT NULL,
+    invalidated_after  TIMESTAMP(3) NOT NULL,
+    reason             VARCHAR(100) NOT NULL,
+    updated_at         TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    PRIMARY KEY (auth0_user_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+```
+
+Design notes:
+- **Primary key on `auth0_user_id`** keeps the table size bounded by the user count (not by request volume) and gives O(1) lookup per request.
+- `TIMESTAMP(3)` (millisecond precision) is required because JWT `iat` is in seconds but `invalidated_after` is stamped with `Instant.now()`; using whole-second precision would allow a JWT issued in the same second to be incorrectly treated as fresh.
+- `reason` is a short string (e.g. `ROLE_ASSIGNED:ADMIN`, `ROLE_REMOVED:SUPPORT`) used for audit/forensics, not for access decisions.
+- A single row per user is sufficient: the denylist is a **per-user cut-off**, not a list of revoked tokens. Subsequent invalidations overwrite the timestamp.
+
+### 12.5 Token freshness filter
+
+`TokenFreshnessFilter` is a `OncePerRequestFilter` registered **after** Spring Security's `BearerTokenAuthenticationFilter` (so the JWT is already parsed and validated) and **before** `RateLimitFilter` (so revoked tokens do not consume the user's rate quota).
+
+```java
+@Override
+protected void doFilterInternal(HttpServletRequest request,
+                                HttpServletResponse response,
+                                FilterChain chain) throws ServletException, IOException {
+    Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+    if (!(auth instanceof JwtAuthenticationToken jwtAuth)) {
+        chain.doFilter(request, response);
+        return;
+    }
+    Jwt jwt = jwtAuth.getToken();
+    String userId = jwt.getSubject();
+    Instant issuedAt = jwt.getIssuedAt();
+    if (userId == null || issuedAt == null) {
+        chain.doFilter(request, response);
+        return;
+    }
+    if (invalidationService.isTokenInvalidated(userId, issuedAt)) {
+        SecurityContextHolder.clearContext();
+        writeUnauthorized(response);
+        return;
+    }
+    chain.doFilter(request, response);
+}
+```
+
+Reject response (matches RFC 6750):
+
+```
+HTTP/1.1 401 Unauthorized
+WWW-Authenticate: Bearer error="invalid_token", error_description="Token has been invalidated; please reauthenticate"
+Content-Type: application/json
+
+{"error":"invalid_token","message":"Token has been invalidated; please reauthenticate."}
+```
+
+### 12.6 Service contract
+
+`ITokenInvalidationService` exposes a minimal three-method API so the filter and `UserService` depend only on what they need:
+
+| Method | Purpose |
+|---|---|
+| `invalidateTokensFor(String userId, String reason)` | Upsert the cutoff row; idempotent. Used by `UserService` on role change. `@Transactional`. |
+| `getInvalidatedAfter(String userId)` | Read-only lookup of the cutoff timestamp (used for diagnostics/testing). |
+| `isTokenInvalidated(String userId, Instant tokenIssuedAt)` | Returns `true` iff a cutoff exists and `tokenIssuedAt.isBefore(cutoff)`. Tolerates `null` inputs (returns `false`) so the filter never throws. |
+
+The implementation (`TokenInvalidationService`) keeps the write path simple:
+- Validates `userId` is non-blank (defensive: prevents poisoning the table with an empty key).
+- Normalises a blank `reason` to `"UNSPECIFIED"` so the column constraint cannot be violated by an upstream caller.
+- Stamps `invalidatedAfter = Instant.now()` server-side; the caller cannot back-date the cutoff.
+- Logs an INFO event without exposing the user identifier (the audit trail already carries it).
+
+### 12.7 Hook in `UserService`
+
+Role assignment and removal share a single private helper so the two paths cannot drift:
+
+```java
+private void invalidateUserSessions(String targetUserId, String reason) {
+    tokenInvalidationService.invalidateTokensFor(targetUserId, reason);
+    auth0.invalidateSessions(targetUserId);
+}
+```
+
+The order is intentional: the denylist write happens **first** so that even if the Auth0 call later fails, the authoritative control is already in place. `assignRole` calls it with `"ROLE_ASSIGNED:" + role.name()` and `removeRole` with `"ROLE_REMOVED:" + role.name()`. The call sits **after** the audit-log entry so the audit record is persisted before any side-effect on the user's session.
+
+### 12.8 Auth0 session revocation
+
+`Auth0ManagementClient.invalidateSessions(String userId)` issues:
+
+```
+DELETE https://{tenant}/api/v2/users/{auth0UserId}/sessions
+Authorization: Bearer {management-api-token}
+```
+
+This is best-effort by design:
+- Any `Auth0ManagementException` (HTTP error, network failure, missing scope) is caught and logged at WARN level.
+- The method always returns normally so the database transaction in `UserService` is not rolled back by a transient IdP error.
+- The defensive guarantee is provided by the denylist; the Auth0 call only improves UX (silent-auth fails sooner, the SPA redirects to login instead of holding a dead session).
+
+### 12.9 Filter chain wiring
+
+`SecurityConfig` adds the new filter immediately after the OAuth2 resource-server's bearer-token filter:
+
+```java
+http
+    .oauth2ResourceServer(o -> o.jwt(j -> j.decoder(jwtDecoder())))
+    .addFilterAfter(tokenFreshnessFilter, BearerTokenAuthenticationFilter.class)
+    .addFilterAfter(rateLimitFilter, TokenFreshnessFilter.class);
+```
+
+This places the freshness check **after** JWT signature/expiry validation (so we do not waste a DB call on tokens that are already invalid for other reasons) and **before** rate limiting (so invalidated tokens do not consume the rate-limit budget).
+
+### 12.10 Security properties and trade-offs
+
+| Property | How it is achieved |
+|---|---|
+| Role changes take effect on the next request | Filter compares `iat` against the per-user cutoff on every request. |
+| Cannot be bypassed by a stolen refresh token | A token refresh produces a new JWT with a *new* `iat` only if `iat > cutoff` at issuance time; otherwise it is rejected the same way. The Auth0 session revocation additionally prevents silent-auth refreshes. |
+| Cannot be bypassed by client-side caching | The check happens server-side on every authenticated request. |
+| Does not leak PII | Logs use the operation reason (e.g. `ROLE_ASSIGNED:ADMIN`); the user id is not written to application logs. |
+| Cannot poison the table | `userId` is validated non-blank and pulled from the trusted JWT `sub` in the call chain; the column is bounded at 200 chars. |
+| Defence in depth | The denylist is authoritative even when the Auth0 Management API is unavailable. |
+| Fail-open vs fail-closed | The filter is **fail-closed for revoked tokens** (rejects) and **fail-open for missing claims** (passes through - the request would still be rejected later if it lacks the role required by the controller). |
+| Clock-skew safety | Both `iat` and `invalidatedAfter` are compared as UTC `Instant`s with millisecond precision; no per-server clock arithmetic is performed. |
+
+### 12.11 Operational notes
+
+- **Schema rollout.** Flyway applies `V8__create_user_token_invalidations.sql` on startup. No manual step is required.
+- **Required Auth0 scope.** The Management API token used by `Auth0ManagementClient` must include `delete:sessions` for the session-revocation call. If the scope is missing, the call logs a WARN but the denylist still protects the API.
+- **Re-login UX.** After a role change the affected user receives `401 invalid_token` on their next request; the SPA's standard 401 handler triggers a silent-auth attempt, which fails (because the Auth0 session is gone) and falls back to interactive login. The new token will carry the updated roles.
+- **Recovery.** Removing a row from `user_token_invalidations` re-enables all currently valid tokens for that user; this should never be required in normal operation and is intentionally not exposed as an API.

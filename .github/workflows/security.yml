@@ -19,7 +19,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  # SAST — CodeQL Analysis
+  # SAST - CodeQL Analysis
   sast-codeql:
     name: SAST - CodeQL Java
     runs-on: ubuntu-latest
@@ -55,7 +55,7 @@ jobs:
         with:
           category: '/language:java'
 
-  # SCA — OWASP Dependency-Check + SBOM
+  # SCA - OWASP Dependency-Check + SBOM
   sca:
     name: SCA - OWASP Dependency-Check + SBOM
     runs-on: ubuntu-latest
