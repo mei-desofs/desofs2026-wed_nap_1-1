@@ -5,6 +5,7 @@ import com.example.desofs.domain.Role;
 import com.example.desofs.security.IRoleGuard;
 import com.example.desofs.services.IAuditLogService;
 import com.example.desofs.services.IOrderService;
+import com.example.desofs.services.ITokenInvalidationService;
 import com.example.desofs.shared.dtos.OrderItemResponseDTO;
 import com.example.desofs.shared.dtos.OrderResponseDTO;
 import com.example.desofs.shared.dtos.PurchaseRequestDTO;
@@ -48,6 +49,9 @@ class OrderControllerIntegrationTests {
 
     @MockitoBean
     private IRoleGuard roleGuard;
+
+    @MockitoBean
+    private ITokenInvalidationService tokenInvalidationService;
 
     private OrderResponseDTO testOrderResponse;
     private String validRequestBody;

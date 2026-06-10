@@ -6,6 +6,7 @@ import com.example.desofs.domain.Role;
 import com.example.desofs.security.IRoleGuard;
 import com.example.desofs.services.IAuditLogService;
 import com.example.desofs.services.IMovieService;
+import com.example.desofs.services.ITokenInvalidationService;
 import com.example.desofs.shared.dtos.MovieDTO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -53,6 +54,9 @@ class MovieControllerIntegrationTests {
 
     @MockitoBean
         private IRoleGuard roleGuard;
+
+    @MockitoBean
+        private ITokenInvalidationService tokenInvalidationService;
 
         private MovieDTO testMovie1;
         private MovieDTO testMovie2;

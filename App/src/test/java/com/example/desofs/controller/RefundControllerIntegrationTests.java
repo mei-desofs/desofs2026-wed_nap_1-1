@@ -5,6 +5,7 @@ import com.example.desofs.domain.Role;
 import com.example.desofs.security.IRoleGuard;
 import com.example.desofs.services.IAuditLogService;
 import com.example.desofs.services.IRefundService;
+import com.example.desofs.services.ITokenInvalidationService;
 import com.example.desofs.shared.dtos.CreateRefundRequest;
 import com.example.desofs.shared.dtos.RefundRequestDTO;
 import org.junit.jupiter.api.BeforeEach;
@@ -57,6 +58,9 @@ class RefundControllerIntegrationTests {
 
     @MockitoBean
     private IRoleGuard roleGuard;
+
+    @MockitoBean
+    private ITokenInvalidationService tokenInvalidationService;
 
     private RefundRequestDTO refund1;
     private RefundRequestDTO refund2;
