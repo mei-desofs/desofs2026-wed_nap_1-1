@@ -80,6 +80,23 @@
       <version>8.10.1</version>
     </dependency>
 
+    <!-- Loads App/.env into Spring Environment so ${VAR} placeholders resolve in dev. -->
+    <dependency>
+      <groupId>me.paulschwarz</groupId>
+      <artifactId>spring-dotenv</artifactId>
+      <version>4.0.0</version>
+    </dependency>
+
+    <!-- Flyway: applies versioned SQL migrations under db/migration on startup. -->
+    <dependency>
+      <groupId>org.flywaydb</groupId>
+      <artifactId>flyway-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.flywaydb</groupId>
+      <artifactId>flyway-mysql</artifactId>
+    </dependency>
+
     <!-- H2 for testing -->
     <dependency>
       <groupId>com.h2database</groupId>
