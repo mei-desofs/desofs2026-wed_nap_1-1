@@ -64,4 +64,44 @@ public class MovieService implements IMovieService {
         Movie savedMovie = movieRepository.save(movieMapper.toEntity(movieDTO));
         return movieMapper.toDTO(savedMovie);
     }
+
+    /**
+     * Updates an existing movie with new data.
+     *
+     * @param id movie identifier
+     * @param movieDTO updated movie data
+     * @return the updated movie entity, or {@code null} if not found
+     */
+    public MovieDTO update(Long id, MovieDTO movieDTO) {
+        Movie movie = movieRepository.findById(id)
+            .orElse(null);
+
+        if (movie == null) {
+            return null;
+        }
+
+        movie.setTitle(movieDTO.getTitle());
+        movie.setDescription(movieDTO.getDescription());
+        movie.setGenre(movieDTO.getGenre());
+        movie.setPlatform(movieDTO.getPlatform());
+        movie.setPrice(movieDTO.getPrice());
+        movie.setStockQuantity(movieDTO.getStockQuantity());
+
+        movieRepository.save(movie);
+
+        return movieMapper.toDTO(movie);
+    }
+
+    /**
+     * Deletes a movie by its identifier.
+     * 
+     * @param id movie identifier
+     */
+    public void delete(Long id) {
+        if (!movieRepository.existsById(id)) {
+            throw new IllegalArgumentException("Movie not found with id: " + id);
+        }
+
+        movieRepository.deleteById(id);
+    }
 }

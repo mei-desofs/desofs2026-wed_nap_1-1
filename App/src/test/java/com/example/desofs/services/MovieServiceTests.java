@@ -15,6 +15,8 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -166,6 +168,70 @@ class MovieServiceTests {
                     .containsExactly("Dune", "Epic sci-fi", "Sci-Fi", "IMAX", 8);
             assertThat(result.getPrice()).isEqualByComparingTo("16.99");
         }
+
+        @Test
+        @DisplayName("update() should update existing movie")
+        void testUpdate_WithValidId_UpdatesMovie() {
+            setupMovieToDtoMapper();
+
+            MovieDTO updatedData = new MovieDTO(
+                    999L,
+                    "Interstellar",
+                    "Space exploration",
+                    "Sci-Fi",
+                    "4K",
+                    new BigDecimal("24.99"),
+                    20
+            );
+
+            when(movieRepository.findById(1L))
+                    .thenReturn(Optional.of(testMovie));
+
+            MovieDTO result = movieService.update(1L, updatedData);
+
+            assertThat(result).isNotNull();
+            assertThat(result.getId()).isEqualTo(1L);
+            assertThat(result.getTitle()).isEqualTo("Interstellar");
+            assertThat(result.getDescription()).isEqualTo("Space exploration");
+            assertThat(result.getPlatform()).isEqualTo("4K");
+            assertThat(result.getPrice()).isEqualByComparingTo("24.99");
+            assertThat(result.getStockQuantity()).isEqualTo(20);
+        }
+
+        @Test
+        @DisplayName("update() should return null when movie does not exist")
+        void testUpdate_WithInvalidId_ReturnsNull() {
+            when(movieRepository.findById(999L))
+                    .thenReturn(Optional.empty());
+
+            MovieDTO result = movieService.update(999L, testMovieDTO);
+
+            assertThat(result).isNull();
+        }
+
+        @Test
+        @DisplayName("delete() should remove existing movie")
+        void testDelete_WithValidId_DeletesMovie() {
+
+            when(movieRepository.existsById(1L))
+                    .thenReturn(true);
+
+            movieService.delete(1L);
+
+            verify(movieRepository).deleteById(1L);
+        }
+
+        @Test
+        @DisplayName("delete() should throw exception when movie does not exist")
+        void testDelete_WithInvalidId_ThrowsException() {
+
+            when(movieRepository.existsById(999L))
+                    .thenReturn(false);
+
+            assertThatThrownBy(() -> movieService.delete(999L))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("Movie not found");
+        }
     }
 
     // TRANSPARENT-BOX TESTS : inspect internal interactions and implementation details
@@ -197,6 +263,50 @@ class MovieServiceTests {
             movieService.create(movie);
 
             verify(movieRepository, times(1)).save(any(Movie.class));
+        }
+
+        @Test
+        @DisplayName("update() should call findById and save exactly once")
+        void testUpdate_CallsRepositoryMethods() {
+
+            setupMovieToDtoMapper();
+
+            when(movieRepository.findById(1L))
+                    .thenReturn(Optional.of(testMovie));
+
+            when(movieRepository.save(any(Movie.class)))
+                    .thenReturn(testMovie);
+
+            movieService.update(1L, testMovieDTO);
+
+            verify(movieRepository, times(1)).findById(1L);
+            verify(movieRepository, times(1)).save(any(Movie.class));
+        }
+
+        @Test
+        @DisplayName("delete() should check existence before deleting")
+        void testDelete_ChecksExistenceBeforeDelete() {
+
+            when(movieRepository.existsById(1L))
+                    .thenReturn(true);
+
+            movieService.delete(1L);
+
+            verify(movieRepository, times(1)).existsById(1L);
+            verify(movieRepository, times(1)).deleteById(1L);
+        }
+
+        @Test
+        @DisplayName("delete() should not call deleteById when movie does not exist")
+        void testDelete_DoesNotDeleteWhenMovieMissing() {
+
+            when(movieRepository.existsById(999L))
+                    .thenReturn(false);
+
+            assertThatThrownBy(() -> movieService.delete(999L))
+                    .isInstanceOf(IllegalArgumentException.class);
+
+            verify(movieRepository, never()).deleteById(anyLong());
         }
     }
 }
