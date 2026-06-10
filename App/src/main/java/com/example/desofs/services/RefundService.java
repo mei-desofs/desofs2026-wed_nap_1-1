@@ -58,6 +58,8 @@ public class RefundService implements IRefundService {
      * @return list of refund requests
      */
     public List<RefundRequestDTO> listAll() {
+        logger.info("Listing all refund requests");
+
         return refundRequestRepository.findAll().stream()
             .map(refundMapper::toDTO)
             .collect(Collectors.toList());

@@ -51,6 +51,7 @@ class RefundServiceTest {
     private RefundRequest testRefund;
 
     private RefundRequestDTO testRefundDTO;
+    
     private static final String AUTH0_ID = "auth0|user123";
 
     @BeforeEach
