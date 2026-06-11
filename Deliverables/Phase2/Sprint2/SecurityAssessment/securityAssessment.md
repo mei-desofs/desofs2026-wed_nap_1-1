@@ -88,7 +88,7 @@ All scenarios passed.
 |---|---|---|---|
 | UC4.a | `CUSTOMER` requests refund of own order | 201 with `PENDING` state | 201 |
 | UC4.b | `CUSTOMER` requests refund on someone else's order | 403 | 403 |
-| UC4.c | Bucket4j burst (>10 req/min) on the create endpoint | `RateLimitFilter` returns 429 | 429 with `Retry-After` |
+| UC4.c | Burst above the configured per-IP / per-user rate (300 / 120 req/min) on the create endpoint | `RateLimitFilter` returns 429 | 429 with `Retry-After` |
 
 ### 3.5 UC5 - View Refund Requests (Sprint 2)
 

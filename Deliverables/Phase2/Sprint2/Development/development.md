@@ -122,7 +122,7 @@ Local development runs through `App/docker-compose.yml`, which adds `security_op
 Hardening summary (rationale and ASVS mapping in [Security Configuration & Installation](../SecurityConfigurationAndInstallation/securityConfigurationAndInstallation.md)):
 
 - Non-root runtime user.
-- Distroless-style JRE-only runtime image.
+- JRE-only runtime image (build toolchain dropped at the runtime stage).
 - No shell-level secrets in the image; database credentials are injected via SSH env at deploy time.
 - Receipts directory mounted from the host (`/opt/emovieshop/receipts`) so application data survives container restarts.
 

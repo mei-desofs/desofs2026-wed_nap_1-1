@@ -84,7 +84,7 @@ The five accepted CVEs documented in [Sprint 1 Cap4.2](../../Sprint1/TestingAndV
 
 ### 4.3 DAST - OWASP ZAP
 
-The OpenAPI spec now exposes the UC5/UC7/UC8 endpoints. The same OpenAPI-driven scan was re-run, authenticated with the M2M Bearer token via the ZAP Replacer (see [Pipeline Automation Cap2.4](../PipelineAutomation/pipelineAutomation.md#24-dast-and-runtime-log-analysis)).
+The OpenAPI spec now exposes the UC5/UC7/UC8 endpoints. The same OpenAPI-driven scan was re-run, authenticated with the M2M Bearer token via the ZAP Replacer (see [Pipeline Automation Cap2](../PipelineAutomation/pipelineAutomation.md#2-security-pipeline-updates)).
 
 | Risk Level | Sprint 1 | Sprint 2 |
 |---|---|---|
