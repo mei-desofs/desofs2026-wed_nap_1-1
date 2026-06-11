@@ -112,13 +112,15 @@ class UserServiceTest {
     }
 
     @Test
-    @DisplayName("blank actor or target user id is rejected")
+    @DisplayName("blank or null actor / target user id is rejected")
     void blankIds_rejected() {
         assertThatThrownBy(() -> userService.assignRole("", TARGET, Role.ADMIN))
                 .isInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(() -> userService.assignRole(ACTOR, "", Role.ADMIN))
                 .isInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(() -> userService.assignRole(null, TARGET, Role.ADMIN))
+                .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> userService.assignRole(ACTOR, null, Role.ADMIN))
                 .isInstanceOf(IllegalArgumentException.class);
         verifyNoInteractions(auth0, auditLog, tokenInvalidation);
     }

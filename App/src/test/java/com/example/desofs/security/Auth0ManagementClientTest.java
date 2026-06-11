@@ -234,4 +234,53 @@ class Auth0ManagementClientTest {
                 .isInstanceOf(IllegalArgumentException.class);
         mockServer.verify();
     }
+
+    @Test
+    @DisplayName("listUsers returns empty list when Auth0 returns null body")
+    void listUsers_nullBody_returnsEmpty() {
+        expectTokenCall();
+        mockServer.expect(requestTo("https://" + DOMAIN + "/api/v2/users"))
+                .andRespond(withSuccess("null", MediaType.APPLICATION_JSON));
+
+        List<UserDTO> users = client.listUsers();
+
+        assertThat(users).isEmpty();
+        mockServer.verify();
+    }
+
+    @Test
+    @DisplayName("listUsers returns empty role list when /roles endpoint returns null body")
+    void listUsers_nullRolesBody_returnsEmptyRoles() {
+        expectTokenCall();
+        mockServer.expect(requestTo("https://" + DOMAIN + "/api/v2/users"))
+                .andRespond(withSuccess(
+                        "[{\"user_id\":\"auth0|1\",\"email\":\"a@b.c\",\"name\":\"A\"}]",
+                        MediaType.APPLICATION_JSON));
+        mockServer.expect(requestTo("https://" + DOMAIN + "/api/v2/users/auth0%7C1/roles"))
+                .andRespond(withSuccess("null", MediaType.APPLICATION_JSON));
+
+        List<UserDTO> users = client.listUsers();
+
+        assertThat(users).hasSize(1);
+        assertThat(users.get(0).getRoles()).isEmpty();
+        mockServer.verify();
+    }
+
+    @Test
+    @DisplayName("listUsers swallows /roles errors and returns the user with empty roles")
+    void listUsers_rolesEndpointError_returnsEmptyRoles() {
+        expectTokenCall();
+        mockServer.expect(requestTo("https://" + DOMAIN + "/api/v2/users"))
+                .andRespond(withSuccess(
+                        "[{\"user_id\":\"auth0|1\",\"email\":\"a@b.c\",\"name\":\"A\"}]",
+                        MediaType.APPLICATION_JSON));
+        mockServer.expect(requestTo("https://" + DOMAIN + "/api/v2/users/auth0%7C1/roles"))
+                .andRespond(withServerError());
+
+        List<UserDTO> users = client.listUsers();
+
+        assertThat(users).hasSize(1);
+        assertThat(users.get(0).getRoles()).isEmpty();
+        mockServer.verify();
+    }
 }

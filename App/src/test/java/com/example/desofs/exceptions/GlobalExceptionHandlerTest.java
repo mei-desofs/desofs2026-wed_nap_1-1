@@ -41,7 +41,7 @@ class GlobalExceptionHandlerTest {
         ConstraintViolationException ex = new ConstraintViolationException("cv", set);
         var resp = handler.handleConstraintViolation(ex);
 
-        assertEquals(400, resp.getStatusCodeValue());
+        assertEquals(400, resp.getStatusCode().value());
         Map<String, Object> body = resp.getBody();
         assertNotNull(body);
         assertTrue(body.get("message").toString().contains("title: must not be blank"));
@@ -64,7 +64,7 @@ class GlobalExceptionHandlerTest {
 
         var resp = handler.handleTransactionSystem(tse);
 
-        assertEquals(400, resp.getStatusCodeValue());
+        assertEquals(400, resp.getStatusCode().value());
         assertTrue(resp.getBody().get("message").toString().contains("field: invalid"));
     }
 
@@ -73,7 +73,7 @@ class GlobalExceptionHandlerTest {
     void testHandleTransactionSystem_withoutConstraintCause() {
         TransactionSystemException tse = new TransactionSystemException("tx");
         var resp = handler.handleTransactionSystem(tse);
-        assertEquals(500, resp.getStatusCodeValue());
+        assertEquals(500, resp.getStatusCode().value());
         assertEquals("An unexpected error occurred", resp.getBody().get("message"));
     }
 
@@ -82,7 +82,7 @@ class GlobalExceptionHandlerTest {
     void testHandleDataIntegrity() {
         DataIntegrityViolationException ex = new DataIntegrityViolationException("dup");
         var resp = handler.handleDataIntegrity(ex);
-        assertEquals(400, resp.getStatusCodeValue());
+        assertEquals(400, resp.getStatusCode().value());
         assertTrue(resp.getBody().get("message").toString().startsWith("Invalid data"));
     }
 
@@ -91,7 +91,7 @@ class GlobalExceptionHandlerTest {
     void testHandleNoResourceFound() {
         NoResourceFoundException ex = new NoResourceFoundException(HttpMethod.GET, "not found");
         var resp = handler.handleNoResourceFound(ex);
-        assertEquals(404, resp.getStatusCodeValue());
+        assertEquals(404, resp.getStatusCode().value());
         assertEquals("Resource not found", resp.getBody().get("message"));
     }
 
@@ -100,7 +100,7 @@ class GlobalExceptionHandlerTest {
     void testHandleSecurityException() {
         SecurityException ex = new SecurityException("bad");
         var resp = handler.handleSecurityException(ex);
-        assertEquals(400, resp.getStatusCodeValue());
+        assertEquals(400, resp.getStatusCode().value());
         assertEquals("Invalid request", resp.getBody().get("message"));
     }
 
@@ -113,7 +113,7 @@ class GlobalExceptionHandlerTest {
         when(ex.getBindingResult()).thenReturn(br);
 
         var resp = handler.handleValidation(ex);
-        assertEquals(400, resp.getStatusCodeValue());
+        assertEquals(400, resp.getStatusCode().value());
         assertTrue(resp.getBody().get("message").toString().contains("title: Title cannot be blank"));
     }
 
@@ -122,7 +122,27 @@ class GlobalExceptionHandlerTest {
     void testHandleTypeMismatch() {
         MethodArgumentTypeMismatchException ex = mock(MethodArgumentTypeMismatchException.class);
         var resp = handler.handleTypeMismatch(ex);
-        assertEquals(400, resp.getStatusCodeValue());
+        assertEquals(400, resp.getStatusCode().value());
         assertEquals("Invalid path parameter", resp.getBody().get("message"));
+    }
+
+    @Test
+    @DisplayName("handleAuth0Management returns 502 with a generic upstream message and a correlation id")
+    void testHandleAuth0Management() {
+        Auth0ManagementException ex = new Auth0ManagementException(
+                "Auth0 token endpoint returned 503");
+
+        var resp = handler.handleAuth0Management(ex);
+
+        assertEquals(502, resp.getStatusCode().value());
+        Map<String, Object> body = resp.getBody();
+        assertNotNull(body);
+        assertEquals("Identity provider unavailable", body.get("message"));
+        // correlationId is a UUID string and must not leak the upstream details
+        assertNotNull(body.get("correlationId"));
+        assertEquals(36, body.get("correlationId").toString().length());
+        assertTrue(body.values().stream()
+                .filter(java.util.Objects::nonNull)
+                .noneMatch(v -> v.toString().contains("503")));
     }
 }

@@ -151,4 +151,17 @@ class TokenInvalidationServiceTest {
         verify(repository).save(captor.capture());
         assertThat(captor.getValue().getReason()).isEqualTo("UNSPECIFIED");
     }
+
+    @Test
+    @DisplayName("invalidateTokensFor normalises null reason to UNSPECIFIED")
+    void invalidateTokensFor_nullReason() {
+        when(repository.findById(USER)).thenReturn(Optional.empty());
+
+        service.invalidateTokensFor(USER, null);
+
+        ArgumentCaptor<UserTokenInvalidation> captor =
+                ArgumentCaptor.forClass(UserTokenInvalidation.class);
+        verify(repository).save(captor.capture());
+        assertThat(captor.getValue().getReason()).isEqualTo("UNSPECIFIED");
+    }
 }

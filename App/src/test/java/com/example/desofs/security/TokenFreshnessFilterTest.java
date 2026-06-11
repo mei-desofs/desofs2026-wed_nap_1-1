@@ -142,4 +142,18 @@ class TokenFreshnessFilterTest {
         verify(chain).doFilter(request, response);
         verifyNoInteractions(invalidationService);
     }
+
+    @Test
+    @DisplayName("JWT without sub claim passes through (cannot be checked)")
+    void jwtWithoutSubject_passesThrough() throws Exception {
+        Jwt jwt = mock(Jwt.class);
+        when(jwt.getSubject()).thenReturn(null);
+        when(jwt.getIssuedAt()).thenReturn(Instant.now());
+        authenticate(jwt);
+
+        filter.doFilter(request, response, chain);
+
+        verify(chain).doFilter(request, response);
+        verifyNoInteractions(invalidationService);
+    }
 }
