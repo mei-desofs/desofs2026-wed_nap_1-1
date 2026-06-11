@@ -28,7 +28,7 @@ The pre-existing SAST/SCA/DAST workflow ([`.github/workflows/security.yml`](../.
 
 ## 2. Security Pipeline Updates
 
-The OpenAPI spec served by `/v3/api-docs` now includes the UC5/UC7/UC8 endpoints (refund listing, full movie CRUD, user / role administration). ZAP automatically picks them up via OpenAPI-driven scanning, so no workflow change was required to broaden coverage.
+The OpenAPI spec served by `/v3/api-docs` now includes the UC5, UC6, UC7 and UC8 endpoints (refund listing, refund approval/rejection, full movie CRUD, user / role administration). ZAP automatically picks them up via OpenAPI-driven scanning, so no workflow change was required to broaden coverage.
 
 The DAST job now also exports the Auth0 Management variables required by UC8 (`AUTH0_MGMT_*` and the role IDs) so the integration tests can exercise role assignment and session revocation end-to-end. The same M2M application used by ZAP serves the backend Management API calls; the `delete:sessions` scope was added to its allow-list.
 

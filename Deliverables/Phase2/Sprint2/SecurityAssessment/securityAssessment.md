@@ -18,12 +18,12 @@ This document records the security assessment activities performed at the end of
 
 | Asset | Use case(s) | Sprint introduced | Re-assessed in Sprint 2 |
 |---|---|---|---|
-| Auth0 JWT validation + role guard | UC1 | Sprint 1 | Yes (regression) |
-| `MovieController` (read) | UC2 | Sprint 1 | Yes (regression) |
-| `OrderController` + `ReceiptFileService` | UC3 | Sprint 1 | Yes (regression) |
-| `RefundController` (create) | UC4 | Sprint 1 | Yes (regression) |
+| Auth0 JWT validation + role guard | UC1 | Sprint 1 | Yes (unchanged) |
+| `MovieController` (read) | UC2 | Sprint 1 | Yes (unchanged) |
+| `OrderController` + `ReceiptFileService` | UC3 | Sprint 1 | Yes (unchanged) |
+| `RefundController` (create) | UC4 | Sprint 1 | Yes (unchanged) |
 | `RefundController` (list) | UC5 | Sprint 2 | Yes (new) |
-| `RefundController` (approve/reject) | UC6 | Sprint 1 | Yes (regression) |
+| `RefundController` (approve/reject) | UC6 | Sprint 1 | Yes (unchanged) |
 | `MovieController` (write) | UC7 | Sprint 2 | Yes (new) |
 | `UserController` (role admin) | UC8 | Sprint 2 | Yes (new) |
 | `TokenFreshnessFilter` + `TokenInvalidationService` | UC8 | Sprint 2 | Yes (new) |

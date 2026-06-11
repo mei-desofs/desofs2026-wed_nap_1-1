@@ -5,7 +5,7 @@ This document records the **deltas** introduced in Sprint 2. The Sprint 1 baseli
 ## Table of Contents
 
 1. [Sprint 2 Scope](#1-sprint-2-scope)
-2. [UC5 / UC7 Controller and Service Refinements](#2-uc5--uc7-controller-and-service-refinements)
+2. [UC5, UC6 and UC7 Controller and Service Refinements](#2-controller-and-service-refinements)
 3. [UC8 - Manage Roles (User Administration & Token Invalidation)](#3-uc8---manage-roles-user-administration--token-invalidation)
 4. [Containerisation & Production Image](#4-containerisation--production-image)
 5. [Database Migrations](#5-database-migrations)
@@ -16,7 +16,7 @@ This document records the **deltas** introduced in Sprint 2. The Sprint 1 baseli
 
 | Area | Sprint 2 delta |
 |---|---|
-| Use Cases | UC5 (View Refund Requests), UC6 (Handle Refund Request), UC7 (Manage Movie Catalog), UC8 (Manage Roles) finalised |
+| Use Cases | UC5 (View Refund Requests), UC6 (Handle Refund Request), UC7 (Manage Movie Catalog) and UC8 (Manage Roles) |
 | Authentication / Session | Server-side JWT denylist (`TokenInvalidationService` + `TokenFreshnessFilter`) and Auth0 session revocation on role change |
 | Database | `V8__create_user_token_invalidations.sql`; schema-alignment migrations `V9__align_orders_schema.sql` and `V10__align_refund_requests_schema.sql` |
 | Deployment | Hardened multi-stage `App/Dockerfile`, `App/docker-compose.yml` for local development, `docker-compose.prod.yml` for the production VM |
@@ -25,7 +25,7 @@ Stack, RBAC matrix and all transversal security controls are unchanged from Spri
 
 ---
 
-## 2. UC5 / UC7 Controller and Service Refinements
+## 2. Controller and Service Refinements
 
 ### 2.1 UC5 - View Refund Requests
 
@@ -33,7 +33,13 @@ Stack, RBAC matrix and all transversal security controls are unchanged from Spri
 
 `GET /api/refunds` (list) and `GET /api/refunds/{id}` (detail) finalise UC5. Listing requires the `SUPPORT` role and is enforced via `RoleGuard` before any data access. Each successful list call is recorded by `AuditLogService` with operation `GET_REFUND_LIST`.
 
-### 2.2 UC7 - Manage Movie Catalog
+### 2.2 UC6 - Handle Refund Requests
+
+**Location:** [`RefundController`](../../../../App/src/main/java/com/example/desofs/controllers/RefundController.java).
+
+`PUT /{id}/approve` (refund) and `PUT /{id}/reject` (refund) finalise UC5. Approve or Reject a Refund Request requires the `SUPPORT` role and is enforced via `RoleGuard` before any data access. Each successful action (either approval or rejection) call is recorded by `AuditLogService` with operation `APPROVE_REFUND` or `REJECT_REFUND`, respectively.
+
+### 2.3 UC7 - Manage Movie Catalog
 
 **Location:** [`MovieController`](../../../../App/src/main/java/com/example/desofs/controllers/MovieController.java).
 
@@ -68,7 +74,7 @@ Audit entries (`AuditLogService`) are emitted for every successful role mutation
 
 ### 3.2 Problem (token invalidation)
 
-The API is a stateless JWT Resource Server with a 1 h access-token lifetime (Sprint 1, Cap4.3). Without extra controls, a role change does not take effect until the next token issuance: an admin who removes the `ADMIN` role from a compromised account would still leave that account with up to one hour of admin access. ASVS V7.4.1 and V8.3.2 explicitly call this case out for self-contained tokens.
+The API is a stateless JWT Resource Server with a 1 hour access-token lifetime (Sprint 1, Cap4.3). Without extra controls, a role change does not take effect until the next token issuance: an admin who removes the `ADMIN` role from a compromised account would still leave that account with up to one hour of admin access. ASVS V7.4.1 and V8.3.2 explicitly call this case out for self-contained tokens.
 
 ### 3.3 Design
 
