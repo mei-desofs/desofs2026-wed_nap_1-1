@@ -149,35 +149,15 @@ The obtained code coverage is reported per package and globally:
 
 | Package | Coverage Status |
 |---------|-----------------|
-| `com.example.desofs.services` | 92% |
-| `com.example.desofs.controllers` | 88% |
-| `com.example.desofs.security` | 92% |
-| `com.example.desofs.config` | 95% |
-| `com.example.desofs.exceptions` | 97% |
-| `com.example.desofs.domain` | 100% |
-| `com.example.desofs.shared.mappers` | 100% |
+| `com.example.desofs.security` | 93% |
+| `com.example.desofs.services` | 95% |
+| `com.example.desofs.exceptions` | 96% |
 | `com.example.desofs` | 37% |
-| Total | 94% |
-
-### 4.4 Token Invalidation & Session Revocation Tests
-
-The token-invalidation and session-revocation feature documented in [Development §12](../Development/development.md#12-token-invalidation--session-revocation-on-role-change) is exercised end-to-end by a dedicated set of unit tests. The full backend test suite (316/316) is green.
-
-| Test class | Tests | What is verified |
-|---|---|---|
-| `App/src/test/java/com/example/desofs/services/TokenInvalidationServiceTest.java` | 10 | Insert when no row exists; refresh existing cut-off (idempotent upsert); `iat` strictly before / equal to / after cut-off; no entry → returns `false`; null `userId` / null `iat` → `false` without DB hit; blank `userId` → `IllegalArgumentException`; blank `reason` normalised to `"UNSPECIFIED"`; `getInvalidatedAfter` returns `Optional.empty()` and the stored timestamp. AssertJ `within(...)` is used to assert the persisted timestamp is close to "now". |
-| `App/src/test/java/com/example/desofs/security/TokenFreshnessFilterTest.java` | 5 | Unauthenticated request → pass-through; non-JWT auth → pass-through; fresh JWT (`iat ≥ cutoff`) → pass-through; stale JWT (`iat < cutoff`) → 401 with `WWW-Authenticate: Bearer error="invalid_token"` and JSON body; missing `iat` claim → pass-through (no false rejection). |
-| `App/src/test/java/com/example/desofs/security/Auth0ManagementClientTest.java` | +3 (delta) | `invalidateSessions` issues `DELETE /api/v2/users/{id}/sessions` with the Management-API bearer token; HTTP 500 from Auth0 is swallowed (logged at WARN, no exception); blank/null `userId` is rejected before any network call. |
-| `App/src/test/java/com/example/desofs/services/UserServiceTest.java` | +N (delta) | `ITokenInvalidationService` is mocked in addition to the existing `IAuth0ManagementClient` and `IAuditLogService` mocks; `assignRole` and `removeRole` both call `invalidateTokensFor(...)` **after** the audit log and **together with** `auth0.invalidateSessions(...)`, with the correct `ROLE_ASSIGNED:<ROLE>` / `ROLE_REMOVED:<ROLE>` reason. Call order is enforced with `InOrder`. |
-| Controller integration slices | 4 files | `AuditLogControllerIntegrationTests`, `MovieControllerIntegrationTests`, `OrderControllerIntegrationTests` and `RefundControllerIntegrationTests` declare `@MockitoBean ITokenInvalidationService` so that `@WebMvcTest` can wire `TokenFreshnessFilter` without bringing up JPA. This guarantees the new filter sits in every controller slice's request pipeline exactly as in production. |
-
-#### Why these tests, mapped to the threat model
-
-- **Cut-off semantics (`TokenInvalidationServiceTest`)** - directly validate the ASVS V7.4.1 control: a JWT issued *before* the per-user cut-off must be considered revoked. The before/equal/after-cut-off cases pin the comparison to "strictly before", preventing both a one-second false-positive at issuance and a one-second false-negative after revocation.
-- **Filter rejection contract (`TokenFreshnessFilterTest`)** - the 401 + `WWW-Authenticate` shape is asserted byte-for-byte so the SPA's existing 401 handler keeps working and clients are forced to re-authenticate (no soft-fail).
-- **Null-tolerance** - both the service and the filter are tested with null inputs because the JWT `iat` claim is optional in the OAuth2 spec; a `NullPointerException` here would convert a benign request into a 500 and could be used as an availability probe.
-- **Auth0 best-effort (`Auth0ManagementClientTest`)** - verifies that an IdP outage cannot roll back the local database transaction (defence-in-depth: the denylist is the authoritative control, the Auth0 call only improves UX).
-- **Call-order in `UserServiceTest`** - ensures the denylist write happens *after* the audit-log entry (so the action is auditable even if the Auth0 call later fails) and *before* the request returns (so no further requests from the affected user can succeed against the same JWT).
+| `com.example.desofs.config` | 100% |
+| `com.example.desofs.domain` | 100% |
+| `com.example.desofs.controllers` | 100% |
+| `com.example.desofs.shared.mappers` | 100% |
+| Total | 96% |
 
 ---
 
