@@ -1,5 +1,25 @@
 # Changelog
 
+## [1.3.0](https://github.com/mei-desofs/desofs2026-wed_nap_1-1/compare/v1.2.3...v1.3.0) (2026-06-11)
+
+
+### Features
+
+* manage movie catalog implementation and adding testing ([df217c5](https://github.com/mei-desofs/desofs2026-wed_nap_1-1/commit/df217c5bb37a92086f221d3e92afb130561427dd))
+* start of UC8 implementation ([9add4ba](https://github.com/mei-desofs/desofs2026-wed_nap_1-1/commit/9add4baa5c92b5f50abfa61b724f0b1316c9474b))
+* UC8 implemented with success ([3145dad](https://github.com/mei-desofs/desofs2026-wed_nap_1-1/commit/3145dade6e1c7f785bec947fbf367b6d4f07d207))
+* view request refunds logic implementation and supporting tests ([e566e10](https://github.com/mei-desofs/desofs2026-wed_nap_1-1/commit/e566e10e343986ca77404254fc57b4028a2b305c))
+
+
+### Bug Fixes
+
+* add V10 migration to align refund_requests with RefundRequest entity ([c8fb145](https://github.com/mei-desofs/desofs2026-wed_nap_1-1/commit/c8fb145d3099dd36d3b90e6ada688a79917d68a8))
+* add v9 migration to allign orders table with Order entity ([5b6e0bb](https://github.com/mei-desofs/desofs2026-wed_nap_1-1/commit/5b6e0bb140671a58997b9f657a6fd0f0be2b74cc))
+* postman collection + environment ([94f7c0e](https://github.com/mei-desofs/desofs2026-wed_nap_1-1/commit/94f7c0e706584ee898c21883c57bb4a11fe6a2a5))
+* security.yml to test users endpoint ([02287a9](https://github.com/mei-desofs/desofs2026-wed_nap_1-1/commit/02287a9789dbdbbc8b2e3c91a77540cbc1ed48f2))
+* test dast with local BD instead of shared BD ([e44974d](https://github.com/mei-desofs/desofs2026-wed_nap_1-1/commit/e44974dd7d0333e3cdb9fee97dcf380d0eef81b6))
+* vars to secrets since it is the correct approach ([8780466](https://github.com/mei-desofs/desofs2026-wed_nap_1-1/commit/8780466c8e99e6b1bd5642848780b8e9889e230d))
+
 ## [1.2.3](https://github.com/mei-desofs/desofs2026-wed_nap_1-1/compare/v1.2.2...v1.2.3) (2026-05-18)
 
 
