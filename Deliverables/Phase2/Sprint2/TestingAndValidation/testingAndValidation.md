@@ -16,7 +16,7 @@ This document records the **Sprint 2 deltas** on top of the testing strategy est
 
 The Sprint 2 test effort focuses on the new code introduced for UC5-UC8 and the deployment surface:
 
-- UC5 / UC7 list and CRUD endpoints on `RefundController` and `MovieController`.
+- UC5, UC6 and UC7 list and CRUD endpoints on `RefundController` and `MovieController`.
 - UC8 server-side token invalidation (`TokenInvalidationService`, `TokenFreshnessFilter`) and Auth0 session revocation (`Auth0ManagementClient.invalidateSessions`).
 - Movie domain rules (`MovieTest`) and service behaviour (`MovieServiceTests`).
 - Containerised production runtime (smoke check on `/actuator/health`).
@@ -126,10 +126,3 @@ No critical errors were detected in `runtime_execution.log` for Sprint 2.
 | Medium | 0 | - |
 | Low | 1 | Same root-path Content-Type finding as Sprint 1 - accepted false positive, suppressed in `rules.tsv` |
 | Accepted CVEs | 5 | Same set as Sprint 1; status unchanged |
-
-### Recommendations
-
-- Re-scan SCA dependencies next sprint as upstream fixes for the five accepted CVEs (`angus-activation`, `hibernate-validator`, `swagger-ui`/DOMPurify) may become available.
-- Maintain the current `fail_action: true` ZAP policy and the CVSS >= 9 build-break threshold on Dependency-Check - the pipeline is clean and should remain blocking on any new High or Medium finding.
-
-The pipeline policy (`fail_action: true` on ZAP, CVSS >= 9 on Dependency-Check, fail-on-error on CodeQL) remains blocking and stayed green throughout Sprint 2.
