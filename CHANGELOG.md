@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.2.3](https://github.com/mei-desofs/desofs2026-wed_nap_1-1/compare/v1.2.2...v1.2.3) (2026-05-18)
+
+
+### Bug Fixes
+
+* get by Id method small fix ([68c02b8](https://github.com/mei-desofs/desofs2026-wed_nap_1-1/commit/68c02b865e74974adcb29cde236a755f6db616ca))
+* get by Id method small fix ([b7ab00c](https://github.com/mei-desofs/desofs2026-wed_nap_1-1/commit/b7ab00c843b3d646952720eb4e2b068183498547))
+* get by Id method small fix ([ede09ad](https://github.com/mei-desofs/desofs2026-wed_nap_1-1/commit/ede09ad633e70c79b737d231752370cbf7b45940))
+* get by Id method small fix ([adf0786](https://github.com/mei-desofs/desofs2026-wed_nap_1-1/commit/adf07868996c6aba9359a2631d681a62c8106241))
+
 ## [1.2.2](https://github.com/mei-desofs/desofs2026-wed_nap_1-1/compare/v1.2.1...v1.2.2) (2026-05-15)
 
 

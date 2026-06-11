@@ -104,6 +104,103 @@ class MovieTest {
 
             assertThat(movie.getId()).isEqualTo(42L);
         }
+
+        @Test
+        @DisplayName("setTitle updates title")
+        void setTitle_updatesTitle() {
+            Movie movie = new Movie(
+                    "Old",
+                    "Description",
+                    "Action",
+                    "DVD",
+                    new BigDecimal("10.00"),
+                    5);
+
+            movie.setTitle("New");
+
+            assertThat(movie.getTitle()).isEqualTo("New");
+        }
+
+        @Test
+        @DisplayName("setDescription updates description")
+        void setDescription_updatesDescription() {
+            Movie movie = new Movie(
+                    "Title",
+                    "Old Description",
+                    "Action",
+                    "DVD",
+                    new BigDecimal("10.00"),
+                    5);
+
+            movie.setDescription("New Description");
+
+            assertThat(movie.getDescription()).isEqualTo("New Description");
+        }
+
+        @Test
+        @DisplayName("setGenre updates genre")
+        void setGenre_updatesGenre() {
+            Movie movie = new Movie(
+                    "Title",
+                    "Description",
+                    "Action",
+                    "DVD",
+                    new BigDecimal("10.00"),
+                    5);
+
+            movie.setGenre("Sci-Fi");
+
+            assertThat(movie.getGenre()).isEqualTo("Sci-Fi");
+        }
+
+        @Test
+        @DisplayName("setPlatform updates platform")
+        void setPlatform_updatesPlatform() {
+            Movie movie = new Movie(
+                    "Title",
+                    "Description",
+                    "Action",
+                    "DVD",
+                    new BigDecimal("10.00"),
+                    5);
+
+            movie.setPlatform("Blu-ray");
+
+            assertThat(movie.getPlatform()).isEqualTo("Blu-ray");
+        }
+
+        @Test
+        @DisplayName("setPrice updates price")
+        void setPrice_updatesPrice() {
+            Movie movie = new Movie(
+                    "Title",
+                    "Description",
+                    "Action",
+                    "DVD",
+                    new BigDecimal("10.00"),
+                    5);
+
+            movie.setPrice(new BigDecimal("20.00"));
+
+            assertThat(movie.getPrice())
+                    .isEqualByComparingTo("20.00");
+        }
+
+        @Test
+        @DisplayName("setStockQuantity updates stock quantity")
+        void setStockQuantity_updatesStockQuantity() {
+            Movie movie = new Movie(
+                    "Title",
+                    "Description",
+                    "Action",
+                    "DVD",
+                    new BigDecimal("10.00"),
+                    5);
+
+            movie.setStockQuantity(20);
+
+            assertThat(movie.getStockQuantity()).isEqualTo(20);
+        }
     }
 
     // TRANSPARENT-BOX TESTS : Inspect or manipulate internal state or behavior
@@ -155,6 +252,22 @@ class MovieTest {
             movie.decreaseStock(3);
 
             assertThat(movie.getStockQuantity()).isEqualTo(5);
+        }
+
+        @Test
+        @DisplayName("decreaseStock throws when stock quantity is zero")
+        void decreaseStock_whenStockIsZero_throws() {
+            Movie movie = new Movie(
+                    "Title",
+                    "Description",
+                    "Action",
+                    "DVD",
+                    new BigDecimal("10.00"),
+                    0);
+
+            assertThatThrownBy(() -> movie.decreaseStock(1))
+                    .isInstanceOf(IllegalStateException.class)
+                    .hasMessageContaining("Insufficient stock");
         }
     }
 }
