@@ -1,17 +1,19 @@
 services:
 
   backend:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: emovieshop:latest
 
     container_name: emovieshop_backend
 
     ports:
       - "8080:8080"
 
-    env_file:
-      - .env
+    environment:
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
+      DB_NAME: ${DB_NAME}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
 
     restart: unless-stopped
 
