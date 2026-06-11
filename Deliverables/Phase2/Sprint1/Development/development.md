@@ -14,7 +14,6 @@
 9. [Security HTTP Headers](#9-security-http-headers)
 10. [Audit Logging](#10-audit-logging)
 11. [Error Handling & Information Disclosure Prevention](#11-error-handling--information-disclosure-prevention)
-12. [Token Invalidation & Session Revocation on Role Change](#12-token-invalidation--session-revocation-on-role-change)
 
 ---
 
@@ -504,49 +503,3 @@ The controller maps `GET` and `HEAD` on `/error` (Spring internally forwards to 
 - **Consistent JSON Content-Type** - all error responses from both `GlobalExceptionHandler` and `CustomErrorController` explicitly set `Content-Type: application/json`, preventing content-type mismatch issues
 - **404 for unknown paths** - requests to undefined endpoints return 404 (not 500), preventing path enumeration from triggering noisy error responses
 - **Database constraint errors** - `DataIntegrityViolationException` is caught and returns 400 with a safe message, preventing SQL/schema details from leaking
-
----
-
-## 12. Token Invalidation & Session Revocation on Role Change
-
-**Locations:** `TokenFreshnessFilter`, `TokenInvalidationService`, `UserTokenInvalidation` (entity + repository), `Auth0ManagementClient.invalidateSessions`, `UserService` (hook on `assignRole`/`removeRole`), `SecurityConfig` (filter wiring), and Flyway migration `V8__create_user_token_invalidations.sql`.
-
-### Problem
-
-The API is a stateless JWT Resource Server with 1 h access-token lifetime (see §4.3). Without extra controls, a role change does not take effect until the next token issuance: an admin who removes the `ADMIN` role from a compromised account would still leave that account with up to one hour of admin access. This is the case ASVS V7.4.1 calls out for self-contained tokens.
-
-### Design
-
-On every administrative role change, `UserService` writes a per-user cut-off and asks Auth0 to drop the SSO session:
-
-```java
-private void invalidateUserSessions(String targetUserId, String reason) {
-    tokenInvalidationService.invalidateTokensFor(targetUserId, reason);
-    auth0.invalidateSessions(targetUserId);
-}
-```
-
-The denylist is the **authoritative** control; the Auth0 call (`DELETE /api/v2/users/{id}/sessions`) is best-effort and only improves UX (silent-auth fails sooner). Any Auth0 failure is logged at WARN and swallowed so the DB transaction is not rolled back.
-
-On every request, `TokenFreshnessFilter` (a `OncePerRequestFilter` placed after `BearerTokenAuthenticationFilter` and before `RateLimitFilter`) reads `jwt.sub` and `jwt.iat`, looks up the cut-off, and rejects with `401 invalid_token` (RFC 6750 `WWW-Authenticate: Bearer error="invalid_token"`) when `iat` is before the cut-off. Missing claims pass through (RBAC at the controller still applies).
-
-### Persistence
-
-```sql
-CREATE TABLE user_token_invalidations (
-    auth0_user_id      VARCHAR(200) PRIMARY KEY,
-    invalidated_after  TIMESTAMP(3) NOT NULL,
-    reason             VARCHAR(100) NOT NULL,
-    updated_at         TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3)
-);
-```
-
-One row per user (cut-off, not a token list). `TIMESTAMP(3)` matches the millisecond precision of `Instant.now()` so a token issued in the same second as the revocation is correctly rejected.
-
-### Properties
-
-- Role changes take effect on the next request.
-- A refreshed token is only accepted if its new `iat` is after the cut-off.
-- The denylist works even when Auth0 is unreachable.
-- `userId` is taken from the trusted JWT `sub`; the cut-off is server-stamped (`Instant.now()`), so the caller cannot back-date it.
-- The Auth0 Management API token must carry the `delete:sessions` scope; without it the session-revocation call is a no-op but the denylist still protects the API.

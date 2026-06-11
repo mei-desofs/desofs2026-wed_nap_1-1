@@ -1,8 +1,8 @@
 # ASVS Traceability: Implementations → Checklist
 
-This documentnt ensusres completeness of the ASVS assessment and provides
+This document ensures completeness of the ASVS assessment and provides
 traceability between implemented security controls, documented security
-requirements and the tests that validates them. 
+requirements, and the tests that validate them.
 
 ## Traceability Model
 
@@ -10,8 +10,7 @@ requirements and the tests that validates them.
 - Implementation: where the control lives in the codebase.
 - ASVS mapping: which checklist area(s) the control supports.
 - Evidence / tests: what validates the behaviour in practice.
-- Status: `Implemented`, `Partial`, or `N/A`.
-validate coverage.
+- Status: `Compliant`, `Partial`, `Not Applicable`.
 
 ---
 
@@ -19,22 +18,22 @@ validate coverage.
 
 Jump to section:
 
-- [V1 - Encoding and Sanitization](#v1)
-- [V2 - Validation and Business Logic](#v2)
-- [V3 - Authentication](#v3)
-- [V4 - Access Control](#v4)
-- [V5 - Session Management](#v5)
-- [V6 - Malicious Input Handling](#v6)
-- [V7 - API Security](#v7)
-- [V8 - Data Protection](#v8)
-- [V9 - File and Resource Handling](#v9)
-- [V10 - Cryptography and Keys](#v10)
-- [V11 - Cryptography](#v11)
-- [V12 - Secure Communication](#v12)
-- [V13 - Configuration](#v13)
-- [V14 - Data Protection (detailed)](#v14)
-- [V15 - Secure Coding and Architecture](#v15)
-- [V16 - Security Logging and Error Handling](#v16)
+- [V1 - Encoding and Sanitization](#v1---encoding-and-sanitization)
+- [V2 - Validation and Business Logic](#v2---validation-and-business-logic)
+- [V3 - Web Frontend Security](#v3---web-frontend-security)
+- [V4 - API and Web Service](#v4---api-and-web-service)
+- [V5 - File Handling](#v5---file-handling)
+- [V6 - Authentication](#v6---authentication)
+- [V7 - Session Management](#v7---session-management)
+- [V8 - Authorization](#v8---authorization)
+- [V9 - Self-contained Tokens](#v9---self-contained-tokens)
+- [V10 - OAuth and OIDC](#v10---oauth-and-oidc)
+- [V11 - Cryptographic Inventory and Documentation](#v11---cryptographic-inventory-and-documentation)
+- [V12 - Secure Communication](#v12---secure-communication)
+- [V13 - Configuration](#v13---configuration)
+- [V14 - Data Protection](#v14---data-protection)
+- [V15 - Secure Coding and Architecture](#v15---secure-coding-and-architecture)
+- [V16 - Security Logging and Error Handling](#v16---security-logging-and-error-handling)
 
 
 ## V1 - Encoding and Sanitization
@@ -669,7 +668,7 @@ This section maps the ASVS V1 - Encoding and Sanitization - checklist section to
 #### V7.2.4 - Verify that the application generates a new session token on user authentication, including re-authentication, and terminates the current session token.
 
 - Status: `Compliant`
-- Implementation: token issuance and rotation are performed by the IdP (Auth0). Application-side termination is enforced by a per-user invalidation cut-off: whenever an administrator changes a user's role, `UserService.assignRole` / `removeRole` calls `TokenInvalidationService.invalidateTokensFor(userId, reason)` which upserts a row in `user_token_invalidations` (Flyway migration `V8__create_user_token_invalidations.sql`) and additionally calls `Auth0ManagementClient.invalidateSessions(userId)` (best-effort `DELETE /api/v2/users/{id}/sessions`). Every subsequent request is intercepted by `TokenFreshnessFilter`, which rejects any JWT whose `iat` claim is older than the stored cut-off with `401 invalid_token`, forcing the client to obtain a new token. See `Deliverables/Phase2/Sprint1/Development/development.md` §12.
+- Implementation: token issuance and rotation are performed by the IdP (Auth0). Application-side termination is enforced by a per-user invalidation cut-off: whenever an administrator changes a user's role, `UserService.assignRole` / `removeRole` calls `TokenInvalidationService.invalidateTokensFor(userId, reason)` which upserts a row in `user_token_invalidations` (Flyway migration `V8__create_user_token_invalidations.sql`) and additionally calls `Auth0ManagementClient.invalidateSessions(userId)` (best-effort `DELETE /api/v2/users/{id}/sessions`). Every subsequent request is intercepted by `TokenFreshnessFilter`, which rejects any JWT whose `iat` claim is older than the stored cut-off with `401 invalid_token`, forcing the client to obtain a new token. See `Deliverables/Phase2/Sprint1/Development/development.md` Cap12.
 - Evidence / Tests:
 	- `App/src/main/java/com/example/desofs/services/TokenInvalidationService.java` and `App/src/main/java/com/example/desofs/services/ITokenInvalidationService.java` - denylist write path and contract.
 	- `App/src/main/java/com/example/desofs/security/TokenFreshnessFilter.java` - request-time enforcement after `BearerTokenAuthenticationFilter`.
@@ -703,7 +702,7 @@ This section maps the ASVS V1 - Encoding and Sanitization - checklist section to
 #### V7.4.1 - Verify that when session termination is triggered (such as logout or expiration), the application disallows any further use of the session. For reference tokens or stateful sessions, this means invalidating the session data at the application backend. Applications using self-contained tokens will need a solution such as maintaining a list of terminated tokens, disallowing tokens produced before a per-user date and time or rotating a per-user signing key.
 
 - Status: `Compliant`
-- Implementation: a **per-user issued-at cut-off** strategy is implemented (one of the three patterns explicitly accepted by V7.4.1 for self-contained tokens). On every administrative role change, `UserService.invalidateUserSessions(targetUserId, reason)` (1) upserts a row in `user_token_invalidations` containing the cut-off `Instant.now()` and (2) issues a best-effort `DELETE /api/v2/users/{id}/sessions` against the Auth0 Management API. On every subsequent request, `TokenFreshnessFilter` (registered after `BearerTokenAuthenticationFilter`) compares the JWT's `iat` claim against the stored cut-off and returns `401 Unauthorized` with `WWW-Authenticate: Bearer error="invalid_token"` if the token was issued before the cut-off. The denylist is the authoritative control; the Auth0 call is defence-in-depth that drops the IdP-side SSO session so silent refresh fails. Full design rationale, threat analysis and trade-offs are documented in `Deliverables/Phase2/Sprint1/Development/development.md` §12.
+- Implementation: a **per-user issued-at cut-off** strategy is implemented (one of the three patterns explicitly accepted by V7.4.1 for self-contained tokens). On every administrative role change, `UserService.invalidateUserSessions(targetUserId, reason)` (1) upserts a row in `user_token_invalidations` containing the cut-off `Instant.now()` and (2) issues a best-effort `DELETE /api/v2/users/{id}/sessions` against the Auth0 Management API. On every subsequent request, `TokenFreshnessFilter` (registered after `BearerTokenAuthenticationFilter`) compares the JWT's `iat` claim against the stored cut-off and returns `401 Unauthorized` with `WWW-Authenticate: Bearer error="invalid_token"` if the token was issued before the cut-off. The denylist is the authoritative control; the Auth0 call is defence-in-depth that drops the IdP-side SSO session so silent refresh fails. Full design rationale, threat analysis and trade-offs are documented in `Deliverables/Phase2/Sprint1/Development/development.md` Cap12.
 - Evidence / Tests:
 	- `App/src/main/resources/db/migration/V8__create_user_token_invalidations.sql` - schema (PK on `auth0_user_id`, millisecond-precision `invalidated_after`).
 	- `App/src/main/java/com/example/desofs/domain/UserTokenInvalidation.java` and `App/src/main/java/com/example/desofs/repositories/UserTokenInvalidationRepository.java` - entity and repository.

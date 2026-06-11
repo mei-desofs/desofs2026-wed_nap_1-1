@@ -8,7 +8,7 @@
 
 - **Code Reviews:** enforce PR checklist (unit tests, integration tests, CI green, SAST/SCA triage, ASVS references). Review turnaround: 48 hours target; coordinators: every team member.
 
-- **Database:** secure schema and migrations, use parameterized queries (JPA), enforce least-privilege DB user, and document backup/restore approach. Owner: Miguel Cardoso (122072).
+- **Database:** secure schema and migrations, use parameterized queries (JPA), enforce least-privilege DB user, and document backup/restore approach. Owner: Miguel Cardoso (1220772).
 
 - **Authentication and Authorization:** Auth0-based JWT validation, `AudienceValidator` enforcement, RBAC checks for admin endpoints, and token lifecycle settings (rotation/expiration). Owners: Pedro Soares (1200909).
 
@@ -31,7 +31,6 @@
 mvn -B -f App clean test jacoco:report
 ```
 
-	 - Owners: `Miguel Cardoso` (tests lead), `Pedro Silva` (security test scenarios).
 	 - Acceptance criteria:
 		 - Unit tests present for all new/changed code paths and critical utilities.
 		 - Integration tests exercise UC flows (login, purchase, refund) including auth and DB interactions.

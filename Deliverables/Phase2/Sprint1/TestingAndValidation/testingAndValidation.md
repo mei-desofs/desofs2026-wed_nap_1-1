@@ -2,17 +2,17 @@
 
 ## Index
 
-- [1. Strategy Overview](#2-strategy-overview)
-- [2. Testing Approach](#3-testing-approach)
-    - [2.1 SAST - Static Analysis](#31-sast---static-analysis)
-    - [2.2 SCA - Dependency Scanning](#32-sca---dependency-scanning)
-    - [2.3 DAST - Dynamic Testing](#34-dast---dynamic-testing)
-    - [2.4 IAST - Instrumented Testing](#35-iast---instrumented-testing)
-- [3. Functional Tests](#4-functional-tests)
-- [4. Security Testing Results](#5-security-testing-results)
-- [5. Results & Observations](#6-results--observations)
-- [6. Tool Selection Justification Summary](#7-tool-selection-justification-summary)
-- [7. References](#8-references)
+- [1. Strategy Overview](#1-strategy-overview)
+- [2. Testing Approach](#2-testing-approach)
+    - [2.1 SAST - Static Analysis](#21-sast---static-analysis)
+    - [2.2 SCA - Dependency Scanning](#22-sca---dependency-scanning)
+    - [2.3 DAST - Dynamic Testing](#23-dast---dynamic-testing)
+    - [2.4 IAST - Instrumented Testing](#24-iast---instrumented-testing)
+- [3. Functional Tests](#3-functional-tests)
+- [4. Security Testing Results](#4-security-testing-results)
+- [5. Results & Observations](#5-results--observations)
+- [6. Tool Selection Justification Summary](#6-tool-selection-justification-summary)
+- [7. References](#7-references)
 
 Here we document the test strategy, executed tests, and validation results for Sprint 1. This strategy integrates security testing throughout the development lifecycle (SAST, DAST, IAST, and SCA).
 
@@ -111,13 +111,14 @@ manual review.
 While this does not replicate the data-flow instrumentation that a true IAST agent provides, it achieves partial coverage of the same intent like detecting runtime security anomalies that are only observable when the application is executing under realistic conditions, and that would not be caught by static analysis alone.
 
 While we are aware that this is not a complete implementation of the IAST methodology, the adopted approach is a pragmatic substitute constrained by tool availability.
+
 ---
 
-## 4. Functional Tests
+## 3. Functional Tests
 
 The functional testing strategy for this sprint was split into two layers: unit tests and integration tests. The goal was to validate the business rules in isolation first, and then verify that the main application flows work correctly when the Spring context, persistence layer, security configuration, and web layer are exercised together.
 
-### 4.1 Unit Tests
+### 3.1 Unit Tests
 
 Unit tests focus on the smallest verifiable units of behaviour. In this project, they cover:
 
@@ -132,7 +133,7 @@ The unit test style combines:
 - **White-box testing** for service methods and domain logic, because the test cases are derived from the internal control flow, validation branches, and exception paths.
 - **Black-box testing** for mappers and public domain behaviour, because the focus is on observable input/output rather than implementation details.
 
-### 4.2 Integration Tests
+### 3.2 Integration Tests
 
 Integration tests verify that multiple application layers work correctly together. Here the emphasis is on the interaction between:
 
@@ -143,25 +144,25 @@ Integration tests verify that multiple application layers work correctly togethe
 
 These tests run with a larger portion of the Spring Boot stack enabled, so they validate routing, serialization, validation, dependency injection, and the end-to-end behaviour of the main API flows. Compared with unit tests, they are broader and slower, but they provide stronger confidence that the application behaves correctly in realistic execution paths.
 
-### 4.3 Coverage Tracking
+### 3.3 Coverage Tracking
 
 The obtained code coverage is reported per package and globally:
 
 | Package | Coverage Status |
 |---------|-----------------|
-| `com.example.desofs.security` | 93% |
-| `com.example.desofs.services` | 95% |
-| `com.example.desofs.exceptions` | 96% |
-| `com.example.desofs` | 37% |
-| `com.example.desofs.config` | 100% |
+| `com.example.desofs.services` | 92% |
+| `com.example.desofs.controllers` | 88% |
+| `com.example.desofs.security` | 92% |
+| `com.example.desofs.config` | 95% |
+| `com.example.desofs.exceptions` | 97% |
 | `com.example.desofs.domain` | 100% |
-| `com.example.desofs.controllers` | 100% |
 | `com.example.desofs.shared.mappers` | 100% |
-| Total | 96% |
+| `com.example.desofs` | 37% |
+| Total | 94% |
 
 ---
 
-## 5. Security Testing Results
+## 4. Security Testing Results
 
 
 ### SAST Results (CodeQL)
@@ -263,7 +264,7 @@ input conditions.
 
 ---
 
-## 6. Results & Observations
+## 5. Results & Observations
 
 ### Overall Status
 
@@ -297,7 +298,7 @@ input conditions.
 
 ---
 
-## 7. Tool Selection Justification Summary
+## 6. Tool Selection Justification Summary
 
 | Tool | Purpose | Why Selected |
 |------|---------|--------------|
@@ -309,7 +310,7 @@ input conditions.
 
 ---
 
-## 8. References
+## 7. References
 
 ### Testing Tools
 - [CodeQL](https://codeql.github.com/) - GitHub-native SAST engine, results in GitHub Security tab

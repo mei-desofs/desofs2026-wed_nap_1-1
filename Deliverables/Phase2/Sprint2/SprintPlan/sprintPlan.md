@@ -15,7 +15,7 @@
 
 - **Code Reviews:** enforce PR checklist (unit tests, integration tests, CI green, SAST/SCA triage, ASVS references). Review turnaround: 48 hours target; coordinators: every team member.
 
-- **Database:** new Flyway migration `V8__create_user_token_invalidations.sql` to back UC8's token denylist. Confirm the production DB user remains non-DDL at runtime (only Flyway runs with the elevated account during application startup). Owner: Miguel Cardoso (1220772) and Pedro Soares (1200909).
+- **Database:** new Flyway migration `V8__create_user_token_invalidations.sql` to back UC8's token denylist, plus `V9__align_orders_schema.sql` and `V10__align_refund_requests_schema.sql` to align the `orders` and `refund_requests` tables with the Auth0-based entities (replacing the legacy `user_id` FK with `auth0_id`). Confirm the production DB user remains non-DDL at runtime (only Flyway runs with the elevated account during application startup). Owner: Miguel Cardoso (1220772) and Pedro Soares (1200909).
 
 - **Authentication and Authorization:** finalise Auth0 token lifecycle controls, new `TokenInvalidationService` + `TokenFreshnessFilter` for server-side freshness enforcement, and `Auth0ManagementClient.invalidateSessions` calling the Management API (`delete:sessions` scope required on the M2M application). Owner: Pedro Soares (1200909).
 
