@@ -30,7 +30,7 @@ skinparam actor {
   BorderColor #888888
 }
 
-title UC7 — Manage Movie Catalog: Use/Abuse Case Diagram
+title UC7 - Manage Movie Catalog: Use/Abuse Case Diagram
 
 actor Admin
 actor Attacker #FF8A80

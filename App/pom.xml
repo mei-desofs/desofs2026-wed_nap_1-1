@@ -20,6 +20,7 @@
     <log4j2.version>2.26.0</log4j2.version>
     <commons-lang3.version>3.20.0</commons-lang3.version>
     <tomcat.version>10.1.55</tomcat.version>
+    <spring-framework.version>6.2.19</spring-framework.version>
   </properties>
 
   <dependencies>
@@ -78,6 +79,23 @@
       <groupId>com.bucket4j</groupId>
       <artifactId>bucket4j-core</artifactId>
       <version>8.10.1</version>
+    </dependency>
+
+    <!-- Loads App/.env into Spring Environment so ${VAR} placeholders resolve in dev. -->
+    <dependency>
+      <groupId>me.paulschwarz</groupId>
+      <artifactId>spring-dotenv</artifactId>
+      <version>4.0.0</version>
+    </dependency>
+
+    <!-- Flyway: applies versioned SQL migrations under db/migration on startup. -->
+    <dependency>
+      <groupId>org.flywaydb</groupId>
+      <artifactId>flyway-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.flywaydb</groupId>
+      <artifactId>flyway-mysql</artifactId>
     </dependency>
 
     <!-- H2 for testing -->

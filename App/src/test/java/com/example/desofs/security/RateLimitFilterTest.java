@@ -1,17 +1,21 @@
 package com.example.desofs.security;
 
+import io.github.bucket4j.Bucket;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.concurrent.ConcurrentMap;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
@@ -107,6 +111,82 @@ class RateLimitFilterTest {
 		ReflectionTestUtils.setField(filter, "ipRequestsPerMinute", ipRequestsPerMinute);
 		ReflectionTestUtils.setField(filter, "userRequestsPerMinute", userRequestsPerMinute);
 		ReflectionTestUtils.setField(filter, "retryAfterSeconds", 60);
+	}
+
+	@Test
+	void anonymousAuthenticationDoesNotTriggerUserRateLimit() throws ServletException, IOException {
+		RateLimitFilter filter = new RateLimitFilter();
+		setLimits(filter, 10, 1);
+		// Anonymous tokens must be ignored by extractUserId(), so the user bucket is never used.
+		SecurityContextHolder.getContext().setAuthentication(
+				new AnonymousAuthenticationToken("key", "anonymousUser",
+						List.of(new SimpleGrantedAuthority("ROLE_ANONYMOUS"))));
+
+		MockHttpServletRequest first = new MockHttpServletRequest();
+		first.setRemoteAddr("10.0.0.10");
+		MockHttpServletResponse firstResponse = new MockHttpServletResponse();
+		filter.doFilter(first, firstResponse, mock(FilterChain.class));
+		assertThat(firstResponse.getStatus()).isEqualTo(200);
+
+		MockHttpServletRequest second = new MockHttpServletRequest();
+		second.setRemoteAddr("10.0.0.10");
+		MockHttpServletResponse secondResponse = new MockHttpServletResponse();
+		filter.doFilter(second, secondResponse, mock(FilterChain.class));
+		// User bucket has limit 1 but anonymous auth must not consume it; only IP bucket applies.
+		assertThat(secondResponse.getStatus()).isEqualTo(200);
+	}
+
+	@Test
+	void trustedForwardedHeadersFallBackToRemoteAddrWhenHeaderMissing() throws ServletException, IOException {
+		RateLimitFilter filter = new RateLimitFilter();
+		setLimits(filter, 1, 10);
+		ReflectionTestUtils.setField(filter, "trustForwardedHeaders", true);
+
+		MockHttpServletRequest first = new MockHttpServletRequest();
+		first.setRemoteAddr("10.0.0.4");
+		// No X-Forwarded-For header at all
+		MockHttpServletResponse firstResponse = new MockHttpServletResponse();
+		filter.doFilter(first, firstResponse, mock(FilterChain.class));
+		assertThat(firstResponse.getStatus()).isEqualTo(200);
+
+		MockHttpServletRequest second = new MockHttpServletRequest();
+		second.setRemoteAddr("10.0.0.4");
+		// Blank X-Forwarded-For - must also fall back to remoteAddr
+		second.addHeader("X-Forwarded-For", "   ");
+		MockHttpServletResponse secondResponse = new MockHttpServletResponse();
+		filter.doFilter(second, secondResponse, mock(FilterChain.class));
+		// Same IP both times, so the second request hits the limit.
+		assertThat(secondResponse.getStatus()).isEqualTo(429);
+	}
+
+	@Test
+	@SuppressWarnings("unchecked")
+	void evictStaleBucketsRemovesIpAndUserEntriesPastTtl() throws Exception {
+		RateLimitFilter filter = new RateLimitFilter();
+		setLimits(filter, 10, 10);
+
+		ConcurrentMap<String, Bucket> ipBuckets =
+				(ConcurrentMap<String, Bucket>) ReflectionTestUtils.getField(filter, "ipBuckets");
+		ConcurrentMap<String, Bucket> userBuckets =
+				(ConcurrentMap<String, Bucket>) ReflectionTestUtils.getField(filter, "userBuckets");
+		ConcurrentMap<String, Long> lastAccess =
+				(ConcurrentMap<String, Long>) ReflectionTestUtils.getField(filter, "lastAccess");
+
+		// Populate buckets and mark access far enough in the past to be considered stale.
+		long stale = System.currentTimeMillis() - java.time.Duration.ofHours(1).toMillis();
+		ipBuckets.put("1.2.3.4", mock(Bucket.class));
+		userBuckets.put("alice", mock(Bucket.class));
+		lastAccess.put("ip:1.2.3.4", stale);
+		lastAccess.put("user:alice", stale);
+
+		// Trigger eviction by issuing a normal request from a different IP.
+		MockHttpServletRequest req = new MockHttpServletRequest();
+		req.setRemoteAddr("10.0.0.99");
+		filter.doFilter(req, new MockHttpServletResponse(), mock(FilterChain.class));
+
+		assertThat(ipBuckets).doesNotContainKey("1.2.3.4");
+		assertThat(userBuckets).doesNotContainKey("alice");
+		assertThat(lastAccess).doesNotContainKeys("ip:1.2.3.4", "user:alice");
 	}
 
 }

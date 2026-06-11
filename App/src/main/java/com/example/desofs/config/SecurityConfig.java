@@ -1,6 +1,7 @@
 package com.example.desofs.config;
 
 import com.example.desofs.security.RateLimitFilter;
+import com.example.desofs.security.TokenFreshnessFilter;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -29,16 +30,19 @@ public class SecurityConfig {
     private String audience;
 
     private final RateLimitFilter rateLimitFilter;
+    private final TokenFreshnessFilter tokenFreshnessFilter;
 
     @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "RateLimitFilter is a Spring-managed singleton bean")
-    public SecurityConfig(RateLimitFilter rateLimitFilter) {
+    public SecurityConfig(RateLimitFilter rateLimitFilter,
+                          TokenFreshnessFilter tokenFreshnessFilter) {
         this.rateLimitFilter = rateLimitFilter;
+        this.tokenFreshnessFilter = tokenFreshnessFilter;
     }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(csrf -> csrf.ignoringRequestMatchers("/**")) // Stateless JWT API — no cookie-based auth, CSRF not applicable
+                .csrf(csrf -> csrf.ignoringRequestMatchers("/**")) // Stateless JWT API - no cookie-based auth, CSRF not applicable
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .headers(headers -> headers
                         .contentTypeOptions(opt -> {}) // X-Content-Type-Options: nosniff (default)
@@ -58,7 +62,8 @@ public class SecurityConfig {
                                 .jwtAuthenticationConverter(jwtAuthenticationConverter())
                         )
                 )
-                .addFilterAfter(rateLimitFilter, BearerTokenAuthenticationFilter.class);
+                .addFilterAfter(tokenFreshnessFilter, BearerTokenAuthenticationFilter.class)
+                .addFilterAfter(rateLimitFilter, TokenFreshnessFilter.class);
 
         return http.build();
     }
@@ -71,7 +76,7 @@ public class SecurityConfig {
         OAuth2TokenValidator<Jwt> audienceValidator = new AudienceValidator(audience);
 
         // createDefaultWithIssuer includes JwtTimestampValidator (checks exp/nbf with 60s clock skew)
-        // and JwtIssuerValidator (checks iss claim) — token expiration is enforced here
+        // and JwtIssuerValidator (checks iss claim) - token expiration is enforced here
         OAuth2TokenValidator<Jwt> issuerValidator = JwtValidators.createDefaultWithIssuer(issuerUri);
 
         jwtDecoder.setJwtValidator(new DelegatingOAuth2TokenValidator<>(issuerValidator, audienceValidator));

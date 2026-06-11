@@ -5,6 +5,7 @@ import com.example.desofs.shared.dtos.AuditLogDTO;
 import com.example.desofs.domain.Role;
 import com.example.desofs.security.RoleGuard;
 import com.example.desofs.services.AuditLogService;
+import com.example.desofs.services.ITokenInvalidationService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -41,6 +42,9 @@ class AuditLogControllerIntegrationTests {
 
     @MockitoBean
     private RoleGuard roleGuard;
+
+    @MockitoBean
+    private ITokenInvalidationService tokenInvalidationService;
 
         private AuditLogDTO assignLog;
         private AuditLogDTO removeLog;

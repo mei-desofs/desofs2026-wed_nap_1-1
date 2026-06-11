@@ -1,78 +1,53 @@
 package com.example.desofs.shared.dtos;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
+import java.util.List;
+
 /**
- * Data Transfer Object representing a user in API responses.
+ * Data Transfer Object representing an Auth0 user in API responses.
  *
- * <p>Contains the user identifier and the public profile fields exposed by
- * the application.</p>
+ * <p>Contains only the public fields exposed by the user-administration
+ * endpoints (UC8). The identifier is the Auth0 user id (e.g.
+ * {@code auth0|abc123}), not a database primary key.</p>
  */
 public class UserDTO {
-    /** User identifier. */
-    private Long id;
 
-    /** User email address. */
+    private String userId;
     private String email;
-
-    /** User display name. */
     private String name;
+    private List<String> roles;
 
-    /**
-     * Creates an empty user DTO.
-     */
-    public UserDTO() {}
-
-    /**
-     * Creates a user DTO with all fields populated.
-     *
-     * @param id user identifier
-     * @param email user email address
-     * @param name user display name
-     */
-    public UserDTO(Long id, String email, String name) {
-        this.id = id;
-        this.email = email;
-        this.name = name;
+    public UserDTO() {
+        this.roles = List.of();
     }
 
-    /**
-     * Returns the user identifier.
-     *
-     * @return user identifier
-     */
-    public Long getId() { return id; }
+    public UserDTO(String userId, String email, String name) {
+        this(userId, email, name, List.of());
+    }
 
-    /**
-     * Sets the user identifier.
-     *
-     * @param id user identifier
-     */
-    public void setId(Long id) { this.id = id; }
+    public UserDTO(String userId, String email, String name, List<String> roles) {
+        this.userId = userId;
+        this.email = email;
+        this.name = name;
+        this.roles = roles == null ? List.of() : List.copyOf(roles);
+    }
 
-    /**
-     * Returns the user email address.
-     *
-     * @return user email address
-     */
+    public String getUserId() { return userId; }
+    public void setUserId(String userId) { this.userId = userId; }
+
     public String getEmail() { return email; }
-
-    /**
-     * Sets the user email address.
-     *
-     * @param email user email address
-     */
     public void setEmail(String email) { this.email = email; }
 
-    /**
-     * Returns the user display name.
-     *
-     * @return user display name
-     */
     public String getName() { return name; }
-
-    /**
-     * Sets the user display name.
-     *
-     * @param name user display name
-     */
     public void setName(String name) { this.name = name; }
+
+    @SuppressFBWarnings(
+            value = "EI_EXPOSE_REP",
+            justification = "Returned list is constructed via List.copyOf")
+    public List<String> getRoles() { return roles; }
+
+    public void setRoles(List<String> roles) {
+        this.roles = roles == null ? List.of() : List.copyOf(roles);
+    }
 }

@@ -109,6 +109,7 @@ The DAST job performs dynamic application security testing against the live API:
 | 10038 | CSP header set by filter but not on error pages |
 | 10021 | X-Content-Type-Options set by filter |
 | 40018 | SQL Injection false positive, JPA uses prepared statements; behavioural difference caused by input sanitizer, not injection |
+| 6 | Path Traversal false positive on numeric ID path parameters |
 
 ---
 
@@ -127,7 +128,7 @@ This ensures every production-bound artifact is versioned and traceable to the c
 
 ---
 
-## 6. Secrets and Variables Management — Compliance Statement
+## 6. Secrets and Variables Management - Compliance Statement
 
 The project follows GitHub Secrets best practices for CI workflows: sensitive values are not committed to source control, secrets are referenced via `${{secrets.SECRET_NAME}}`, outputs that may contain secrets are masked, and environment-level protections are used for production secrets where applicable.
 

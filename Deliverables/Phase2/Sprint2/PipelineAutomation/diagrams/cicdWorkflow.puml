@@ -1,0 +1,50 @@
+@startuml
+skinparam DefaultFontName "Segoe UI"
+skinparam ArrowColor #2C3E50
+skinparam ActivityBackgroundColor #EBF5FB
+skinparam ActivityBorderColor #2C3E50
+skinparam ActivityDiamondBackgroundColor #FEF9E7
+skinparam ActivityDiamondBorderColor #B7950B
+
+title eMovieShop - CI/CD Workflow (high level)
+
+start
+
+:Developer pushes to a feature branch;
+
+:**Feature Checks**
+build + unit tests
+(on every push, any branch != main);
+
+:Developer opens PR to main;
+
+:**Development CI**
+build + tests
++ **Security Pipeline**
+SAST, SCA, DAST,
+runtime log analysis
+(on PR to main);
+
+if (all gates pass?) then (yes)
+  :Merge into main;
+else (no)
+  :Block PR;
+  stop
+endif
+
+:Merge main -> prod;
+
+:**release-please**
+update / merge release PR
++ tag commit
+(on push to prod);
+
+:**deploy** job
+SCP JAR + Dockerfile to VM
+docker build + compose up -d;
+
+:Production VM
+running emovieshop:latest;
+stop
+
+@enduml

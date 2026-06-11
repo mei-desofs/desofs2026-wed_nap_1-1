@@ -30,7 +30,7 @@ skinparam actor {
   BorderColor #888888
 }
 
-title UC2 — Browse Available Movies: Use/Abuse Case Diagram
+title UC2 - Browse Available Movies: Use/Abuse Case Diagram
 
 actor Customer
 actor Attacker #FF8A80

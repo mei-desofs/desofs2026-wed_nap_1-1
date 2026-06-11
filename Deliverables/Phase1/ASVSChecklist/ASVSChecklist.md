@@ -111,17 +111,17 @@ The primary security threats are **application-level fraud scenarios**:
 - Refund policy abuse (mitigated by business rule enforcement at L2)
 - Unauthorized role escalation (mitigated by centralized RoleGuard at L2)
 
-These threats are addressed comprehensively by **Level 2 controls** (63% coverage). Level 3 controls—such as advanced threat detection, multi-tenant isolation, fine-grained dynamic ABAC, and production-grade incident response with tamper-proof audit logging—are **over-provisioned for the actual business risk** of a modest-value retail transaction system.
+These threats are addressed comprehensively by **Level 2 controls** (63% coverage). Level 3 controls-such as advanced threat detection, multi-tenant isolation, fine-grained dynamic ABAC, and production-grade incident response with tamper-proof audit logging-are **over-provisioned for the actual business risk** of a modest-value retail transaction system.
 
 **ASVS Level Appropriateness:**
 
 - **Level 1 (76% coverage):** Baseline opportunistic security; addresses minimum protection needs.
-- **Level 2 (63% coverage):** **Appropriate and sufficient target** for this application—ensures transaction integrity, input validation, strong authentication delegation, authorization enforcement, and adequate audit logging. Protects against common fraud scenarios and injection attacks.
+- **Level 2 (63% coverage):** **Appropriate and sufficient target** for this application-ensures transaction integrity, input validation, strong authentication delegation, authorization enforcement, and adequate audit logging. Protects against common fraud scenarios and injection attacks.
 - **Level 3 (39% coverage):** Advanced protection for high-value, highly-sensitive systems (e.g., healthcare, financial services, government). Unnecessary complexity for an academic movie retail system with moderate transaction values and non-sensitive data.
 
 **Conclusion:**
 
-Level 2 compliance is the **risk-appropriate target** for eMovieShop. The application's modest data sensitivity, bounded threat model (application-level fraud, not nation-state adversaries), and academic proof-of-concept scope justify this positioning. Level 3 requirements will remain relevant only if future phases introduce payment processing, PII aggregation, or multi-tenant isolation—none of which are currently planned.
+Level 2 compliance is the **risk-appropriate target** for eMovieShop. The application's modest data sensitivity, bounded threat model (application-level fraud, not nation-state adversaries), and academic proof-of-concept scope justify this positioning. Level 3 requirements will remain relevant only if future phases introduce payment processing, PII aggregation, or multi-tenant isolation-none of which are currently planned.
 
 ## Per-Category Analysis
 

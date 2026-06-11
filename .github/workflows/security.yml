@@ -19,7 +19,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  # SAST — CodeQL Analysis
+  # SAST - CodeQL Analysis
   sast-codeql:
     name: SAST - CodeQL Java
     runs-on: ubuntu-latest
@@ -55,7 +55,7 @@ jobs:
         with:
           category: '/language:java'
 
-  # SCA — OWASP Dependency-Check + SBOM
+  # SCA - OWASP Dependency-Check + SBOM
   sca:
     name: SCA - OWASP Dependency-Check + SBOM
     runs-on: ubuntu-latest
@@ -106,6 +106,22 @@ jobs:
       contents: read
       issues: write
 
+    # Ephemeral MySQL for hermetic, deterministic DAST runs.
+    # Flyway owns the schema (V1..V8); Hibernate stays in `validate`.
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: eMovieShop
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -uroot -proot --silent"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+
     steps:
       - name: Checkout Code
         uses: actions/checkout@v6
@@ -124,13 +140,24 @@ jobs:
       # 1. Iniciar a aplicação pura (produção-equivalente) e capturar log
       - name: Start Application
         env:
-          SPRING_DATASOURCE_URL: ${{ secrets.SPRING_DATASOURCE_URL }}
-          SPRING_DATASOURCE_USERNAME: ${{ secrets.SPRING_DATASOURCE_USERNAME }}
-          SPRING_DATASOURCE_PASSWORD: ${{ secrets.SPRING_DATASOURCE_PASSWORD }}
+          SPRING_DATASOURCE_URL: jdbc:mysql://127.0.0.1:3306/eMovieShop?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+          SPRING_DATASOURCE_USERNAME: root
+          SPRING_DATASOURCE_PASSWORD: root
           AUTH0_ISSUER_URI: https://${{ secrets.AUTH0_DOMAIN }}/
           AUTH0_AUDIENCE: ${{ vars.AUTH0_AUDIENCE }}
+          # Auth0 Management API (UC8 user/role administration).
+          # In CI the same M2M used by ZAP also serves the backend Management
+          # API calls. Requires `read:users`, `read:roles`, `read:role_members`
+          # authorized on the Auth0 Management API for the M2M application.
+          AUTH0_MGMT_DOMAIN: ${{ secrets.AUTH0_DOMAIN }}
+          AUTH0_MGMT_AUDIENCE: https://${{ secrets.AUTH0_DOMAIN }}/api/v2/
+          AUTH0_MGMT_CLIENT_ID: ${{ secrets.AUTH0_CLIENT_ID }}
+          AUTH0_MGMT_CLIENT_SECRET: ${{ secrets.AUTH0_CLIENT_SECRET }}
+          AUTH0_ROLE_ID_ADMIN: ${{ secrets.AUTH0_ROLE_ID_ADMIN }}
+          AUTH0_ROLE_ID_SUPPORT: ${{ secrets.AUTH0_ROLE_ID_SUPPORT }}
+          AUTH0_ROLE_ID_CUSTOMER: ${{ secrets.AUTH0_ROLE_ID_CUSTOMER }}
           SERVER_PORT: 8080
-          SPRING_JPA_HIBERNATE_DDL_AUTO: create-drop
+          SPRING_JPA_HIBERNATE_DDL_AUTO: validate
           SPRINGDOC_API_DOCS_ENABLED: "true"
           SPRINGDOC_SWAGGER_UI_ENABLED: "true"
         run: |
