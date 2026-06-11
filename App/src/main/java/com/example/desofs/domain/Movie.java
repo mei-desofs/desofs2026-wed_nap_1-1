@@ -74,6 +74,11 @@ public class Movie {
         this.stockQuantity = stockQuantity;
     }
 
+    /**
+     * Returns the database identifier for this movie.
+     * 
+     * @return
+     */
     public Long getId() {
         return id;
     }
@@ -88,8 +93,22 @@ public class Movie {
         this.id = id;
     }
 
+    /**
+     * Returns the movie title.
+     *
+     * @return the title, never {@code null}
+     */
     public String getTitle() {
         return title;
+    }
+
+    /**
+     * Sets the movie title.
+     * 
+     * @param title the new title for the movie
+     */
+    public void setTitle(String title) {
+        this.title = title;
     }
 
     /**
@@ -103,6 +122,14 @@ public class Movie {
     }
 
     /**
+     * Sets the movie description.
+     * @param description the new description for the movie
+     */
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    /**
      * Returns the movie description.
      *
      * @return the description, may be {@code null}
@@ -110,6 +137,14 @@ public class Movie {
 
     public String getGenre() {
         return genre;
+    }
+
+    /**
+     * Sets the movie genre.
+     * @param genre the new genre for the movie
+     */
+    public void setGenre(String genre) {
+        this.genre = genre;
     }
 
     /**
@@ -123,13 +158,28 @@ public class Movie {
     }
 
     /**
+     * Sets the platform where the movie is available.
+     * @param platform the new platform for the movie
+     */
+    public void setPlatform(String platform) {
+        this.platform = platform;
+    }
+
+    /**
      * Returns the platform where the movie is available.
      *
      * @return the platform, may be {@code null}
      */
-
     public BigDecimal getPrice() {
         return price;
+    }
+
+    /**
+     * Sets the price of the movie.
+     * @param price the new price for the movie
+     */
+    public void setPrice(BigDecimal price) {
+        this.price = price;
     }
 
     /**
@@ -140,6 +190,14 @@ public class Movie {
 
     public Integer getStockQuantity() {
         return stockQuantity;
+    }
+
+    /**
+     * Sets the available stock quantity for this movie.
+     * @param stockQuantity the new stock quantity; must be non-negative
+     */    
+    public void setStockQuantity(Integer stockQuantity) {
+        this.stockQuantity = stockQuantity;
     }
 
     /**

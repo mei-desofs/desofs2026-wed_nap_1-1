@@ -26,6 +26,7 @@ import java.util.Optional;
 
 import static org.hamcrest.Matchers.hasSize;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
@@ -95,25 +96,6 @@ class RefundControllerIntegrationTests {
             "\"amount\":15.00," +
             "\"reason\":\"Not satisfied\"" +
             "}";
-    }
-
-    @Test
-    @DisplayName("GET /api/refunds should return 200 OK with all refunds")
-    void list_returnsAllRefunds() throws Exception {
-        when(refundService.listAll()).thenReturn(List.of(refund1, refund2));
-
-        mockMvc.perform(get("/api/refunds")
-                .with(jwt()))
-            .andExpect(status().isOk())
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-            .andExpect(jsonPath("$", hasSize(2)))
-            .andExpect(jsonPath("$[0].id").value(1L))
-            .andExpect(jsonPath("$[0].status").value("REQUESTED"))
-            .andExpect(jsonPath("$[1].id").value(2L))
-            .andExpect(jsonPath("$[1].status").value("APPROVED"));
-
-        verify(refundService, times(1)).listAll();
-        verifyNoInteractions(roleGuard);
     }
 
     @Test
@@ -269,5 +251,55 @@ class RefundControllerIntegrationTests {
 
         verify(refundService, times(1)).reject(999L, "Duplicate order");
         verifyNoInteractions(auditLogService);
+    }
+
+    @Test
+    @DisplayName("PUT /api/refunds/{id}/approve with non-SUPPORT role should return 403")
+    void approve_withWrongRole_returns403() throws Exception {
+
+        doThrow(new AccessDeniedException("User does not have SUPPORT role"))
+                .when(roleGuard)
+                .requireRole(any(Jwt.class), eq(Role.SUPPORT));
+
+        mockMvc.perform(put("/api/refunds/1/approve")
+                .with(csrf())
+                .with(jwt()))
+            .andExpect(status().isForbidden());
+
+        verify(refundService, never()).approve(any());
+        verifyNoInteractions(auditLogService);
+    }
+
+    @Test
+    @DisplayName("PUT /api/refunds/{id}/reject with non-SUPPORT role should return 403")
+    void reject_withWrongRole_returns403() throws Exception {
+
+        doThrow(new AccessDeniedException("User does not have SUPPORT role"))
+                .when(roleGuard)
+                .requireRole(any(Jwt.class), eq(Role.SUPPORT));
+
+        mockMvc.perform(put("/api/refunds/1/reject")
+                .with(csrf())
+                .with(jwt())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"reason\":\"Duplicate order\"}"))
+            .andExpect(status().isForbidden());
+
+        verify(refundService, never()).reject(anyLong(), any());
+        verifyNoInteractions(auditLogService);
+    }
+
+    @Test
+    @DisplayName("POST /api/refunds with invalid payload should return 400")
+    void create_invalidPayload_returns400() throws Exception {
+
+        mockMvc.perform(post("/api/refunds")
+                .with(csrf())
+                .with(jwt())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{}"))
+            .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(refundService);
     }
 }

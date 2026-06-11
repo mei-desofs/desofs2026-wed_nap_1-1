@@ -3,17 +3,62 @@ on:
     branches:
       - prod
 
-permissions:
-  contents: write
-  pull-requests: write
-
 name: release-please
 
 jobs:
   release-please:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
     steps:
       - uses: googleapis/release-please-action@v4
         with:
           token: ${{ secrets.MY_RELEASE_PLEASE_TOKEN }}
           release-type: simple
+          target-branch: prod
+
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-java@v5
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - run: mvn -B clean package -DskipTests
+        working-directory: App
+
+      - run: mkdir -p deploy/target && cp App/Dockerfile deploy/ && cp App/target/*.jar deploy/target/
+
+      - uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VM_HOST }}
+          username: ${{ secrets.VM_USER }}
+          key: ${{ secrets.VM_SSH_KEY }}
+          source: deploy/
+          target: /opt/emovieshop/
+
+      - uses: appleboy/ssh-action@v1
+        env:
+          DB_HOST: ${{ secrets.DB_HOST }}
+          DB_PORT: ${{ secrets.DB_PORT }}
+          DB_NAME: ${{ secrets.DB_NAME }}
+          DB_USERNAME: ${{ secrets.DB_USERNAME }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+        with:
+          host: ${{ secrets.VM_HOST }}
+          username: ${{ secrets.VM_USER }}
+          key: ${{ secrets.VM_SSH_KEY }}
+          envs: DB_HOST,DB_PORT,DB_NAME,DB_USERNAME,DB_PASSWORD
+          script: |
+            mkdir -p /opt/emovieshop/receipts
+            docker build -t emovieshop:latest /opt/emovieshop/deploy
+            cd /opt/emovieshop
+            docker compose -f docker-compose.prod.yml up -d
+            docker image prune -f

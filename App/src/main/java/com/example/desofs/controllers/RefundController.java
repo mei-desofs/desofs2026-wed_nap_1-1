@@ -59,7 +59,13 @@ public class RefundController {
      * @return list of {@link RefundRequestDTO}
      */
     @GetMapping
-    public List<RefundRequestDTO> list() {
+    public List<RefundRequestDTO> list(@AuthenticationPrincipal Jwt jwt) {
+        String auth0Id = jwt.getSubject();
+        logger.info("The user: {} has requested to list all refund requests", auth0Id);
+
+        roleGuard.requireRole(jwt, Role.SUPPORT);
+
+        auditLogService.log(jwt.getSubject(), jwt.getSubject(), Role.SUPPORT, "GET_REFUND_LIST");
         return refundService.listAll();
     }
 

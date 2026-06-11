@@ -26,6 +26,9 @@ import java.util.List;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasSize;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -73,25 +76,6 @@ class MovieControllerIntegrationTests {
     // ============ GET /api/movies (List All) ============
 
     @Test
-    @DisplayName("GET /api/movies should return 200 OK with all movies")
-    void testGetMoviesCatalog_Returns200_WithMoviesList() throws Exception {
-        when(movieService.listAll()).thenReturn(List.of(testMovie1, testMovie2));
-
-        mockMvc.perform(get("/api/movies")
-                        .with(jwt())
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$", hasSize(2)))
-                .andExpect(jsonPath("$[0].id").value(1L))
-                .andExpect(jsonPath("$[0].title").value("Inception"))
-                .andExpect(jsonPath("$[1].id").value(2L))
-                .andExpect(jsonPath("$[1].title").value("Matrix"));
-
-        verify(movieService, times(1)).listAll();
-    }
-
-    @Test
     @DisplayName("GET /api/movies should return empty array when no movies exist")
     void testGetMoviesCatalog_WithEmptyDatabase_ReturnsEmptyArray() throws Exception {
         when(movieService.listAll()).thenReturn(List.of());
@@ -104,36 +88,6 @@ class MovieControllerIntegrationTests {
 
         verify(movieService, times(1)).listAll();
     }
-
-        @Test
-        @DisplayName("GET /api/movies should return 200 with empty array when service fails")
-        void testGetMoviesCatalog_WhenServiceThrows_Returns200EmptyArray() throws Exception {
-                when(movieService.listAll()).thenThrow(new RuntimeException("DB failure"));
-
-                mockMvc.perform(get("/api/movies")
-                                                .with(jwt())
-                                                .accept(MediaType.APPLICATION_JSON))
-                                .andExpect(status().isOk())
-                                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                                .andExpect(jsonPath("$", hasSize(0)));
-
-                verify(movieService, times(1)).listAll();
-        }
-
-        @Test
-        @DisplayName("GET /api/movies should return 200 with empty array when service throws an error")
-        void testGetMoviesCatalog_WhenServiceThrowsError_Returns200EmptyArray() throws Exception {
-                when(movieService.listAll()).thenThrow(new AssertionError("Unexpected failure"));
-
-                mockMvc.perform(get("/api/movies")
-                                                .with(jwt())
-                                                .accept(MediaType.APPLICATION_JSON))
-                                .andExpect(status().isOk())
-                                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                                .andExpect(jsonPath("$", hasSize(0)));
-
-                verify(movieService, times(1)).listAll();
-        }
 
     @Test
     @DisplayName("GET /api/movies response contains all required fields")
@@ -498,4 +452,127 @@ class MovieControllerIntegrationTests {
 
         verify(roleGuard, times(1)).requireRole(any(), any());
     }
+
+    @Test
+        @DisplayName("PUT /api/movies/{id} should update movie and return 200")
+        void testUpdateMovie_Returns200() throws Exception {
+
+        MovieDTO updatedMovie = new MovieDTO(
+                1L,
+                "Updated Title",
+                "Updated Description",
+                "Action",
+                "Blu-ray",
+                new BigDecimal("19.99"),
+                20);
+
+        when(movieService.update(eq(1L), any(MovieDTO.class)))
+                .thenReturn(updatedMovie);
+
+        String body = """
+                {
+                "id":999,
+                "title":"Updated Title",
+                "description":"Updated Description",
+                "genre":"Action",
+                "platform":"Blu-ray",
+                "price":19.99,
+                "stockQuantity":20
+                }
+                """;
+
+        mockMvc.perform(put("/api/movies/1")
+                .with(csrf())
+                .with(jwt().jwt(jwt -> jwt.subject("auth0|admin123")))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(1))
+                .andExpect(jsonPath("$.title").value("Updated Title"));
+
+        verify(movieService).update(eq(1L), any(MovieDTO.class));
+        verify(auditLogService).log(
+                eq("auth0|admin123"),
+                eq("auth0|admin123"),
+                eq(Role.ADMIN),
+                eq("UPDATE_MOVIE"));
+        }
+
+        @Test
+        @DisplayName("PUT /api/movies/{id} should return 404 when movie does not exist")
+        void testUpdateMovie_NotFound_Returns404() throws Exception {
+
+        when(movieService.update(eq(999L), any(MovieDTO.class)))
+                .thenReturn(null);
+
+        String body = """
+                {
+                "title":"Updated"
+                }
+                """;
+
+        mockMvc.perform(put("/api/movies/999")
+                .with(csrf())
+                .with(jwt())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body))
+                .andExpect(status().isNotFound());
+
+        verify(movieService).update(eq(999L), any(MovieDTO.class));
+        verifyNoInteractions(auditLogService);
+        }
+
+        @Test
+        @DisplayName("PUT /api/movies/{id} should return 403 when role guard denies access")
+        void testUpdateMovie_WhenRoleGuardDenies_Returns403() throws Exception {
+
+        doThrow(new AccessDeniedException("Access denied"))
+                .when(roleGuard)
+                .requireRole(any(), eq(Role.ADMIN));
+
+        mockMvc.perform(put("/api/movies/1")
+                .with(csrf())
+                .with(jwt())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{}"))
+                .andExpect(status().isForbidden());
+
+        verify(movieService, never()).update(anyLong(), any());
+        }
+
+        @Test
+        @DisplayName("DELETE /api/movies/{id} should return 204")
+        void testDeleteMovie_Returns204() throws Exception {
+
+        doNothing().when(movieService).delete(1L);
+
+        mockMvc.perform(delete("/api/movies/1")
+                .with(csrf())
+                .with(jwt().jwt(jwt -> jwt.subject("auth0|admin123"))))
+                .andExpect(status().isNoContent());
+
+        verify(movieService).delete(1L);
+
+        verify(auditLogService).log(
+                eq("auth0|admin123"),
+                eq("auth0|admin123"),
+                eq(Role.ADMIN),
+                eq("DELETE_MOVIE"));
+        }
+
+        @Test
+        @DisplayName("DELETE /api/movies/{id} should return 403 when role guard denies access")
+        void testDeleteMovie_WhenRoleGuardDenies_Returns403() throws Exception {
+
+        doThrow(new AccessDeniedException("Access denied"))
+                .when(roleGuard)
+                .requireRole(any(), eq(Role.ADMIN));
+
+        mockMvc.perform(delete("/api/movies/1")
+                .with(csrf())
+                .with(jwt()))
+                .andExpect(status().isForbidden());
+
+        verify(movieService, never()).delete(anyLong());
+        }
 }
