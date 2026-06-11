@@ -11,3 +11,7 @@ This document serves as the main index for Sprint 1 of Phase 2. Here you will fi
 - [Pipeline Automation](./PipelineAutomation/pipelineAutomation.md): branching strategy, CI/CD workflows, SAST, SCA, and release automation.
 - [Testing and Validation](./TestingAndValidation/testingAndValidation.md): test strategy, SAST/SCA/DAST results, functional and security test execution.
 - [ASVS Traceability](./ASVSTraceability/Traceability.md): ASVS 5.0.0 traceability for Sprint 1 implementations. (Phase 1 baseline ASVS checklist is available at [Phase 1 ASVS checklist](../../Phase1/ASVSChecklist/ASVSChecklist.md)).
+
+### Use Cases
+
+Use case specifications (description, sequence diagrams, STRIDE threat analysis, ASVS mapping) live in the Phase 1 baseline and are not duplicated here. Sprint 1 implements the UCs listed in the [Sprint Plan](./SprintPlan/sprintPlan.md#sprint-focus-areas); for the full UC catalogue see [Phase 1 Use Cases](../../Phase1/UseCases/).

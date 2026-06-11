@@ -66,13 +66,13 @@ Specific threats to the process of browsing available movies were evaluated usin
 ### 3.1 STRIDE Table
 | Threat                                                                                        | Category                   | Mitigation Strategy                                                                                               |
 |:----------------------------------------------------------------------------------------------|:---------------------------|:------------------------------------------------------------------------------------------------------------------|
-| Attacker uses a forged or stolen JWT to impersonate a Customer (U1, B1 — Risk 12/10)          | **Spoofing**               | JWT signature validated against Auth0 JWKS (RS256) on every request; unsigned or malformed tokens rejected `401`. |
-| Customer manually crafts requests targeting Support or Admin endpoints (U6 — Risk 12)         | **Elevation of Privilege** | `RoleGuard` enforces `Customer` role server-side; any role mismatch returns `403 Forbidden`.                      |
-| Attacker injects malicious input via query parameters, e.g., search field (B3 — Risk 9)       | **Tampering**              | Server-side validation of all query parameters for type, format, and range before reaching `MovieService`.        |
-| Verbose error responses expose stack traces or internal service details (B6 — Risk 12)        | **Information Disclosure** | Generic error messages returned to clients; internal identifiers and stack traces never included in responses.    |
-| Attacker floods `GET /api/movies` to cause DoS or scrape full catalog data (U5, B7 — Risk 12) | **Denial of Service**      | Rate limiting middleware applied to the endpoint; `429` returned on threshold breach.                             |
-| Unbounded catalog query with no pagination saturates database resources (D6 — Risk 9)         | **Denial of Service**      | Query result sets are paginated and limited server-side; requests without valid pagination parameters rejected.   |
-| JWT or credentials intercepted in transit via network sniffing (U4 — Risk 8)                  | **Information Disclosure** | TLS enforced for all client-to-backend communications (ASVS V12.1.1); no plaintext fallback permitted.            |
+| Attacker uses a forged or stolen JWT to impersonate a Customer (U1, B1 - Risk 12/10)          | **Spoofing**               | JWT signature validated against Auth0 JWKS (RS256) on every request; unsigned or malformed tokens rejected `401`. |
+| Customer manually crafts requests targeting Support or Admin endpoints (U6 - Risk 12)         | **Elevation of Privilege** | `RoleGuard` enforces `Customer` role server-side; any role mismatch returns `403 Forbidden`.                      |
+| Attacker injects malicious input via query parameters, e.g., search field (B3 - Risk 9)       | **Tampering**              | Server-side validation of all query parameters for type, format, and range before reaching `MovieService`.        |
+| Verbose error responses expose stack traces or internal service details (B6 - Risk 12)        | **Information Disclosure** | Generic error messages returned to clients; internal identifiers and stack traces never included in responses.    |
+| Attacker floods `GET /api/movies` to cause DoS or scrape full catalog data (U5, B7 - Risk 12) | **Denial of Service**      | Rate limiting middleware applied to the endpoint; `429` returned on threshold breach.                             |
+| Unbounded catalog query with no pagination saturates database resources (D6 - Risk 9)         | **Denial of Service**      | Query result sets are paginated and limited server-side; requests without valid pagination parameters rejected.   |
+| JWT or credentials intercepted in transit via network sniffing (U4 - Risk 8)                  | **Information Disclosure** | TLS enforced for all client-to-backend communications (ASVS V12.1.1); no plaintext fallback permitted.            |
 
 ---
 

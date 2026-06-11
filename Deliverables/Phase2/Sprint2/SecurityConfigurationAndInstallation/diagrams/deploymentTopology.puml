@@ -1,0 +1,42 @@
+@startuml
+!define RECTANGLE_BORDER #2C3E50
+skinparam rectangle {
+  BackgroundColor #FDFEFE
+  BorderColor #2C3E50
+  FontColor #1B2631
+}
+skinparam node {
+  BackgroundColor #EBF5FB
+  BorderColor #2C3E50
+  FontColor #1B2631
+}
+skinparam database {
+  BackgroundColor #FEF9E7
+  BorderColor #B7950B
+}
+skinparam folder {
+  BackgroundColor #F4ECF7
+  BorderColor #6C3483
+}
+skinparam ArrowColor #2C3E50
+skinparam DefaultFontName "Segoe UI"
+
+title eMovieShop - Production Deployment Topology
+
+cloud "GitHub" as gh {
+  node "GitHub Actions runner\n(ephemeral)" as runner
+}
+
+node "Production VM (Linux)" as vm {
+  node "Docker Engine" as docker {
+    rectangle "emovieshop:latest\n(rootless container, port 8080)" as app
+  }
+  database "MySQL 8.0\n(localhost)" as mysql
+  folder "/opt/emovieshop/receipts" as receipts
+}
+
+runner -down-> vm : SSH / SCP\n(deploy job)
+app -down-> mysql : JDBC (loopback)
+app -right-> receipts : bind mount
+
+@enduml

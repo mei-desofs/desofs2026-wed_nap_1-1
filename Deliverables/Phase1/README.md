@@ -1,4 +1,4 @@
-# eMovieShop Documentation — Phase 1
+# eMovieShop Documentation - Phase 1
 
 This document serves as the main index for Phase 1 of the project. Here you will find references to all required artefacts, organized by topic, as well as the evaluation criteria.
 

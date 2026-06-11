@@ -2,13 +2,13 @@
 
 ## Sprint Focus Areas
 
-- **Pipeline — DAST, SAST, IAST and SCA** integrate and run SAST (CodeQL/SpotBugs/PMD), IAST where available, and OpenAPI-driven DAST (OWASP ZAP). Owners: Miguel Cardoso (1220772), Pedro Soares (1200909) and Pedro Costa (1201576). 
+- **Pipeline - DAST, SAST, IAST and SCA** integrate and run SAST (CodeQL/SpotBugs/PMD), IAST where available, and OpenAPI-driven DAST (OWASP ZAP). Owners: Miguel Cardoso (1220772), Pedro Soares (1200909) and Pedro Costa (1201576). 
 
 - **Use Cases Implementation:** complete UC implementations (UC1, UC2, UC3 and UC4) per assignments above. Each UC owner delivers feature PRs with tests and ASVS evidence; testing lead consolidates test results. Owners: Diogo Ribeiro (1220812), Pedro Soares (1200909), Pedro Costa (1201576) and Pedro Silva (1221033)
 
 - **Code Reviews:** enforce PR checklist (unit tests, integration tests, CI green, SAST/SCA triage, ASVS references). Review turnaround: 48 hours target; coordinators: every team member.
 
-- **Database:** secure schema and migrations, use parameterized queries (JPA), enforce least-privilege DB user, and document backup/restore approach. Owner: Miguel Cardoso (122072).
+- **Database:** secure schema and migrations, use parameterized queries (JPA), enforce least-privilege DB user, and document backup/restore approach. Owner: Miguel Cardoso (1220772).
 
 - **Authentication and Authorization:** Auth0-based JWT validation, `AudienceValidator` enforcement, RBAC checks for admin endpoints, and token lifecycle settings (rotation/expiration). Owners: Pedro Soares (1200909).
 
@@ -31,7 +31,6 @@
 mvn -B -f App clean test jacoco:report
 ```
 
-	 - Owners: `Miguel Cardoso` (tests lead), `Pedro Silva` (security test scenarios).
 	 - Acceptance criteria:
 		 - Unit tests present for all new/changed code paths and critical utilities.
 		 - Integration tests exercise UC flows (login, purchase, refund) including auth and DB interactions.

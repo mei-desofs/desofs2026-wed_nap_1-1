@@ -18,7 +18,6 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import jakarta.validation.ConstraintViolationException;
-
 import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.UUID;
@@ -220,6 +219,23 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(errorBody(correlationId, HttpStatus.INTERNAL_SERVER_ERROR.value(), "An unexpected error occurred"));
+    }
+
+    /**
+     * Handles Auth0 Management API failures without leaking upstream details.
+     *
+     * @param ex Auth0 management exception
+     * @return HTTP 502 response with a generic upstream error message
+     */
+    @ExceptionHandler(Auth0ManagementException.class)
+    public ResponseEntity<Map<String, Object>> handleAuth0Management(Auth0ManagementException ex) {
+        String correlationId = UUID.randomUUID().toString();
+        logger.error("Auth0 management failure [{}]: {}", correlationId, ex.getMessage());
+
+        return ResponseEntity.status(HttpStatus.BAD_GATEWAY)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(errorBody(correlationId, HttpStatus.BAD_GATEWAY.value(),
+                        "Identity provider unavailable"));
     }
 
     /**

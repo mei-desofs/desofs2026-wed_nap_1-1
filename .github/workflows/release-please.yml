@@ -34,7 +34,7 @@ jobs:
       - run: mvn -B clean package -DskipTests
         working-directory: App
 
-      - run: mkdir -p deploy/target && cp App/Dockerfile deploy/ && cp App/target/*.jar deploy/target/
+      - run: mkdir -p deploy/target && cp App/Dockerfile deploy/ && cp App/docker-compose.yml deploy/ && cp App/target/*.jar deploy/target/
 
       - uses: appleboy/scp-action@v0.1.7
         with:
@@ -59,6 +59,6 @@ jobs:
           script: |
             mkdir -p /opt/emovieshop/receipts
             docker build -t emovieshop:latest /opt/emovieshop/deploy
-            cd /opt/emovieshop
-            docker compose -f docker-compose.prod.yml up -d
+            cd /opt/emovieshop/deploy
+            docker compose up -d
             docker image prune -f
