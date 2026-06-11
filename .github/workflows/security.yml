@@ -153,9 +153,9 @@ jobs:
           AUTH0_MGMT_AUDIENCE: https://${{ secrets.AUTH0_DOMAIN }}/api/v2/
           AUTH0_MGMT_CLIENT_ID: ${{ secrets.AUTH0_CLIENT_ID }}
           AUTH0_MGMT_CLIENT_SECRET: ${{ secrets.AUTH0_CLIENT_SECRET }}
-          AUTH0_ROLE_ID_ADMIN: ${{ vars.AUTH0_ROLE_ID_ADMIN }}
-          AUTH0_ROLE_ID_SUPPORT: ${{ vars.AUTH0_ROLE_ID_SUPPORT }}
-          AUTH0_ROLE_ID_CUSTOMER: ${{ vars.AUTH0_ROLE_ID_CUSTOMER }}
+          AUTH0_ROLE_ID_ADMIN: ${{ secrets.AUTH0_ROLE_ID_ADMIN }}
+          AUTH0_ROLE_ID_SUPPORT: ${{ secrets.AUTH0_ROLE_ID_SUPPORT }}
+          AUTH0_ROLE_ID_CUSTOMER: ${{ secrets.AUTH0_ROLE_ID_CUSTOMER }}
           SERVER_PORT: 8080
           SPRING_JPA_HIBERNATE_DDL_AUTO: validate
           SPRINGDOC_API_DOCS_ENABLED: "true"
