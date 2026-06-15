@@ -9,6 +9,8 @@ This document records the **deltas** introduced in Sprint 2. The Sprint 1 baseli
 3. [UC8 - Manage Roles (User Administration & Token Invalidation)](#3-uc8---manage-roles-user-administration--token-invalidation)
 4. [Containerisation & Production Image](#4-containerisation--production-image)
 5. [Database Migrations](#5-database-migrations)
+6. [Cryptographic Key Management Lifecycle](#6-cryptographic-key-management-lifecycle)
+7. [Logging and Audit Strategy](#7-logging-and-audit-strategy)
 
 ---
 
@@ -143,3 +145,59 @@ Hardening summary (rationale and ASVS mapping in [Security Configuration & Insta
 | [`V10__align_refund_requests_schema.sql`](../../../../App/src/main/resources/db/migration/V10__align_refund_requests_schema.sql) | Replaces legacy `refund_requests.user_id` FK with `auth0_id` |
 
 V9 / V10 close a long-standing drift between the JPA entities (post-Auth0) and the schema created in V1, which had previously been masked by `hibernate.ddl-auto=create-drop`. With Flyway as the schema source of truth and `spring.jpa.hibernate.ddl-auto=validate` in production, these alignments are required for the application to start.
+
+## 6. Cryptographic Key Management Lifecycle
+
+### JWT Signing Keys (Auth0 Managed)
+
+The application relies on Auth0 for JWT signing key management.
+
+- **Key Generation**
+
+    JWT signing keys are generated and managed exclusively by Auth0.
+
+    The application never generates or stores JWT signing private keys.
+
+- **Key Storage**
+
+    Private signing keys remain inside Auth0 infrastructure and are never shared with the application.
+    
+    The backend accesses only public verification keys exposed through the Auth0 JWKS endpoint.
+
+- **Key Distribution**
+
+    Public verification keys are obtained from the configured Auth0 JWKS endpoint.
+
+    Only keys belonging to the configured issuer are trusted.
+
+- **Key Rotation**
+
+    Signing key rotation is performed by Auth0.
+    
+    The backend automatically retrieves updated public keys from the JWKS endpoint when validating JWTs.
+
+- **Key Revocation and Replacement**
+
+    When Auth0 rotates signing keys, previously trusted keys can be retired according to Auth0 lifecycle policies.
+
+    The backend trusts only currently valid keys published by the issuer.
+
+
+## 7. Logging and Audit Strategy
+
+### Application Logs
+Location: application.log
+Retention: 90 days
+
+### Audit Logs
+Location: audit_logs table
+Retention: 1 year
+
+### Security Events
+- Failed authentication
+- Failed authorization
+- JWT validation errors
+- Auth0 communication failures
+
+### Access Control
+Only administrators may access audit logs.
