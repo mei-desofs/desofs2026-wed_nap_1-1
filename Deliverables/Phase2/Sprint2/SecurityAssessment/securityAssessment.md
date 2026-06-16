@@ -23,7 +23,7 @@ This document records the security assessment activities performed at the end of
 | `OrderController` + `ReceiptFileService` | UC3 | Sprint 1 | Yes (unchanged) |
 | `RefundController` (create) | UC4 | Sprint 1 | Yes (unchanged) |
 | `RefundController` (list) | UC5 | Sprint 2 | Yes (new) |
-| `RefundController` (approve/reject) | UC6 | Sprint 1 | Yes (unchanged) |
+| `RefundController` (approve/reject) | UC6 | Sprint 2 | Yes (new) |
 | `MovieController` (write) | UC7 | Sprint 2 | Yes (new) |
 | `UserController` (role admin) | UC8 | Sprint 2 | Yes (new) |
 | `TokenFreshnessFilter` + `TokenInvalidationService` | UC8 | Sprint 2 | Yes (new) |
@@ -58,72 +58,76 @@ All scenarios passed.
 
 ### 3.1 UC1 - Login (Auth0 delegated)
 
-| # | Scenario | Expected control | Observed |
-|---|---|---|---|
-| UC1.a | Anonymous request to any `/api/**` | Spring Resource Server returns 401 | 401 with `WWW-Authenticate: Bearer` |
-| UC1.b | Tampered JWT signature | `JwtDecoder` rejects | 401 `invalid_token` |
-| UC1.c | JWT with wrong `aud` claim | `AudienceValidator` rejects | 401 `invalid_token`; reason logged |
-| UC1.d | JWT without `https://emovieshop/roles` claim | `Auth0RolesConverter` returns empty authorities, RoleGuard 403 | 403 |
+| # | Scenario | Expected control | Observed | Evidence |
+|---|---|---|---|---|
+| UC1.a | Anonymous request to any `/api/**` | Spring Resource Server returns 401 | 401 with `WWW-Authenticate: Bearer` | [`SecurityConfigIntegrationTest`](../../../../App/src/test/java/com/example/desofs/config/SecurityConfigIntegrationTest.java) |
+| UC1.b | Tampered JWT signature | `JwtDecoder` rejects | 401 `invalid_token` | [`SecurityConfigIntegrationTest`](../../../../App/src/test/java/com/example/desofs/config/SecurityConfigIntegrationTest.java) |
+| UC1.c | JWT with wrong `aud` claim | `AudienceValidator` rejects | 401 `invalid_token`; reason logged | [`AudienceValidatorTest`](../../../../App/src/test/java/com/example/desofs/config/AudienceValidatorTest.java) |
+| UC1.d | JWT without `https://emovieshop/roles` claim | `Auth0RolesConverter` returns empty authorities, RoleGuard 403 | 403 | [`SecurityConfigIntegrationTest`](../../../../App/src/test/java/com/example/desofs/config/SecurityConfigIntegrationTest.java) |
 
 ### 3.2 UC2 - Browse Available Movies
 
-| # | Scenario | Expected control | Observed |
-|---|---|---|---|
-| UC2.a | `CUSTOMER` calls `GET /api/movies/{id}` with valid id | 200 with DTO | 200, no internal fields leaked |
-| UC2.b | `CUSTOMER` calls `GET /api/movies` (admin-only listing) | 403 | 403 |
-| UC2.c | Path traversal `GET /api/movies/../actuator/env` | Spring routing returns 404 | 404; ZAP rule `6` suppressed as numeric-id false-positive |
+| # | Scenario | Expected control | Observed | Evidence |
+|---|---|---|---|---|
+| UC2.a | `CUSTOMER` calls `GET /api/movies/{id}` with valid id | 200 with DTO | 200, no internal fields leaked | [`MovieControllerIntegrationTests`](../../../../App/src/test/java/com/example/desofs/controller/MovieControllerIntegrationTests.java) |
+| UC2.b | `CUSTOMER` calls `GET /api/movies` (admin-only listing) | 403 | 403 | [`MovieControllerIntegrationTests`](../../../../App/src/test/java/com/example/desofs/controller/MovieControllerIntegrationTests.java) |
+| UC2.c | Path traversal `GET /api/movies/../actuator/env` | Spring routing returns 404 | 404; ZAP rule `6` suppressed as numeric-id false-positive | DAST (ZAP report) |
 
 ### 3.3 UC3 - Purchase Movie
 
-| # | Scenario | Expected control | Observed |
-|---|---|---|---|
-| UC3.a | `CUSTOMER` posts a valid order | 201 + receipt PDF written | 201; receipt file owned by container user `emovieshop` |
-| UC3.b | Negative quantity in payload | `@Valid` Bean Validation rejects | 400 with field-level error from `GlobalExceptionHandler` |
-| UC3.c | Receipt name with `../etc/passwd` and embedded `\0` | `ReceiptFileService` rejects after sanitization | 400 `Invalid request`; correlation id logged |
-| UC3.d | Customer A reads Customer B's receipt | Ownership check rejects | 403 |
+| # | Scenario | Expected control | Observed | Evidence |
+|---|---|---|---|---|
+| UC3.a | `CUSTOMER` posts a valid order | 201 + receipt PDF written | 201; receipt file owned by container user `emovieshop` | [`OrderControllerIntegrationTests`](../../../../App/src/test/java/com/example/desofs/controller/OrderControllerIntegrationTests.java) |
+| UC3.b | Negative quantity in payload | `@Valid` Bean Validation rejects | 400 with field-level error from `GlobalExceptionHandler` | [`InputValidationSecurityTest`](../../../../App/src/test/java/com/example/desofs/controller/InputValidationSecurityTest.java) |
+| UC3.c | Receipt name with `../etc/passwd` and embedded `\0` | `ReceiptFileService` rejects after sanitization | 400 `Invalid request`; correlation id logged | [`InputValidationSecurityTest`](../../../../App/src/test/java/com/example/desofs/controller/InputValidationSecurityTest.java) |
+| UC3.d | Customer A reads Customer B's receipt | Ownership check rejects | 403 | [`OrderControllerIntegrationTests`](../../../../App/src/test/java/com/example/desofs/controller/OrderControllerIntegrationTests.java) |
 
 ### 3.4 UC4 - Request Refund
 
-| # | Scenario | Expected control | Observed |
-|---|---|---|---|
-| UC4.a | `CUSTOMER` requests refund of own order | 201 with `PENDING` state | 201 |
-| UC4.b | `CUSTOMER` requests refund on someone else's order | 403 | 403 |
-| UC4.c | Burst above the configured per-IP / per-user rate (300 / 120 req/min) on the create endpoint | `RateLimitFilter` returns 429 | 429 with `Retry-After` |
+| # | Scenario | Expected control | Observed | Evidence |
+|---|---|---|---|---|
+| UC4.a | `CUSTOMER` requests refund of own order | 201 with `PENDING` state | 201 | [`RefundControllerIntegrationTests`](../../../../App/src/test/java/com/example/desofs/controller/RefundControllerIntegrationTests.java) |
+| UC4.b | `CUSTOMER` requests refund on someone else's order | 403 | 403 | [`RefundControllerIntegrationTests`](../../../../App/src/test/java/com/example/desofs/controller/RefundControllerIntegrationTests.java) |
+| UC4.c | Burst above the configured per-IP / per-user rate (300 / 120 req/min) on the create endpoint | `RateLimitFilter` returns 429 | 429 with `Retry-After` | [`RefundControllerIntegrationTests`](../../../../App/src/test/java/com/example/desofs/controller/RefundControllerIntegrationTests.java) (rate-limit case) |
 
 ### 3.5 UC5 - View Refund Requests (Sprint 2)
 
-| # | Scenario | Expected control | Observed |
-|---|---|---|---|
-| UC5.a | `SUPPORT` calls `GET /api/refunds` | 200 with paginated list | 200 |
-| UC5.b | `CUSTOMER` calls `GET /api/refunds` | RoleGuard returns 403 | 403, no body leak |
-| UC5.c | SQL injection probe via `?status=PENDING' OR 1=1--` | JPA parameter binding neutralises | 400 `Invalid request` (enum coercion fails); no DB error leaked |
+| # | Scenario | Expected control | Observed | Evidence |
+|---|---|---|---|---|
+| UC5.a | `SUPPORT` calls `GET /api/refunds` | 200 with paginated list | 200 | [`RefundControllerIntegrationTests`](../../../../App/src/test/java/com/example/desofs/controller/RefundControllerIntegrationTests.java) |
+| UC5.b | `CUSTOMER` calls `GET /api/refunds` | RoleGuard returns 403 | 403, no body leak | [`RefundControllerIntegrationTests`](../../../../App/src/test/java/com/example/desofs/controller/RefundControllerIntegrationTests.java) |
+| UC5.c | SQL injection probe via `?status=PENDING' OR 1=1--` | JPA parameter binding neutralises | 400 `Invalid request` (enum coercion fails); no DB error leaked | DAST (ZAP report) + [`InputValidationSecurityTest`](../../../../App/src/test/java/com/example/desofs/controller/InputValidationSecurityTest.java) |
+| UC5.d | `SUPPORT` calls `GET /api/refunds/{id}` | 200 with detail DTO when found, 404 otherwise | 200 / 404 | [`RefundControllerIntegrationTests`](../../../../App/src/test/java/com/example/desofs/controller/RefundControllerIntegrationTests.java) |
+| UC5.e | `CUSTOMER` calls `GET /api/refunds/{id}` | RoleGuard returns 403 | 403 | [`RefundControllerIntegrationTests`](../../../../App/src/test/java/com/example/desofs/controller/RefundControllerIntegrationTests.java) |
 
 ### 3.6 UC6 - Handle Refund Request
 
-| # | Scenario | Expected control | Observed |
-|---|---|---|---|
-| UC6.a | `SUPPORT` approves a `PENDING` refund | State machine -> `APPROVED`; audit log entry | 200; row visible in `audit_log` |
-| UC6.b | `SUPPORT` approves an already-`APPROVED` refund | Domain rule throws | 400 with deterministic message |
-| UC6.c | `CUSTOMER` calls `POST /api/refunds/{id}/approve` | RoleGuard returns 403 | 403 |
+| # | Scenario | Expected control | Observed | Evidence |
+|---|---|---|---|---|
+| UC6.a | `SUPPORT` approves a `PENDING` refund | State machine -> `APPROVED`; audit log entry | 200; row visible in `audit_log` | [`RefundControllerIntegrationTests`](../../../../App/src/test/java/com/example/desofs/controller/RefundControllerIntegrationTests.java), [`AuditLogControllerIntegrationTests`](../../../../App/src/test/java/com/example/desofs/controller/AuditLogControllerIntegrationTests.java) |
+| UC6.b | `SUPPORT` approves an already-`APPROVED` refund | Domain rule throws | 400 with deterministic message | [`RefundControllerIntegrationTests`](../../../../App/src/test/java/com/example/desofs/controller/RefundControllerIntegrationTests.java) |
+| UC6.c | `CUSTOMER` calls `POST /api/refunds/{id}/approve` | RoleGuard returns 403 | 403 | [`RefundControllerIntegrationTests`](../../../../App/src/test/java/com/example/desofs/controller/RefundControllerIntegrationTests.java) |
 
 ### 3.7 UC7 - Manage Movie Catalog (Sprint 2)
 
-| # | Scenario | Expected control | Observed |
-|---|---|---|---|
-| UC7.a | `ADMIN` posts a valid movie | 201 with new id | 201; `audit_log` row written |
-| UC7.b | `SUPPORT` posts a movie | 403 | 403 |
-| UC7.c | XSS payload in `title` (`<script>alert(1)</script>`) | Stored as-is; output is JSON, no HTML rendering on the API side | 201; payload returned escaped in JSON, no HTML execution path |
-| UC7.d | Title exceeding `@Size(max=255)` | Bean Validation rejects | 400 with field-level error |
+| # | Scenario | Expected control | Observed | Evidence |
+|---|---|---|---|---|
+| UC7.a | `ADMIN` posts a valid movie | 201 with new id | 201; `audit_log` row written | [`MovieControllerIntegrationTests`](../../../../App/src/test/java/com/example/desofs/controller/MovieControllerIntegrationTests.java) |
+| UC7.b | `SUPPORT` posts a movie | 403 | 403 | [`MovieControllerIntegrationTests`](../../../../App/src/test/java/com/example/desofs/controller/MovieControllerIntegrationTests.java) |
+| UC7.c | XSS payload in `title` (`<script>alert(1)</script>`) | Stored as-is; output is JSON, no HTML rendering on the API side | 201; payload returned escaped in JSON, no HTML execution path | [`InputValidationSecurityTest`](../../../../App/src/test/java/com/example/desofs/controller/InputValidationSecurityTest.java) |
+| UC7.d | Title exceeding `@Size(max=255)` | Bean Validation rejects | 400 with field-level error | [`MovieControllerIntegrationTests`](../../../../App/src/test/java/com/example/desofs/controller/MovieControllerIntegrationTests.java) |
+| UC7.e | `ADMIN` calls `DELETE /api/movies/{id}` | 204 No Content; `DELETE_MOVIE` audit entry written | 204; `audit_log` row visible | [`MovieControllerIntegrationTests`](../../../../App/src/test/java/com/example/desofs/controller/MovieControllerIntegrationTests.java) |
+| UC7.f | `CUSTOMER` calls `DELETE /api/movies/{id}` | RoleGuard returns 403 | 403, no body leak | [`MovieControllerIntegrationTests`](../../../../App/src/test/java/com/example/desofs/controller/MovieControllerIntegrationTests.java) |
 
 ### 3.8 UC8 - Manage Roles (Sprint 2)
 
-| # | Scenario | Expected control | Observed |
-|---|---|---|---|
-| UC8.a | Anonymous request to `POST /api/users/{id}/roles` | 401 | 401 `WWW-Authenticate: Bearer` |
-| UC8.b | `ADMIN` calls `POST /api/users/{adminSelf}/roles` | `UserService.guardSelfModification` throws | 400 from `GlobalExceptionHandler` |
-| UC8.c | Admin removes `ADMIN` role from a target user; that user replays a token issued before the cut-off | `TokenFreshnessFilter` rejects | 401 `invalid_token`; `iat` denylist hit logged |
-| UC8.d | Same as UC8.c but using a refreshed token issued after the cut-off | Token must be accepted | 200 returned for permitted endpoints |
-| UC8.e | Auth0 Management API forced offline during role change | DB cut-off persists, Auth0 call swallowed | DB write committed, WARN log emitted, request returns 204 |
+| # | Scenario | Expected control | Observed | Evidence |
+|---|---|---|---|---|
+| UC8.a | Anonymous request to `POST /api/users/{id}/roles` | 401 | 401 `WWW-Authenticate: Bearer` | [`UserControllerIntegrationTests`](../../../../App/src/test/java/com/example/desofs/controller/UserControllerIntegrationTests.java) |
+| UC8.b | `ADMIN` calls `POST /api/users/{adminSelf}/roles` | `UserService.guardSelfModification` throws | 400 from `GlobalExceptionHandler` | [`UserControllerIntegrationTests`](../../../../App/src/test/java/com/example/desofs/controller/UserControllerIntegrationTests.java) |
+| UC8.c | Admin removes `ADMIN` role from a target user; that user replays a token issued before the cut-off | `TokenFreshnessFilter` rejects | 401 `invalid_token`; `iat` denylist hit logged | [`TokenFreshnessFilterTest`](../../../../App/src/test/java/com/example/desofs/security/TokenFreshnessFilterTest.java), [`TokenInvalidationServiceTest`](../../../../App/src/test/java/com/example/desofs/services/TokenInvalidationServiceTest.java) |
+| UC8.d | Same as UC8.c but using a refreshed token issued after the cut-off | Token must be accepted | 200 returned for permitted endpoints | [`TokenFreshnessFilterTest`](../../../../App/src/test/java/com/example/desofs/security/TokenFreshnessFilterTest.java) |
+| UC8.e | Auth0 Management API forced offline during role change | DB cut-off persists, Auth0 call swallowed | DB write committed, WARN log emitted, request returns 204 | [`Auth0ManagementClientTest`](../../../../App/src/test/java/com/example/desofs/security/Auth0ManagementClientTest.java) |
 
 ---
 
@@ -154,7 +158,7 @@ The five accepted CVEs documented in [Sprint 1 Cap4.2](../../Sprint1/TestingAndV
 | Auth0 Management API outage during a role change | Low | Medium | Local denylist is authoritative; Auth0 call is best-effort. WARN log surfaces the failure for follow-up. |
 | GitHub Secret leakage by misconfigured workflow | Low | High | Secrets are only consumed in actions, never echoed. Tokens are masked. PR-based workflow review catches accidental dumps. |
 | Accepted CVEs become exploitable upstream | Low | Medium | Mitigations documented per CVE; re-scan each sprint. |
-| `network_mode: host` in `docker-compose.prod.yml` exposes every listening port directly on the VM | Low | Medium | Only port 8080 is bound by the app; host firewall restricts inbound traffic. |
+| Production MySQL reached on the VM loopback shares the host network namespace with the database server | Low | Medium | Only port 8080 is exposed by the container; the host firewall restricts inbound traffic and the MySQL port is not published outside the VM. |
 | Rate limit counters (Bucket4j) are kept in memory and reset whenever the container restarts | Low | Low | Restarts are infrequent and only briefly relax the limit. A distributed store (e.g. Redis) would be needed if the app is ever scaled out. |
 
 ---
