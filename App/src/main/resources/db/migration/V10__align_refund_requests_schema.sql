@@ -1,10 +1,9 @@
 -- Flyway migration: align `refund_requests` table with the RefundRequest JPA entity.
--- Same root cause as V9: the entity uses `auth0_id` (String, post-Auth0 migration)
--- while V5 created `user_id` (BIGINT FK to users). Drift was masked by
--- Hibernate `ddl-auto=create-drop`; with `validate` the missing column blocks
--- startup.
+-- Same root cause as V9: every statement is guarded against the current schema
+-- state so the migration is safe to (re)apply on databases where Hibernate
+-- already removed legacy columns.
 
--- Resolve the auto-generated FK name on user_id and drop it.
+-- 1. Drop the auto-generated FK on user_id (if it still exists).
 SET @fk_name := (
     SELECT CONSTRAINT_NAME
     FROM information_schema.KEY_COLUMN_USAGE
@@ -19,9 +18,29 @@ SET @sql := IF(@fk_name IS NOT NULL,
                'SELECT 1');
 PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 
--- The legacy index on user_id is dropped automatically when the column is dropped.
-ALTER TABLE refund_requests
-    DROP COLUMN user_id,
-    ADD COLUMN auth0_id VARCHAR(255) NOT NULL DEFAULT '' AFTER order_id;
+-- 2. Drop legacy user_id column only if present (its index is dropped with it).
+SET @col_exists := (
+    SELECT COUNT(*) FROM information_schema.COLUMNS
+    WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'refund_requests' AND COLUMN_NAME = 'user_id'
+);
+SET @sql := IF(@col_exists > 0, 'ALTER TABLE refund_requests DROP COLUMN user_id', 'SELECT 1');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 
-CREATE INDEX idx_refund_auth0_id ON refund_requests(auth0_id);
+-- 3. Add auth0_id only if missing.
+SET @col_exists := (
+    SELECT COUNT(*) FROM information_schema.COLUMNS
+    WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'refund_requests' AND COLUMN_NAME = 'auth0_id'
+);
+SET @sql := IF(@col_exists = 0,
+               "ALTER TABLE refund_requests ADD COLUMN auth0_id VARCHAR(255) NOT NULL DEFAULT '' AFTER order_id",
+               'SELECT 1');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+-- 4. Create the auth0_id index only if it does not already exist.
+SET @idx_exists := (
+    SELECT COUNT(*) FROM information_schema.STATISTICS
+    WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'refund_requests' AND INDEX_NAME = 'idx_refund_auth0_id'
+);
+SET @sql := IF(@idx_exists = 0, 'CREATE INDEX idx_refund_auth0_id ON refund_requests(auth0_id)', 'SELECT 1');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
