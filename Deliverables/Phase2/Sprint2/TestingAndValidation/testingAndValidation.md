@@ -25,16 +25,18 @@ The Sprint 2 test effort focuses on the new code introduced for UC5-UC8 and the 
 
 ## 2. New and Updated Tests
 
-| Test class | Type | What it covers |
-|---|---|---|
-| [`MovieTest`](../../../../App/src/test/java/com/example/desofs/domain/MovieTest.java) | Unit | Movie domain invariants and constructors |
-| [`MovieServiceTests`](../../../../App/src/test/java/com/example/desofs/services/MovieServiceTests.java) | Unit | `MovieService` create/get/list/update branches |
-| [`TokenInvalidationServiceTest`](../../../../App/src/test/java/com/example/desofs/services/TokenInvalidationServiceTest.java) | Unit | Cut-off persistence, `isTokenInvalidated` decision logic |
-| [`TokenFreshnessFilterTest`](../../../../App/src/test/java/com/example/desofs/security/TokenFreshnessFilterTest.java) | Unit | 401 on stale `iat`; pass-through for missing claims; pass-through for non-JWT requests |
+| Test class | Type | What it covers                                                                                                    |
+|---|---|-------------------------------------------------------------------------------------------------------------------|
+| [`MovieTest`](../../../../App/src/test/java/com/example/desofs/domain/MovieTest.java) | Unit | Movie domain invariants and constructors                                                                          |
+| [`MovieServiceTests`](../../../../App/src/test/java/com/example/desofs/services/MovieServiceTests.java) | Unit | `MovieService` create/get/list/update branches                                                                    |
+| [`TokenInvalidationServiceTest`](../../../../App/src/test/java/com/example/desofs/services/TokenInvalidationServiceTest.java) | Unit | Cut-off persistence, `isTokenInvalidated` decision logic                                                          |
+| [`TokenFreshnessFilterTest`](../../../../App/src/test/java/com/example/desofs/security/TokenFreshnessFilterTest.java) | Unit | 401 on stale `iat`; pass-through for missing claims; pass-through for non-JWT requests                            |
 | [`Auth0ManagementClientTest`](../../../../App/src/test/java/com/example/desofs/security/Auth0ManagementClientTest.java) | Unit | `invalidateSessions_success`, `invalidateSessions_swallowsAuth0Errors`, `invalidateSessions_rejectsInvalidUserId` |
-| [`MovieControllerIntegrationTests`](../../../../App/src/test/java/com/example/desofs/controller/MovieControllerIntegrationTests.java) | Integration | UC7: list / get / create / update including RBAC and `@Valid` failures |
-| [`RefundControllerIntegrationTests`](../../../../App/src/test/java/com/example/desofs/controller/RefundControllerIntegrationTests.java) | Integration | UC5 listing as `SUPPORT`, UC4 creation as `CUSTOMER`, approval / rejection flows |
-| [`UserControllerIntegrationTests`](../../../../App/src/test/java/com/example/desofs/controller/UserControllerIntegrationTests.java) | Integration | UC8 list users / assign role / remove role; self-modification guard |
+| [`MovieControllerIntegrationTests`](../../../../App/src/test/java/com/example/desofs/controller/MovieControllerIntegrationTests.java) | Integration | UC7: list / get / create / update including RBAC and `@Valid` failures                                            |
+| [`RefundControllerIntegrationTests`](../../../../App/src/test/java/com/example/desofs/controller/RefundControllerIntegrationTests.java) | Integration | UC5 listing as `SUPPORT`, UC6 approve / reject flows; UC4 creation as `CUSTOMER` *                                |
+| [`UserControllerIntegrationTests`](../../../../App/src/test/java/com/example/desofs/controller/UserControllerIntegrationTests.java) | Integration | UC8 list users / assign role / remove role; self-modification guard                                               |
+
+* NOTE: UC4 (refund creation) was delivered in Sprint 1; the `CUSTOMER` create case is kept in this class as a regression test to guarantee the original UC4 flow still works after the UC5/UC6 additions.
 
 ---
 

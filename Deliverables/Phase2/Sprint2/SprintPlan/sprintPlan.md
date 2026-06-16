@@ -2,12 +2,11 @@
 
 ## Sprint Focus Areas
 
-- **Pipeline - Deployment Automation:** extend the existing `release-please.yml` workflow with a `deploy` job that, after each release to `prod`, builds the application JAR with Maven, copies the artefact + `Dockerfile` to the production VM via `scp`, and brings the stack up over `ssh` with `docker compose -f docker-compose.prod.yml up -d`. DB credentials (`DB_HOST/PORT/NAME/USERNAME/PASSWORD`), VM access (`VM_HOST/USER/SSH_KEY`) and the release token (`MY_RELEASE_PLEASE_TOKEN`) are read from GitHub Secrets. The pre-existing SAST/SCA/DAST workflow (`.github/workflows/security.yml`) is left untouched apart from minor comment housekeeping; CodeQL, SpotBugs/PMD, OWASP Dependency-Check and OWASP ZAP keep running as in Sprint 1, with the ZAP API scan remaining blocking (`fail_action: true`) as new endpoints land for UC5-UC8. Owners: Miguel Cardoso (1220772), Pedro Soares (1200909) and Pedro Costa (1201576).
+- **Pipeline - Deployment Automation:** extend the existing `release-please.yml` workflow with a `deploy` job that, after each release to `prod`, builds the application JAR with Maven, copies the artifact + `Dockerfile` + `App/docker-compose.yml` to the production VM via `scp`, and brings the stack up over `ssh` with `docker compose up -d`. DB credentials (`DB_HOST/PORT/NAME/USERNAME/PASSWORD`), VM access (`VM_HOST/USER/SSH_KEY`) and the release token (`MY_RELEASE_PLEASE_TOKEN`) are read from GitHub Secrets. The pre-existing SAST/SCA/DAST workflow (`.github/workflows/security.yml`) is left untouched apart from minor comment housekeeping; CodeQL, SpotBugs/PMD, OWASP Dependency-Check and OWASP ZAP keep running as in Sprint 1, with the ZAP API scan remaining blocking (`fail_action: true`) as new endpoints land for UC5-UC8. Owners: Miguel Cardoso (1220772), Pedro Soares (1200909) and Pedro Costa (1201576).
 
-- **Deployment:** containerise the application for a reproducible runtime and ship it to the production VM.
+- **Deployment:** containerize the application for a reproducible runtime and ship it to the production VM.
     - Tighten `App/Dockerfile` (build / runtime separation, non-root user, healthcheck) so the image is suitable for production. Tracking branch: `chore--docker-containers`.
-    - Add `App/docker-compose.yml` for local development (API + MySQL with Flyway applying `V1..V8` against a clean database on first start). Tracking branch: `chore--docker-containers`.
-    - Add `docker-compose.prod.yml` at the repo root for the production VM (consumed by the `deploy` job described above; expects secrets injected via the SSH environment).
+    - Add `App/docker-compose.yml` with `security_opt: no-new-privileges:true`, `cap_drop: ALL`, `restart: unless-stopped` and a `curl /actuator/health` healthcheck. The same hardened compose file is used for local development (API + MySQL with Flyway applying `V1..V10` against a clean database on first start) and on the production VM (consumed by the deploy job; expects secrets injected via the SSH environment). Tracking branch: `chore--docker-containers`.
     - Smoke-validate the resulting container: `/actuator/health` returns 200 and an unauthenticated request to a protected endpoint returns 401.
     Owners: Diogo Ribeiro (1220812) and Miguel Cardoso (1220772).
 
@@ -17,15 +16,15 @@
 
 - **Database:** new Flyway migration `V8__create_user_token_invalidations.sql` to back UC8's token denylist, plus `V9__align_orders_schema.sql` and `V10__align_refund_requests_schema.sql` to align the `orders` and `refund_requests` tables with the Auth0-based entities (replacing the legacy `user_id` FK with `auth0_id`). Owner: Miguel Cardoso (1220772) and Pedro Soares (1200909).
 
-- **Authentication and Authorization:** finalise Auth0 token lifecycle controls, new `TokenInvalidationService` + `TokenFreshnessFilter` for server-side freshness enforcement, and `Auth0ManagementClient.invalidateSessions` calling the Management API (`delete:sessions` scope required on the M2M application). Owner: Pedro Soares (1200909).
+- **Authentication and Authorization:** finalize Auth0 token lifecycle controls, new `TokenInvalidationService` + `TokenFreshnessFilter` for server-side freshness enforcement, and `Auth0ManagementClient.invalidateSessions` calling the Management API (`delete:sessions` scope required on the M2M application). Owner: Pedro Soares (1200909).
 
 - **Documentation:** Maintain and publish sprint documentation and evidence artifacts, following the structure declared in [`Deliverables/Phase2/Sprint2/README.md`](../README.md):
      - `Development/development.md` - technology stack and new security features (token invalidation, UC5/UC7 controller and service changes).
      - `TestingAndValidation/testingAndValidation.md` - new unit and integration tests for UC5, UC7 and UC8.
      - `PipelineAutomation/pipelineAutomation.md` - document the new `deploy` job, its secrets and the deployment topology.
-     - `SecurityConfigurationAndInstallation/securityConfigurationAndInstallation.md` - secure deployment procedure (VM, secrets management via GitHub Secrets and SSH `envs`, `docker-compose.prod.yml`, hardening guidelines).
+     - `SecurityConfigurationAndInstallation/securityConfigurationAndInstallation.md` - secure deployment procedure (VM, secrets management via GitHub Secrets and SSH `envs`, hardened `App/docker-compose.yml`, hardening guidelines).
      - `SecurityAssessment/securityAssessment.md` - assessment of the new deployment path (penetration-test scope, vulnerability triage, residual risk).
-     - `ASVSTraceability/Traceability.md` - ASVS 5.0.0 traceability for Sprint 2 (notably V7.2.4 and V7.4.1 promoted from `Partial` to `Compliant` thanks to UC8's token denylist).
+     - `ASVSTraceability/ASVS_Overview.md` and `ASVSTraceability/ASVS_5.0_Tracker.xlsx` - comparative ASVS 5.0 assessment across Phase 1, Sprint 1 and Sprint 2.
      - Test reports and coverage artifacts (`App/target/surefire-reports/`, `App/target/site/jacoco/`).
      - Release notes and changelog references (generated by `release-please`).
      Owners: Diogo Ribeiro (1220812), Pedro Silva (1221033), Miguel Cardoso (1220772), Pedro Soares (1200909) and Pedro Costa (1201576)
