@@ -9,6 +9,8 @@ This document records the **deltas** introduced in Sprint 2. The Sprint 1 baseli
 3. [UC8 - Manage Roles (User Administration & Token Invalidation)](#3-uc8---manage-roles-user-administration--token-invalidation)
 4. [Containerisation & Production Image](#4-containerisation--production-image)
 5. [Database Migrations](#5-database-migrations)
+6. [Cryptographic Key Management Lifecycle](#6-cryptographic-key-management-lifecycle)
+7. [Logging and Audit Strategy](#7-logging-and-audit-strategy)
 
 ---
 
@@ -19,7 +21,7 @@ This document records the **deltas** introduced in Sprint 2. The Sprint 1 baseli
 | Use Cases | UC5 (View Refund Requests), UC6 (Handle Refund Request), UC7 (Manage Movie Catalog) and UC8 (Manage Roles) |
 | Authentication / Session | Server-side JWT denylist (`TokenInvalidationService` + `TokenFreshnessFilter`) and Auth0 session revocation on role change |
 | Database | `V8__create_user_token_invalidations.sql`; schema-alignment migrations `V9__align_orders_schema.sql` and `V10__align_refund_requests_schema.sql` |
-| Deployment | Hardened multi-stage `App/Dockerfile`, `App/docker-compose.yml` for local development, `docker-compose.prod.yml` for the production VM |
+| Deployment | Hardened multi-stage `App/Dockerfile` and `App/docker-compose.yml` (used both for local development and as the production compose file copied to the VM by the deploy job) |
 
 Stack, RBAC matrix and all transversal security controls are unchanged from Sprint 1.
 
@@ -31,13 +33,13 @@ Stack, RBAC matrix and all transversal security controls are unchanged from Spri
 
 **Location:** [`RefundController`](../../../../App/src/main/java/com/example/desofs/controllers/RefundController.java).
 
-`GET /api/refunds` (list) and `GET /api/refunds/{id}` (detail) finalise UC5. Listing requires the `SUPPORT` role and is enforced via `RoleGuard` before any data access. Each successful list call is recorded by `AuditLogService` with operation `GET_REFUND_LIST`.
+`GET /api/refunds` (list) and `GET /api/refunds/{id}` (detail) finalize UC5. Both endpoints require the `SUPPORT` role, enforced via `RoleGuard` before any data access. Each successful list call is recorded by `AuditLogService` with operation `GET_REFUND_LIST`.
 
 ### 2.2 UC6 - Handle Refund Requests
 
 **Location:** [`RefundController`](../../../../App/src/main/java/com/example/desofs/controllers/RefundController.java).
 
-`PUT /{id}/approve` (refund) and `PUT /{id}/reject` (refund) finalise UC5. Approve or Reject a Refund Request requires the `SUPPORT` role and is enforced via `RoleGuard` before any data access. Each successful action (either approval or rejection) call is recorded by `AuditLogService` with operation `APPROVE_REFUND` or `REJECT_REFUND`, respectively.
+`PUT /api/refunds/{id}/approve` and `PUT /api/refunds/{id}/reject` finalise UC6. Both require the `SUPPORT` role, enforced via `RoleGuard` before any data access. Each successful action is recorded by `AuditLogService` with operation `APPROVE_REFUND` or `REJECT_REFUND`, respectively.
 
 ### 2.3 UC7 - Manage Movie Catalog
 
@@ -51,6 +53,7 @@ The catalog endpoints completed in Sprint 2 are:
 | `GET /api/movies/{id}` | Authenticated | Returns 404 when the id does not exist |
 | `POST /api/movies` | `ADMIN` | `@Valid MovieDTO`; `id` is forced to `null` to prevent client-supplied identifiers; emits `CREATE_MOVIE` |
 | `PUT /api/movies/{id}` | `ADMIN` | `@Valid MovieDTO`; returns 404 when the movie is missing |
+| `DELETE /api/movies/{id}` | `ADMIN` | Returns 204 on success; emits `DELETE_MOVIE` audit entry |
 
 DTO validation (`@NotBlank`, `@Size`, `@DecimalMin`, `@Min`) and `GlobalExceptionHandler` continue to enforce input safety as documented in Sprint 1.
 
@@ -116,14 +119,14 @@ One row per user (cut-off, not a token list). `TIMESTAMP(3)` matches the millise
 
 ## 4. Containerisation & Production Image
 
-**Locations:** [`App/Dockerfile`](../../../../App/Dockerfile), [`App/docker-compose.yml`](../../../../App/docker-compose.yml), [`docker-compose.prod.yml`](../../../../docker-compose.prod.yml).
+**Locations:** [`App/Dockerfile`](../../../../App/Dockerfile), [`App/docker-compose.yml`](../../../../App/docker-compose.yml).
 
 `App/Dockerfile` is a two-stage build:
 
 1. **Build stage** (`maven:3.9-eclipse-temurin-21`): resolves dependencies, packages the application JAR.
 2. **Runtime stage** (`eclipse-temurin:21-jre`): copies the JAR into a slim JRE image, creates a dedicated system user `emovieshop`, drops to that user via `USER emovieshop`, and exposes only port 8080.
 
-Local development runs through `App/docker-compose.yml`, which adds `security_opt: no-new-privileges:true`, `cap_drop: ALL`, and a `curl /actuator/health` healthcheck. Production deployment uses `docker-compose.prod.yml` consumed by the deploy job described in [Pipeline Automation Cap3](../PipelineAutomation/pipelineAutomation.md#3-deployment-pipeline).
+A single hardened `App/docker-compose.yml` is used both for local development and on the production VM (the deploy job copies it into `/opt/emovieshop/deploy` and runs `docker compose up -d` from there). The compose file applies `security_opt: no-new-privileges:true`, `cap_drop: ALL`, `restart: unless-stopped` and a `curl /actuator/health` healthcheck. Database credentials are read exclusively from environment variables (`DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USERNAME`, `DB_PASSWORD`); they are injected via the SSH `envs:` clause at deploy time and never embedded in the image. Container orchestration is detailed in [Pipeline Automation Cap3](../PipelineAutomation/pipelineAutomation.md#3-deployment-pipeline).
 
 Hardening summary (rationale and ASVS mapping in [Security Configuration & Installation](../SecurityConfigurationAndInstallation/securityConfigurationAndInstallation.md)):
 
@@ -143,3 +146,22 @@ Hardening summary (rationale and ASVS mapping in [Security Configuration & Insta
 | [`V10__align_refund_requests_schema.sql`](../../../../App/src/main/resources/db/migration/V10__align_refund_requests_schema.sql) | Replaces legacy `refund_requests.user_id` FK with `auth0_id` |
 
 V9 / V10 close a long-standing drift between the JPA entities (post-Auth0) and the schema created in V1, which had previously been masked by `hibernate.ddl-auto=create-drop`. With Flyway as the schema source of truth and `spring.jpa.hibernate.ddl-auto=validate` in production, these alignments are required for the application to start.
+
+## 6. Cryptographic Key Management Lifecycle
+
+JWT signing keys are managed entirely by Auth0. The application never generates or stores the private signing key:
+
+- **Generation and storage.** Performed inside Auth0; the private key never leaves the tenant.
+- **Distribution.** The backend fetches public verification keys from the Auth0 JWKS endpoint and trusts only keys belonging to the configured issuer.
+- **Rotation.** Driven by Auth0; the backend transparently picks up new public keys from JWKS when validating JWTs.
+- **Revocation and replacement.** Retired keys are dropped from JWKS by Auth0 and the backend stops trusting them automatically.
+
+
+## 7. Logging and Audit Strategy
+
+| Stream | Sink | Retention | Notes |
+|---|---|---|---|
+| Application logs | `application.log` (container stdout in production) | 90 days | Captures security events: failed authentication, failed authorisation, JWT validation errors, Auth0 communication failures. |
+| Audit logs | `audit_logs` table (DB) | 1 year | Written by `AuditLogService` on every privileged operation (UC3, UC4-UC6, UC7, UC8). |
+
+Access to audit logs (`GET /api/audit-logs`) is restricted to the `ADMIN` role.
