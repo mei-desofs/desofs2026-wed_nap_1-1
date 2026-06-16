@@ -51,21 +51,46 @@ The runtime log analysis step (the IAST pragmatic alternative) keeps running as 
 | Checkout | Git | Fetch source code |
 | Setup JDK 21 | Temurin + Maven cache | Build environment |
 | `mvn -B clean package -DskipTests` | Maven | Build the runtime JAR |
-| Stage artefacts | shell | Copy `App/Dockerfile` + JAR under `deploy/` |
+| Stage artefacts | shell | Copy `App/Dockerfile`, `App/docker-compose.yml` and the JAR under `deploy/` |
 | Upload to VM | `appleboy/scp-action` | Transfer `deploy/` to `/opt/emovieshop/deploy` |
 | Remote deploy | `appleboy/ssh-action` | Build the image and bring the stack up |
 
-The remote deploy step runs:
+The upload step uses `appleboy/scp-action` and only references secrets:
 
-```bash
-mkdir -p /opt/emovieshop/receipts
-docker build -t emovieshop:latest /opt/emovieshop/deploy
-cd /opt/emovieshop
-docker compose -f docker-compose.prod.yml up -d
-docker image prune -f
+```yaml
+- uses: appleboy/scp-action@v0.1.7
+  with:
+    host: ${{ secrets.VM_HOST }}
+    username: ${{ secrets.VM_USER }}
+    key: ${{ secrets.VM_SSH_KEY }}
+    source: deploy/
+    target: /opt/emovieshop/
 ```
 
-Database credentials and Auth0 settings reach the SSH session through the action's `envs:` clause and are consumed by [`docker-compose.prod.yml`](../../../../docker-compose.prod.yml). The compose file uses `network_mode: host` so the container can reach the VM-local MySQL instance and exposes only port 8080. The image runs as the non-root user `emovieshop` (see [`App/Dockerfile`](../../../../App/Dockerfile)); detailed hardening rationale lives in [Security Configuration & Installation](../SecurityConfigurationAndInstallation/securityConfigurationAndInstallation.md).
+The remote deploy step then uses `appleboy/ssh-action` and exposes database credentials only inside the SSH session, via the action's `envs:` clause (no secret is written to the VM filesystem):
+
+```yaml
+- uses: appleboy/ssh-action@v1
+  env:
+    DB_HOST: ${{ secrets.DB_HOST }}
+    DB_PORT: ${{ secrets.DB_PORT }}
+    DB_NAME: ${{ secrets.DB_NAME }}
+    DB_USERNAME: ${{ secrets.DB_USERNAME }}
+    DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+  with:
+    host: ${{ secrets.VM_HOST }}
+    username: ${{ secrets.VM_USER }}
+    key: ${{ secrets.VM_SSH_KEY }}
+    envs: DB_HOST,DB_PORT,DB_NAME,DB_USERNAME,DB_PASSWORD
+    script: |
+      mkdir -p /opt/emovieshop/receipts
+      docker build -t emovieshop:latest /opt/emovieshop/deploy
+      cd /opt/emovieshop/deploy
+      docker compose up -d
+      docker image prune -f
+```
+
+The production stack uses the same hardened [`App/docker-compose.yml`](../../../../App/docker-compose.yml) as local development (`security_opt: no-new-privileges:true`, `cap_drop: ALL`, `restart: unless-stopped`, healthcheck). The compose file exposes only port 8080 and runs the container as the non-root user `emovieshop` (see [`App/Dockerfile`](../../../../App/Dockerfile)); detailed hardening rationale lives in [Security Configuration & Installation](../SecurityConfigurationAndInstallation/securityConfigurationAndInstallation.md).
 
 ---
 
