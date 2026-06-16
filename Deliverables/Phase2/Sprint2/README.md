@@ -1,6 +1,6 @@
 # eMovieShop Documentation - Phase 2: Sprint 2
 
-This document serves as the main index for Sprint 2 of Phase 2. Here you will find references to all required artefacts, organised by topic.
+This document serves as the main index for Sprint 2 of Phase 2. Here you will find references to all required artifacts, organized by topic.
 
 ## Document Structure
 
